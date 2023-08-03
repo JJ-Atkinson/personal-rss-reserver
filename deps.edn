@@ -1,2 +1,8 @@
-{:deps {org.clojure/tools.namespace {:mvn/version "0.2.11"}
-        com.microsoft.playwright/playwright {:mvn/version "1.33.0"}}}
+{:paths ["src"]
+ :deps {org.clojure/tools.namespace {:mvn/version "0.2.11"}
+        com.microsoft.playwright/playwright {:mvn/version "1.33.0"}
+        io.github.pfeodrippe/wally {:mvn/version "0.0.4"}
+        nrepl/nrepl {:mvn/version "1.0.0"}
+        org.clojars.quoll/asami {:mvn/version "2.2.4"}}
+ :aliases 
+ {:dev {:extra-deps {com.gfredericks/debug-repl {:mvn/version "0.0.12"}}}}}
