@@ -1,10 +1,11 @@
 (ns personal-rss-feed.playwright.wally-utils
   (:require
-   [tilley.test-system.wally-state :as wally-state]
+   [personal-rss-feed.playwright.wally-state :as wally-state]
    [wally.main :as w])
   (:import
    (com.microsoft.playwright BrowserType$LaunchOptions)
-   (com.microsoft.playwright.options Cookie)))
+   (com.microsoft.playwright.options Cookie)
+   (java.nio.file Paths)))
 
 (defn fresh-browser
   "This is a very expensive call. Avoid using it.
@@ -13,11 +14,13 @@
    :type                 The type of browser to launch. One of #{:chromium :firefox :webkit}
    :between-action-delay The ms delay between browser actions. Defaults to 0. See LaunchOptions.setSlowMo.
    :devtools?            Start chromium devtools?"
-  [{:keys [headless? type between-action-delay devtools?]
+  [{:keys [headless? type between-action-delay devtools? exe-path]
     :or {headless? true
          type :chromium
          between-action-delay 0
-         devtools? false}}]
+         devtools? false
+         exe-path (Paths/get (System/getenv "CHROME_LOCATION")
+                    (into-array String []))}}]
   (let [pw @wally-state/playwright-instance
         browser (case type
                   :chromium (.chromium pw)
@@ -26,7 +29,9 @@
     (.launch browser (-> (BrowserType$LaunchOptions.)
                        (.setHeadless headless?)
                        (.setSlowMo between-action-delay)
-                       (.setDevtools devtools?)))))
+                       (.setDevtools devtools?)
+                       (cond->
+                         (not= exe-path :default) (.setExecutablePath exe-path))))))
 
 (defn cached-browser
   [key fallback-create-fn]
@@ -69,9 +74,7 @@
 (defn fresh-page
   "Create a playwright page, for use with `w/with-page`.
 
-   :browser-context If supplied, this context will be used. The auth token will be added to this context if supplied.
-   :user-id         If supplied, the page will have appropriate cookies to be signed in as 
-                    user-id **IFF** the `playwright-simple-auth-replacements` are used.
+   :browser-context If supplied, this context will be used. 
    :debug           A map which, if present, builds a browser with good defaults for viewing the test live.
                     Any options are overrides to `fresh-browser`.
 
@@ -82,12 +85,11 @@
                     https://www.javadoc.io/static/com.microsoft.playwright/playwright/1.33.0/com/microsoft/playwright/Page.html
    :browser-context The browser context object 
                     https://www.javadoc.io/doc/com.microsoft.playwright/playwright/latest/com/microsoft/playwright/BrowserContext.html"
-  [{:keys [user-id browser-context debug]}]
+  [{:keys [browser-context debug]}]
   (let [ctx (or browser-context
               (fresh-browser-context {:browser (if debug
                                                  (debug-browser debug)
                                                  (default-browser))}))]
-    (sign-in-context! ctx user-id)
     {:page (.newPage ctx)
      :browser-context ctx}))
 
@@ -99,7 +101,4 @@
                  browser-context# (:browser-context page-desc#)]
        (w/with-page page# ~@body))))
 
-(defn navigate
-  [system path]
-  (w/navigate (str "http://localhost:" (:server-port system) path)))
-
+(def navigate w/navigate)

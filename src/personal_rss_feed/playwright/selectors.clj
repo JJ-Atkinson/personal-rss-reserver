@@ -1,6 +1,5 @@
 (ns personal-rss-feed.playwright.selectors
   (:require
-   [tilley.modules.htmx.form.ui.core :as form.ui]
    [wally.main :as w]
    [wally.selectors])
   (:import
@@ -45,18 +44,6 @@
    Returns a selector"
   [test-id]
   (invoke-locator-utils-method "getByTestIdSelector" test-id))
-
-(defn field-id
-  ([field-key entity]
-   (field-id field-key entity ""))
-  ([field-key entity extension]
-   (str "#" (form.ui/field-id field-key entity) extension)))
-
-(defn field-test-id
-  ([field-key entity]
-   (field-id field-key entity ""))
-  ([field-key entity extension]
-   (test-id (str (form.ui/field-id field-key entity) extension))))
 
 (defn query-1
   "Query that returns just one locator. If more than one match is found, an exception is thrown. If none is found,
