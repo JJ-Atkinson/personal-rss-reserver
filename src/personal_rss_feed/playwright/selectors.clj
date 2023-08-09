@@ -5,7 +5,7 @@
   (:import
    (java.lang.reflect Method)
    (com.microsoft.playwright.impl LocatorUtils)
-   (com.microsoft.playwright Locator Locator$GetByTextOptions Locator$GetByLabelOptions ElementHandle)))
+   (com.microsoft.playwright Locator Locator$GetByTextOptions Locator$GetByLabelOptions ElementHandle Locator$GetByTitleOptions)))
 
 (def
   ^{:private true
@@ -32,6 +32,12 @@
    Returns a selector"
   [text & {:keys [exact] :or {exact false}}]
   (invoke-locator-utils-method "getByTextSelector" text (.setExact (Locator$GetByTextOptions.) exact)))
+
+(defn title
+  "Selects an element by title attribute. See https://playwright.dev/java/docs/api/class-page#page-get-by-title
+   Returns a selector"
+  [text & {:keys [exact] :or {exact false}}]
+  (invoke-locator-utils-method "getByTitleSelector" text (.setExact (Locator$GetByTitleOptions.) exact)))
 
 (defn label
   "Select a form element by the text of its label. See https://playwright.dev/java/docs/locators#locate-by-label
