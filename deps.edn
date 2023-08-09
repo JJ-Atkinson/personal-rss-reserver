@@ -3,6 +3,10 @@
         com.microsoft.playwright/playwright {:mvn/version "1.33.0"}
         io.github.pfeodrippe/wally {:mvn/version "0.0.4"}
         nrepl/nrepl {:mvn/version "1.0.0"}
-        org.clojars.quoll/asami {:mvn/version "2.2.4"}}
- :aliases 
- {:dev {:extra-deps {com.gfredericks/debug-repl {:mvn/version "0.0.12"}}}}}
+        datalevin/datalevin {:mvn/version "0.8.18"}
+        org.clojure/data.xml {:mvn/version "0.0.8"}
+        clj-http/clj-http {:mvn/version "3.12.3"}}
+ :aliases
+ {:dev {:extra-deps {com.gfredericks/debug-repl {:mvn/version "0.0.12"}}
+        :jvm-opts ["--add-opens" "java.base/java.nio=ALL-UNNAMED"
+                   "--add-opens" "java.base/sun.nio.ch=ALL-UNNAMED"]}}}

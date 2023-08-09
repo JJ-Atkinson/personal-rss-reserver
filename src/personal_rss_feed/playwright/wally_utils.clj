@@ -19,8 +19,8 @@
          type :chromium
          between-action-delay 0
          devtools? false
-         exe-path (Paths/get (System/getenv "CHROME_LOCATION")
-                    (into-array String []))}}]
+         exe-path (some-> (System/getenv "CHROME_LOCATION")
+                    (Paths/get (into-array String [])))}}]
   (let [pw @wally-state/playwright-instance
         browser (case type
                   :chromium (.chromium pw)
@@ -31,7 +31,8 @@
                        (.setSlowMo between-action-delay)
                        (.setDevtools devtools?)
                        (cond->
-                         (not= exe-path :default) (.setExecutablePath exe-path))))))
+                         (and exe-path (not= exe-path :default)) 
+                         (.setExecutablePath exe-path))))))
 
 (defn cached-browser
   [key fallback-create-fn]
