@@ -30,27 +30,32 @@
   (.click (ws/query-1 [".fa-sign-in-alt"]))
 
   (w/fill (ws/query [".modal" ".input--email" s/input])
-    "")
+    (System/getenv "LE_USERNAME"))
   (w/fill (ws/query [".modal" ".input--password" s/input])
-    "")
+    (System/getenv "LE_PASSWORD"))
   (w/click (ws/query [".modal" (ws/text "Submit")]))
+  
   (w/navigate "https://lotuseaters.com/premium-dashboard"))
 
 (defn augment-episode-information
   [episodes]
-  (w-utils/with-page (w-utils/fresh-page {})
+  (w-utils/with-page (w-utils/fresh-page {:debug {}})
     (.setDefaultTimeout w/*page* 20000)
     (login)
 
+    (break!)
     (->> episodes
       (map (fn [{:episode/keys [url] :as ep}]
              (merge ep
                (get-detailed-information url))))
-      (doall))))
+      (doall))
+    ))
 
 (comment
   ;; Required for nix. Move this later.
   (System/setProperty "playwright.cli.dir" (System/getenv "PLAYWRIGHT_CLI_LOCATION"))
+
+  (augment-episode-information [])
 
 
   (ws/query [".pageListing__items .pageListingItem"])
@@ -62,21 +67,14 @@
     "href")
 
   (str/trim (w/text-content (ws/query-1 [".post__body" s/div s/p s/b s/i])))
-
-
-  
-  
-
-  
-
-
+  (get-detailed-information "https://www.lotuseaters.com/premium-brokenomics-4-or-debt-and-deficits-no-good-options-from-here-17-01-23" )
 
   )
 
 (defn parse-description
   [desc-str]
   (drop 1
-    (re-matches #".*\<img src=\"(.*)\" ?\/>.*\<br\>(.*).*<br>"
+    (re-matches #".*\<a href=\"(.*)\" ?>.*\<img src=\"(.*)\" ?\/>.*\<br\>(.*).*<br>"
       (-> desc-str
         (str/trim)
         (str/replace "\t" "")
@@ -120,33 +118,33 @@
 (def rss-str->episodes
   (comp
     (fn [intermediate]
-      (->> (:items intermediate) 
-        (map (partial merge (dissoc intermediate :items)))))
+      {:episodes (->> (:items intermediate)
+                   (map (partial merge (select-keys intermediate [:podcast/id]))))
+       :podcast (dissoc intermediate :items)})
     (map-accumulator
-      [(attribute :title content)
-       (attribute :icon content)
-       (attribute :link (comp :href :attrs))
-       (attribute :updated content)
-       (attribute :description content)
-       (attribute :id content)
+      [(attribute :title :podcast/title content)
+       (attribute :icon :podcast/icon content)
+       (attribute :link :podcast/feed-uri (comp :href :attrs))
+       (attribute :updated :podcast/updated-at content)
+       (attribute :description :podcast/description content)
+       (attribute :id :podcast/id content)
        (attributes :item :items
          (navigate
-           (comp :content)
+           :content
            (map-accumulator
-             [(attribute :title #(str/trim (second (str/split (content %) #"\|"))))
-              (attribute :description :image-original-uri #(first (parse-description (content %))))
-              (attribute :description :description #(second (parse-description (content %))))
-              (attribute :pubDate :published content)])))])
-    #(-> (xml/parse-str %)
-      :content
-      first
-      :content)))
+             [(attribute :title :episode/title #(str/trim (second (str/split (content %) #"\|"))))
+              (attribute :description :episode/thumbnail-origin-uri #(nth (parse-description (content %)) 1))
+              (attribute :description :episode/url #(nth (parse-description (content %)) 0))
+              (attribute :description :episode/excerpt #(nth (parse-description (content %)) 2))
+              (attribute :pubDate :episode/publish-date content)])))])
+    #(-> (xml/parse-str %) :content first :content)))
 
 (comment
   (def resp
     (http/get
       "https://lotuseaters.com/feed/category/brokenomics"))
   (xml/parse-str (:body resp))
-  
-  (rss-str->episodes (:body resp)))
+
+  (rss-str->episodes (:body resp))
+  )
 

@@ -14,7 +14,7 @@
              :episode/ep-number {:db/valueType :db.type/string}
              :episode/thumbnail-origin-uri {:db/valueType :db.type/string}
              :episode/excerpt {:db/valueType :db.type/string}
-             :episode/series {:db/valueType :db.type/string}
+             :episode/publish-date {:db/valueType :db.type/string}
              :episode/audio-original-uri {:db/valueType :db.type/string}})
 
 (def conn (d/get-conn "/tmp/datalevin/mydb" schema))
