@@ -1,0 +1,3 @@
+/.idea/
+/personal-rss-reserver.iml
+!/resources/config/secrets.edn
