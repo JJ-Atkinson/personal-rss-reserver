@@ -1,6 +1,8 @@
 (ns personal-rss-feed.ingest.lotus-eaters
   (:require
    [clojure.string :as str]
+   [dev.freeformsoftware.simple-queue.core :as simple-queue]
+   [dev.freeformsoftware.simple-queue.queue :as queue]
    [integrant.core :as ig]
    [personal-rss-feed.playwright.wally-utils :as w-utils]
    [wally.main :as w]
@@ -215,10 +217,16 @@
 
 
 (defmethod ig/init-key ::lotus-eaters-ingest
-  [_ {:keys [start-cron? apply-playwright-cli-fix?] :as options}]
+  [_ {:keys [start-cron? apply-playwright-cli-fix? queue] :as options}]
   (when apply-playwright-cli-fix?
     ;; Required for nix.
     (System/setProperty "playwright.cli.dir" (System/getenv "PLAYWRIGHT_CLI_LOCATION")))
+  
+  (simple-queue/qadd! queue {::queue/name :lotus-eaters/fetch-metadata
+                             ::queue/default-retry-limit 2})
+  (simple-queue/qadd! queue {::queue/name :lotus-eaters/download-episode})
+  (simple-queue/qadd! queue {::queue/name :lotus-eaters/transcribe-audio})
+  (simple-queue/qadd! queue {::queue/name :lotus-eaters/upload-s3})
   
   
   )

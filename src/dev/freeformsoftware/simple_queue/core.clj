@@ -28,14 +28,10 @@
    [dev.freeformsoftware.simple-queue.queue :as queue]
    [dev.freeformsoftware.simple-queue.queue-item :as queue-item]
    [com.fulcrologic.guardrails.core :refer [>defn => ?]]
-   [chime.core :as chime]
-   [taoensso.encore :as enc])
+   [chime.core :as chime])
   (:import (clojure.lang Atom)
-           (java.time Instant LocalTime ZonedDateTime ZoneId Period Duration)
+           (java.time Instant Duration)
            (java.util Date)))
-
-
-
 
 (s/def ::name->queue any?)                                  ;; Disk backed map
 (s/def ::persistence-dir string?)
@@ -44,7 +40,7 @@
 (s/def ::default-retry-limit number?)
 (s/def ::system #(instance? Atom %))
 
-(defn create-queue-item-map!
+(defn- create-queue-item-map!
   [{::keys [persistence-dir mem-only?]}]
   (let [persistence-dir (str persistence-dir "/queued-items")]
     (disk-map/create-disk-backed-map!
@@ -52,7 +48,7 @@
                   :read-fn    (if mem-only? (constantly nil) (fn [k _] (queue-item/read! persistence-dir k)))
                   :write-fn   (if mem-only? (constantly nil) (fn [_ v] (queue-item/write! persistence-dir v)))})))
 
-(defn create-queue-map!
+(defn- create-queue-map!
   [{::keys [persistence-dir queues mem-only?]}]
   (disk-map/create-disk-backed-map!
     #::disk-map{:folder-str   persistence-dir
@@ -90,7 +86,7 @@
   [system id]
   (get-in @system [::id->queue-item id]))
 
-(>defn qsort!
+(>defn -qsort!
   "Sort waiting-q, ensuring it's a vector. Low->High priority, suitable for peek/pop. Date new == low priority."
   [system queue-name]
   [::system ::queue/name => ::system]
@@ -112,15 +108,13 @@
      :opt [::queue/rate-limit-fn
            ::queue/timeout?-fn])
    => ::system]
-  (println "qaaaad" (and (not (contains? queue-ent ::queue/timeout?-fn))
-                      (::default-timeout-ms @system)))
   (let [queue-ent (cond-> queue-ent
                     (and (not (contains? queue-ent ::queue/timeout?-fn))
                       (::default-timeout-ms @system))
                     (assoc ::queue/timeout?-fn (default-timeout?-fn (::default-timeout-ms @system))))]
     (assert (not (some (partial contains? queue-ent) [::queue/active-q ::queue/dead-q ::queue/waiting-q])))
     (update!q system (::queue/name queue-ent) #(merge queue-ent %))
-    (qsort! system (::queue/name queue-ent))
+    (-qsort! system (::queue/name queue-ent))
     system))
 
 (>defn qsubmit!
@@ -140,10 +134,10 @@
                 (assoc queue-entry ::queue-item/submission-time (Date.)))]
     (update!q system queue ::queue/waiting-q #(conj % id))
     (swap! system update ::id->queue-item assoc id entry)
-    (qsort! system queue)
+    (-qsort! system queue)
     (count (get-in @system [::name->queue queue ::queue/waiting-q]))))
 
-(defn- qfinish!
+(defn- -qfinish!*
   [system queue-item-id completion-data status]
   (let [{::queue-item/keys [queue] :as queue-ent} (resolve!i system queue-item-id)]
     (update!q system queue (fn [q]
@@ -164,12 +158,12 @@
    (qcomplete! system queue-item-id {}))
   ([system queue-item-id completion-data]
    [::system ::queue-item/id ::queue-item/completion-data => number?]
-   (qfinish! system queue-item-id completion-data ::queue-item/succeeded)))
+   (-qfinish!* system queue-item-id completion-data ::queue-item/succeeded)))
 
 (>defn qerror!
   [system queue-item-id error-info]
   [::system ::queue-item/id ::queue-item/completion-data => number?]
-  (qfinish! system queue-item-id error-info ::queue-item/failed))
+  (-qfinish!* system queue-item-id error-info ::queue-item/failed))
 
 (>defn qpeek!
   "Read the top entry off the queue. Nil if none is found. Respects ::queue/rate-limit-fn.
@@ -207,7 +201,7 @@
       (update!qi system qi-id (fn [qi] (merge qi ret)))
       ret)))
 
-(defn activate-timeout!
+(defn -activate-timeout!
   "Activate the timeout on an item in the active-q. Optionally runs `notify-timed-out!`. If the item exceeds `retry-limit` (default 0),
    then it is kicked to the dead-q. If not, it is sent back to the active-q with Long/MAX_VALUE priority."
   [system queue-item-id]
@@ -239,7 +233,7 @@
                              queue-names)]
     (doseq [{::queue/keys [timeout?-fn] ::queue-item/keys [id] :as queue-item} questionable-items]
       (when (and timeout?-fn (timeout?-fn queue-item))
-        (activate-timeout! system id)))))
+        (-activate-timeout! system id)))))
 
 (defn- start-timeout-watchdog!
   [system]
@@ -271,7 +265,7 @@
                      ::default-notify-timed-out! (partial println "ent timed out!")}))
 
   @s
-  (qsort! s :third/queue)
+  (-qsort! s :third/queue)
 
   (qadd! s {::queue/name :third/queue})
   

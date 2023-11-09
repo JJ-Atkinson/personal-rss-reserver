@@ -42,5 +42,5 @@
 (>defn write!
   [persistence-dir item]
   [string? ::item => ::item]
-  (spit (queue-item->file persistence-dir (::id item)) (pr-str item))
+  (spit (queue-item->file persistence-dir (::id item)) (pr-str (dissoc item ::reader-exception ::raw-file-contents)))
   item)
