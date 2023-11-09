@@ -1,12 +1,36 @@
-{:paths ["src"]
- :deps {org.clojure/tools.namespace {:mvn/version "0.2.11"}
-        com.microsoft.playwright/playwright {:mvn/version "1.33.0"}
-        io.github.pfeodrippe/wally {:mvn/version "0.0.4"}
-        nrepl/nrepl {:mvn/version "1.0.0"}
-        datalevin/datalevin {:mvn/version "0.8.18"}
-        org.clojure/data.xml {:mvn/version "0.0.8"}
-        clj-http/clj-http {:mvn/version "3.12.3"}}
+{:paths ["src" "resources"]
+ :deps  {com.microsoft.playwright/playwright {:mvn/version "1.33.0"}
+         io.github.pfeodrippe/wally          {:mvn/version "0.0.4"}
+         nrepl/nrepl                         {:mvn/version "1.0.0"}
+         datalevin/datalevin                 {:mvn/version "0.8.18"}
+         commons-io/commons-io               {:mvn/version "2.15.0"}
+         clj-http/clj-http                   {:mvn/version "3.12.3"}
+         remus/remus                         {:mvn/version "0.2.4"}
+         clj-rss/clj-rss                     {:mvn/version "0.4.0"}
+         djblue/portal                       {:mvn/version "0.49.0"}
+         potemkin/potemkin                   {:mvn/version "0.4.6"}
+
+         info.sunng/ring-jetty9-adapter      {:mvn/version "0.30.2"} ;; ignore the name, it's jetty 12
+         org.eclipse.jetty/jetty-client      {:mvn/version "12.0.3"} ;; also import jetty-client 12 for cognitect aws api
+         com.cognitect.aws/api               {:mvn/version "0.8.686"
+                                              :exclusions  [org.eclipse.jetty/jetty-client]} ;; Using jetty 9, while we use jetty 12
+
+         com.cognitect.aws/endpoints         {:mvn/version "1.1.12.504"}
+         com.cognitect.aws/s3                {:mvn/version "848.2.1413.0" :aws/serviceFullName "Amazon Simple Storage Service"},
+         org.babashka/http-client            {:mvn/version "0.4.15"}
+         io.github.tonsky/clj-simple-router  {:mvn/version "0.1.0"}
+         ring/ring                           {:mvn/version "1.10.0"}
+         integrant/integrant                 {:mvn/version "0.8.1"}
+         jarohen/chime                       {:mvn/version "0.3.3"}
+         org.clojure/tools.namespace         {:mvn/version "1.4.4"}
+         com.fulcrologic/guardrails          {:mvn/version "1.1.13"}} ;; allow guardrails in prod because idc. perf isn't a huge deal
  :aliases
  {:dev {:extra-deps {com.gfredericks/debug-repl {:mvn/version "0.0.12"}}
-        :jvm-opts ["--add-opens" "java.base/java.nio=ALL-UNNAMED"
-                   "--add-opens" "java.base/sun.nio.ch=ALL-UNNAMED"]}}}
+        :jvm-opts   ["--add-opens" "java.base/java.nio=ALL-UNNAMED"
+                     "--add-opens" "java.base/sun.nio.ch=ALL-UNNAMED"
+
+                     ;; https://bugs.openjdk.org/browse/JDK-8213696
+                     ;; Required to allow signing to procede normally for the cognitect aws api. 
+                     ;; It signs the headers as well, and by default the jdk http client sets its
+                     ;; own (wrong) `host` header, breaking the signature.
+                     "-Djdk.httpclient.allowRestrictedHeaders=host"]}}}

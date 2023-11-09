@@ -17,5 +17,8 @@ mkShell {
     google-chrome
     nodejs
     playwright-driver
+
+    openai-whisper-cpp
+    ffmpeg
   ];
 }
