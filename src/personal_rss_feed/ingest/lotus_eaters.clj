@@ -177,7 +177,7 @@
       "https://lotuseaters.com/feed/category/brokenomics"))
   (def resp2 (remus/parse-url "https://lotuseaters.com/feed/category/brokenomics"))
   (xml/parse-str (:body resp))
-  
+
   (rss-str->episodes (:body resp))
 
   (http/head "https://cdn.lotuseaters.com/23.03.28-Brokenomics17-5_Big_Innovation_Platforms(P).mp3")
@@ -209,9 +209,9 @@
   (with-open [body (clojure.java.io/input-stream "dads-linode.mp3")]
     (println (type body))
     (aws/invoke s3 {:op      :PutObject
-                    :request {:Bucket        "lotus-eaters"
-                              :Key           "dads.mp3"
-                              :Body          body}}))
+                    :request {:Bucket "lotus-eaters"
+                              :Key    "dads.mp3"
+                              :Body   body}}))
 
   (java.util.Date. "2023-10-17T15:00:00+00:00"))
 
@@ -221,14 +221,14 @@
   (when apply-playwright-cli-fix?
     ;; Required for nix.
     (System/setProperty "playwright.cli.dir" (System/getenv "PLAYWRIGHT_CLI_LOCATION")))
-  
-  (simple-queue/qadd! queue {::queue/name :lotus-eaters/fetch-metadata
+
+  (simple-queue/qadd! queue {::queue/name                :lotus-eaters/fetch-metadata
                              ::queue/default-retry-limit 2})
-  (simple-queue/qadd! queue {::queue/name :lotus-eaters/download-episode})
+  (simple-queue/qadd! queue {::queue/name :lotus-eaters/download-audio})
+  (simple-queue/qadd! queue {::queue/name :lotus-eaters/download-video})
   (simple-queue/qadd! queue {::queue/name :lotus-eaters/transcribe-audio})
   (simple-queue/qadd! queue {::queue/name :lotus-eaters/upload-s3})
-  
-  
+
   )
 
 (defmethod ig/suspend-key! ::lotus-eaters-ingest

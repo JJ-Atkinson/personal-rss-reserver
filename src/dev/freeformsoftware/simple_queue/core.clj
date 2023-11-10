@@ -137,33 +137,13 @@
     (-qsort! system queue)
     (count (get-in @system [::name->queue queue ::queue/waiting-q]))))
 
-(defn- -qfinish!*
-  [system queue-item-id completion-data status]
-  (let [{::queue-item/keys [queue] :as queue-ent} (resolve!i system queue-item-id)]
-    (update!q system queue (fn [q]
-                             (-> q
-                               (update ::queue/waiting-q #(vec (remove (partial = queue-item-id) %)))
-                               (update ::queue/active-q #(remove (partial = queue-item-id) %))
-                               (update ::queue/dead-q #(cons queue-item-id %)))))
-    (update!qi system queue-item-id
-      (fn [qi]
-        (assoc qi
-          ::queue-item/completion-time (Date.)
-          ::queue-item/completion-data completion-data
-          ::queue-item/status status)))))
-
-(>defn qcomplete!
-  ([system queue-item-id]
-   [::system ::queue-item/id => number?]
-   (qcomplete! system queue-item-id {}))
-  ([system queue-item-id completion-data]
-   [::system ::queue-item/id ::queue-item/completion-data => number?]
-   (-qfinish!* system queue-item-id completion-data ::queue-item/succeeded)))
-
-(>defn qerror!
-  [system queue-item-id error-info]
-  [::system ::queue-item/id ::queue-item/completion-data => number?]
-  (-qfinish!* system queue-item-id error-info ::queue-item/failed))
+(>defn qview
+  "Lazy view of the queued items. Items may be changed before resolved if the required items are not fully realized before 
+   queue operations are made."
+  [system queue-name]
+  [::system ::queue/name => (s/coll-of ::queue-item/item)]
+  (->> (get-in @system [::name->queue queue-name])
+    (map #(resolve!i system %))))
 
 (>defn qpeek!
   "Read the top entry off the queue. Nil if none is found. Respects ::queue/rate-limit-fn.
@@ -196,32 +176,66 @@
                   ::queue-item/activation-time (Date.)
                   ::queue-item/status ::queue-item/activated)
           qi-id (::queue-item/id peekv)]
-      (update!q system queue-name ::queue/waiting-q pop)
-      (update!q system queue-name ::queue/active-q #(conj % qi-id))
+      (update!q system queue-name #(-> % 
+                                     (update ::queue/waiting-q pop)
+                                     (update ::queue/active-q conj qi-id)))
       (update!qi system qi-id (fn [qi] (merge qi ret)))
       ret)))
+
+(defn- -qfinish!*
+  [system queue-item-id completion-data status]
+  (let [{::queue-item/keys [queue] :as queue-ent} (resolve!i system queue-item-id)]
+    (update!q system queue (fn [q]
+                             (-> q
+                               (update ::queue/waiting-q #(vec (remove (partial = queue-item-id) %)))
+                               (update ::queue/active-q #(remove (partial = queue-item-id) %))
+                               (update ::queue/dead-q #(cons queue-item-id %)))))
+    (update!qi system queue-item-id
+      (fn [qi]
+        (assoc qi
+          ::queue-item/completion-time (Date.)
+          ::queue-item/completion-data completion-data
+          ::queue-item/status status)))))
+
+(defn -qerror-move!*
+  "Move an item out of the active-q. If (::retryable? completion-data) and it is within the retry limit, the item
+   is sent back to the waiting-q. Otherwise, it is marked dead."
+  [system queue-item-id completion-data]
+  (let [item        (resolve!i system queue-item-id)
+        retry-limit (retry-limit system item)
+        queue-name  (::queue-item/queue item)]
+    (update!q system queue-name ::queue/active-q #(remove (partial = queue-item-id) %))
+    (if (and (::retryable? completion-data)
+          (> retry-limit (or (::queue-item/retry-count item) 0)))
+      (qsubmit! system (assoc item
+                         ::queue-item/retry-count ((fnil inc 0) (::queue-item/retry-count item))
+                         ::queue-item/status ::queue-item/error-retrying
+                         ::queue-item/priority Long/MAX_VALUE))
+      (-qfinish!* system queue-item-id completion-data ::queue-item/failed))))
+
+(>defn qcomplete!
+  ([system queue-item-id]
+   [::system ::queue-item/id => number?]
+   (qcomplete! system queue-item-id {}))
+  ([system queue-item-id completion-data]
+   [::system ::queue-item/id ::queue-item/completion-data => number?]
+   (-qfinish!* system queue-item-id completion-data ::queue-item/succeeded)))
+
+(>defn qerror!
+  "Mark a task as errored-out. Optionally can be marked as retryable? true to re-submit to the top of the queue."
+  [system queue-item-id {::keys [retryable?] :as error-info}]
+  [::system ::queue-item/id ::queue-item/completion-data => number?]
+  (-qerror-move!* system queue-item-id error-info))
 
 (defn -activate-timeout!
   "Activate the timeout on an item in the active-q. Optionally runs `notify-timed-out!`. If the item exceeds `retry-limit` (default 0),
    then it is kicked to the dead-q. If not, it is sent back to the active-q with Long/MAX_VALUE priority."
   [system queue-item-id]
-  (let [item        (resolve!i system queue-item-id)
-        retry-limit (retry-limit system item)
-        queue-name  (::queue-item/queue item)]
-    (update!q system queue-name ::queue/active-q #(remove (partial = queue-item-id) %))
-    (when-let [notify-timed-out! (or (get-in @system [::name->queue queue-name ::queue/notify-timed-out!])
+  (let [i (resolve!i system queue-item-id)]
+    (when-let [notify-timed-out! (or (get-in @system [::name->queue (::queue/name i) ::queue/notify-timed-out!])
                                    (::default-notify-timed-out! @system))]
-      (notify-timed-out! item))
-    (if (> retry-limit (or (::queue-item/retry-count item) 0))
-      (qsubmit! system (assoc item
-                         ::queue-item/retry-count ((fnil inc 0) (::queue-item/retry-count item))
-                         ::queue-item/status ::queue-item/error-retrying
-                         ::queue-item/priority Long/MAX_VALUE))
-      (do
-        (update!qi system queue-item-id (fn [i] (assoc i
-                                                  ::queue-item/completion-time (Date.)
-                                                  ::queue-item/status ::queue-item/failed)))
-        (update!q system queue-name ::queue/dead-q #(cons queue-item-id %))))))
+      (notify-timed-out! i))
+    (-qerror-move!* system queue-item-id {::retryable? true})))
 
 (defn- prune-timeouts!
   [system]
@@ -252,7 +266,7 @@
     (start-timeout-watchdog! system)
     system))
 
-(defn close-system! 
+(defn close-system!
   [system]
   (some-> @system ::chime-ent (.close)))
 
@@ -268,9 +282,9 @@
   (-qsort! s :third/queue)
 
   (qadd! s {::queue/name :third/queue})
-  
+
   (do
-    
+
     (qsubmit! s {::queue-item/id    #uuid"11111111-b2fc-4e21-aa6d-67dc48e9fbfd"
                  ::queue-item/queue :third/queue
                  ::queue-item/data  {:data "Med Prio, Add first"}})
@@ -288,9 +302,10 @@
   (qpop! s :third/queue)
 
   (qcomplete! s #uuid"22222222-b2fc-4e21-aa6d-67dc48e9fbfd" {:best :success :ever! :yay})
-  (qerror! s #uuid"11111111-b2fc-4e21-aa6d-67dc48e9fbfd" {:error (StackOverflowError.)})
+  (qerror! s #uuid"11111111-b2fc-4e21-aa6d-67dc48e9fbfd" {:error :some-random-error
+                                                          ::retryable? true})
   (prune-timeouts! s)
-  
+
   (resolve!i s #uuid"11111111-b2fc-4e21-aa6d-67dc48e9fbfd")
 
 

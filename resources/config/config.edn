@@ -3,7 +3,7 @@
            :dev.freeformsoftware.simple-queue.core/default-timeout-ms 100000 ;; 100s
            :dev.freeformsoftware.simple-queue.core/watchdog-ms        1000
            }
-
+          
           :personal-rss-feed.feed.s3/s3
           {:hostname          "garage-ct.lan"
            :port              3900
