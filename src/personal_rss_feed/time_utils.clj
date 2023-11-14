@@ -27,7 +27,7 @@
                    time (::queue-item/activation-time timebox-end)
                    time (.toInstant time)
                    dur (Duration/between time (Instant/now))]
-      (boolean (> (/ (.toMillis dur) 1000) period-s)))))
+      (boolean (< (/ (.toMillis dur) 1000) period-s)))))
 
 (defn queue-lockout-backoff-retry
   [{:keys [base-s-backoff]}]

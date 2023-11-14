@@ -1,4 +1,7 @@
-{:system {:personal-rss-feed.queue/queue
+{:system {:personal-rss-feed.feed.db/conn
+          {:uri "/tmp/datalevin/personal-rss-server"}
+
+          :personal-rss-feed.queue/queue
           {:dev.freeformsoftware.simple-queue.core/persistence-dir    "/tmp/simple-queue/personal-rss-server"
            :dev.freeformsoftware.simple-queue.core/default-timeout-ms 100000 ;; 100s
            :dev.freeformsoftware.simple-queue.core/watchdog-ms        1000
@@ -11,13 +14,9 @@
            :access-key-id     "GKf824d02222f93cb03b3144a1"
            :secret-access-key #n/ref :s3/secret-access-key}
 
-          :personal-rss-feed.feed.db/conn
-          {:uri "/tmp/datalevin/personal-rss-server"}
-
           :personal-rss-feed.ingest.lotus-eaters/lotus-eaters-ingest
-          {:start-feed-refresh?       false
+          {:start-auto-poll?          false
            :s3/s3                     #ig/ref :personal-rss-feed.feed.s3/s3
-           :s3/public-s3-prefix       #n/ref :s3/public-s3-prefix
            :apply-playwright-cli-fix? true
            :db/conn                   #ig/ref :personal-rss-feed.feed.db/conn
            :queue                     #ig/ref :personal-rss-feed.queue/queue

@@ -4,7 +4,8 @@
    [nrepl.server :refer [start-server stop-server default-handler]]
    [clojure.tools.namespace.repl :as tools.namespace]
    [personal-rss-feed.config :as config]
-   [com.gfredericks.debug-repl]))
+   [com.gfredericks.debug-repl]
+   [taoensso.timbre :as log]))
 
 (tools.namespace/set-refresh-dirs "src")
 (tools.namespace/disable-reload!)
@@ -39,5 +40,5 @@
                     :port 8001
                     :handler (default-handler #'com.gfredericks.debug-repl/wrap-debug-repl)))
   (println "NREPL Server located at 8001")
-  (Thread/sleep Long/MAX_VALUE)
-  (start))
+  (start)
+  (Thread/sleep Long/MAX_VALUE))

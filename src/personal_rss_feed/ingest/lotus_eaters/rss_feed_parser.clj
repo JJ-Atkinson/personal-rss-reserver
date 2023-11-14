@@ -8,8 +8,9 @@
             [personal-rss-feed.ingest.lotus-eaters.shared :as le.shared]
             [personal-rss-feed.feed.db :as db]
             [dev.freeformsoftware.simple-queue.queue-item :as queue-item]
-            [personal-rss-feed.ingest.lotus-eaters.fetch-metadata :as le.fetch-metadata])
-  (:import (java.time Instant LocalDateTime Period ZoneId LocalTime ZonedDateTime)
+            [personal-rss-feed.ingest.lotus-eaters.fetch-metadata :as le.fetch-metadata]
+            [taoensso.timbre :as log])
+  (:import (java.time Duration Instant LocalDateTime Period ZoneId LocalTime ZonedDateTime)
            (java.time.format DateTimeFormatter)
            (java.util Date)))
 
@@ -86,18 +87,26 @@
 
 (defn parse-new-feed-items
   [conn queue feed-uri]
-  (let [body (:body (bb.http/get feed-uri))
-        {:keys [episodes podcast]} (rss-str->episodes body)
-        db   (d/db conn)]
-    (db/save-podcast! conn podcast)
-    (doseq [ep (remove #(db/known-episode? db (:episode/url %)) episodes)]
-      (db/save-episode! conn ep)
-      (simple-queue/qsubmit! queue #::queue-item{:queue ::le.fetch-metadata/fetch-metadata
-                                                 :id    (random-uuid)
-                                                 :data  ep}))))
+  (log/info "Parsing feed" feed-uri)
+  (try
+    (let [body (:body (bb.http/get feed-uri))
+          {:keys [episodes podcast]} (rss-str->episodes body)
+          db   (d/db conn)]
+      (log/info "Found episodes" episodes)
+      (db/save-podcast! conn podcast)
+      (doseq [ep (remove #(db/known-episode? db (:episode/url %)) episodes)]
+        (db/save-episode! conn (assoc ep
+                                 :episode/podcast feed-uri))
+        (simple-queue/qsubmit! queue #::queue-item{:queue    ::le.fetch-metadata/fetch-metadata-queue
+                                                   :id       (random-uuid)
+                                                   :data     ep
+                                                   :priority (.getTime (Date.))})))
+    (catch Exception e
+      (log/error "Failed to parse new feed items!" e))))
 
 (defn parse-all-feeds
   [conn queue]
+  (log/info "Parsing rss feeds for new episodes")
   (doseq [{feed-uri :podcast/feed-uri} (db/known-podcasts conn)]
     (parse-new-feed-items conn queue feed-uri)))
 
@@ -108,20 +117,22 @@
                                                      (.adjustInto (ZonedDateTime/now (ZoneId/of "GMT")))
                                                      (.toInstant))
                                  (Period/ofDays 1)))]
-    (cons (Instant/now)
-      (interleave
-        (daily-at 15 0)
-        (daily-at 16 0)
-        (daily-at 17 30)))))
+    (chime/without-past-times
+      (cons (.plusSeconds (Instant/now) 3)
+        (interleave
+          (daily-at 15 0)
+          (daily-at 16 0)
+          (daily-at 17 30))))))
 
 (comment (take 10 (make-timeline)))
 
 (defn init!
   [!shared]
+  (log/info "Starting rss feed parser task to run at" (take 5 (make-timeline)) "...")
   (swap! !shared update ::le.shared/close-on-halt conj
     (chime/chime-at
       (make-timeline)
-      #(parse-all-feeds (:db/conn @!shared) (:queue @!shared)))))
+      (fn [t] (parse-all-feeds (:db/conn @!shared) (:queue @!shared))))))
 
 (comment
   (def resp

@@ -2,6 +2,7 @@
   (:require
    [clojure.string :as str]
    [dev.freeformsoftware.simple-queue.core :as simple-queue]
+   [personal-rss-feed.ingest.lotus-eaters.download-file :as le.download-file]
    [dev.freeformsoftware.simple-queue.queue :as queue]
    [dev.freeformsoftware.simple-queue.queue-item :as queue-item]
    [personal-rss-feed.playwright.wally-utils :as w-utils]
@@ -48,7 +49,7 @@
   [date-s]
   (let [conforms? (re-matches #"\d+\w+ \w{3}, \d{4}.+" date-s) ;; does it specify year?
         date-s    (if-not conforms? (str date-s " " (.get (Calendar/getInstance) (Calendar/YEAR))) date-s)
-        date-s    (-> date-s 
+        date-s    (-> date-s
                     (str/replace "pm" "PM")
                     (str/replace "am" "AM"))
         formatter (DateTimeFormatter/ofPattern "d['th']['st']['nd'] MMM[', 'yyyy] 'at' hh:mm a[' 'yyyy]" Locale/ENGLISH)
@@ -80,7 +81,7 @@
 
     :episode/publish-date
     (e->nil (parse-date (.textContent (first (ws/query [".post__metaDetails" s/p s/b])))))
-    
+
     :episode/title                                          ;; trims "Premium: Brokenomics | Argentina" 
     (e->nil (let [text (.textContent (first (ws/query [".post__intro" s/h1])))]
               (if (str/starts-with? text "PREMIUM")
@@ -107,12 +108,21 @@
   [!shared {::queue-item/keys              [id]
             {:keys [:episode/url] :as ctx} ::queue-item/data
             :as                            queue-item}]
-  (try
-    (db/save-episode! (:db/conn @!shared) (get-detailed-information !shared ctx))
-    (simple-queue/qcomplete! (::le.shared/queue @!shared) id)
-    (catch Exception e
-      (simple-queue/qerror! (::le.shared/queue @!shared) id {:exception                (pr-str e)
-                                                             ::simple-queue/retryable? true}))))
+  (let [queue (::le.shared/queue @!shared)]
+    (try
+      (let [episode (get-detailed-information !shared ctx)]
+        (db/save-episode! (:db/conn @!shared) episode)
+        (simple-queue/qsubmit! queue
+          #::queue-item{:queue    ::le.download-file/download-queue
+                        :id       (random-uuid)
+                        :data     (assoc (select-keys episode [:episode/url])
+                                    ::le.download-file/download-type ::le.download-file/audio)
+                        :priority (.getTime (Date.))})
+        (simple-queue/qcomplete! queue id)
+        episode)
+      (catch Exception e
+        (simple-queue/qerror! queue id {:exception                (pr-str e)
+                                        ::simple-queue/retryable? true})))))
 
 (defn init!
   [!shared]
@@ -123,12 +133,12 @@
     (swap! !shared update ::le.shared/close-on-halt conj browser-context))
 
   (le.shared/start-queue! !shared
-    {:queue-conf {::queue/name                ::fetch-metadata
+    {:queue-conf {::queue/name                ::fetch-metadata-queue
                   ::queue/default-retry-limit 3
                   ::queue/rate-limit-fn       (time-utils/queue-rate-limit-x-per-period
                                                 {:period-s    (* 60 60 24)
                                                  :limit-count (:downloads-per-day @!shared)})
-                  ::queue/timeout?-fn         (simple-queue/default-timeout?-fn (* 1000 140))
+                  ::queue/timeout?-fn         (simple-queue/default-timeout?-fn (* 1000 160))
                   ::queue/lockout?-fn         (time-utils/queue-lockout-backoff-retry
                                                 {:base-s-backoff (* 60 60 3)})} ;; runs at 0h, 3h, (3+6h) 9h, (6+9h) 15h
      :poll-ms    1000
@@ -137,5 +147,15 @@
 (comment
   (swap! @le.shared/!!shared assoc ::debug {})
 
-  (get-detailed-information @le.shared/!!shared {:episode/url "..."}))
+  (get-detailed-information @le.shared/!!shared {:episode/url "..."})
+
+  (dev.freeformsoftware.simple-queue.core/qpeek!
+    (::le.shared/queue @@le.shared/!!shared)
+    ::fetch-metadata-queue)
+
+  (augment-episode-information
+    @le.shared/!!shared
+    (dev.freeformsoftware.simple-queue.core/qpop!
+      (::le.shared/queue @@le.shared/!!shared)
+      ::fetch-metadata-queue)))
 
