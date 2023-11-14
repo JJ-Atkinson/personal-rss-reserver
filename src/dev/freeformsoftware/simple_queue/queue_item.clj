@@ -12,10 +12,10 @@
 (s/def ::completion-data map?)
 (s/def ::queue keyword?)                                    ;; same as ::queue/name
 (s/def ::data map?)
-(s/def ::retry-limit number?)
+(s/def ::retry-limit number?)                              
 (s/def ::priority number?)
 (s/def ::status #{::waiting ::activated ::error-retrying ::failed ::succeeded})
-(s/def ::retry-count int?)                                  ;; the number of times an item has been retried
+(s/def ::retry-count int?)                                  ;; 0 indexed. 0/nx == submitted first time, 1 == failed once, etc.
 
 (s/def ::item
   (s/keys :req [::id ::submission-time ::queue ::status ::retry-count]

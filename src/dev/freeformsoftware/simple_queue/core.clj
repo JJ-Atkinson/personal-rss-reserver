@@ -5,10 +5,11 @@
    - Priority Queue
    - Configurable rate limiter
    - Retry with a limited failure count and reporting options
+   - No back pressure, items should be able to accumulate forever
    - Admin api for viewing and editing queue contents
    
    This is fairly specific to my own needs (small data, low volume queueing, single machine, rate limits,
-   extreme internal visibility), and I will likely not add additional features.
+   extreme internal visibility, large task dumps), and I will likely not add additional features.
    
    
    Data is stored in `persistence-dir` as follows:
@@ -56,7 +57,7 @@
                                         (assoc acc (::queue/name q) q))
                                 {}
                                 queues)
-                :read-fn      (partial queue/read! persistence-dir)
+                :read-fn      (if mem-only? (constantly nil) (partial queue/read! persistence-dir))
                 :write-fn     (if mem-only? (constantly nil) (fn [_ v] (queue/write! persistence-dir v)))}))
 
 (defn- retry-limit
@@ -99,9 +100,8 @@
     (update!q system queue-name ::queue/waiting-q sort)
     system))
 
-
-(>defn qadd!
-  "Add a new queue!"
+(>defn qcreate!
+  "Create a new queue!"
   [system queue-ent]
   [::system
    (s/keys :req [::queue/name]
@@ -142,30 +142,41 @@
    queue operations are made."
   [system queue-name]
   [::system ::queue/name => (s/coll-of ::queue-item/item)]
-  (->> (get-in @system [::name->queue queue-name])
+  (->> (get-in @system [::name->queue queue-name ::queue/waiting-q])
     (map #(resolve!i system %))))
 
 (>defn qpeek!
-  "Read the top entry off the queue. Nil if none is found. Respects ::queue/rate-limit-fn.
+  "Read the top non locked entry off the queue. Nil if none is found. Respects rate-limit-fn and lockout?-fn
   
+  ::queue/rate-limit-fn
   
-   sorted-waiting-reversed-lazy          is reversed so that about to be pulled queue items are first
-   activated-items-lazy                  any currently activated items
-   sorted-recent-queue-items-lazy        is sorted newest->oldest
+  (fn [
+   sorted-waiting-reversed-lazy          ; is reversed so that about to be pulled queue items are first
+   activated-items-lazy                  ; any currently activated items
+   sorted-recent-queue-items-lazy        ; is sorted newest->oldest
+   ] boolean? ) ;; if true, then rate limit is active and no-one can peek/pop
   
-   (fn rate-limit-fn [sorted-waiting-lazy-reversed activated-items-lazy sorted-recent-queue-items-lazy] 
-     \"if true, then rate limit is active and no-one can peek/pop\")"
+   ::queue/lockout?-fn
+   
+   (fn [queue-item] boolean?) 
+   
+   if present, when returns true the queue item is \"locked\", meaning the item is basically invisible in the waiting-q. 
+   it will be passed over in favor of other lower priority entries. Useful if a specific lockout timer is required for
+   retries on a queue. "
   [system queue-name]
   [::system ::queue/name => (? ::queue-item/item)]
-  (let [queue-ent (get-in @system [::name->queue queue-name])]
-    (when-let [possible-id (some-> queue-ent ::queue/waiting-q peek)]
+  (let [queue-ent (get-in @system [::name->queue queue-name])
+        lockout?  (::queue/lockout?-fn queue-ent)]
+    (when-let [possible-id (if lockout?
+                             (some->> queue-ent ::queue/waiting-q reverse (map (partial resolve!i system)) (remove lockout?) first ::queue-item/id)
+                             (some-> queue-ent ::queue/waiting-q peek))]
       (if-let [rate-limit-f (::queue/rate-limit-fn queue-ent)]
         (let [sorted-waiting-reversed-lazy   (->> queue-ent ::queue/waiting-q reverse (map #(resolve!i system %)))
               activated-items-lazy           (->> queue-ent ::queue/active-q (map #(resolve!i system %)))
               sorted-recent-queue-items-lazy (->> queue-ent ::queue/dead-q (map #(resolve!i system %)))]
           (when-not (rate-limit-f sorted-waiting-reversed-lazy activated-items-lazy sorted-recent-queue-items-lazy)
-            (get-in @system [::id->queue-item possible-id])))
-        (get-in @system [::id->queue-item possible-id])))))
+            (resolve!i system possible-id)))
+        (resolve!i system possible-id)))))
 
 (>defn qpop!
   "Same as peek, but sets the entity as ::submitted"
@@ -176,8 +187,8 @@
                   ::queue-item/activation-time (Date.)
                   ::queue-item/status ::queue-item/activated)
           qi-id (::queue-item/id peekv)]
-      (update!q system queue-name #(-> % 
-                                     (update ::queue/waiting-q pop)
+      (update!q system queue-name #(-> %
+                                     (update ::queue/waiting-q (fn [wq] (vec (remove (partial = qi-id) wq))))
                                      (update ::queue/active-q conj qi-id)))
       (update!qi system qi-id (fn [qi] (merge qi ret)))
       ret)))
@@ -281,7 +292,8 @@
   @s
   (-qsort! s :third/queue)
 
-  (qadd! s {::queue/name :third/queue})
+  (qcreate! s {::queue/name :third/queue
+               ::queue/lockout?-fn #(get-in % [::queue-item/data :locked-eternally?])})
 
   (do
 
@@ -291,7 +303,8 @@
     (Thread/sleep 1)
     (qsubmit! s {::queue-item/id    #uuid"22222222-b2fc-4e21-aa6d-67dc48e9fbfd"
                  ::queue-item/queue :third/queue
-                 ::queue-item/data  {:data "Low Prio, Add second"}})
+                 ::queue-item/data  {:data "Low Prio, Add second"
+                                     :locked-eternally? true}})
     (Thread/sleep 2)
     (qsubmit! s {::queue-item/id       #uuid"00000000-b2fc-4e21-aa6d-67dc48e9fbfd"
                  ::queue-item/priority 1
@@ -300,9 +313,10 @@
 
   (qpeek! s :third/queue)
   (qpop! s :third/queue)
+  (qview s :third/queue)
 
   (qcomplete! s #uuid"22222222-b2fc-4e21-aa6d-67dc48e9fbfd" {:best :success :ever! :yay})
-  (qerror! s #uuid"11111111-b2fc-4e21-aa6d-67dc48e9fbfd" {:error :some-random-error
+  (qerror! s #uuid"11111111-b2fc-4e21-aa6d-67dc48e9fbfd" {:error       :some-random-error
                                                           ::retryable? true})
   (prune-timeouts! s)
 

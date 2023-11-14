@@ -3,7 +3,7 @@
            :dev.freeformsoftware.simple-queue.core/default-timeout-ms 100000 ;; 100s
            :dev.freeformsoftware.simple-queue.core/watchdog-ms        1000
            }
-          
+
           :personal-rss-feed.feed.s3/s3
           {:hostname          "garage-ct.lan"
            :port              3900
@@ -15,15 +15,20 @@
           {:uri "/tmp/datalevin/personal-rss-server"}
 
           :personal-rss-feed.ingest.lotus-eaters/lotus-eaters-ingest
-          {:start-cron? false
+          {:start-feed-refresh?       false
+           :s3/s3                     #ig/ref :personal-rss-feed.feed.s3/s3
+           :s3/public-s3-prefix       #n/ref :s3/public-s3-prefix
            :apply-playwright-cli-fix? true
-           :db/conn     #ig/ref :personal-rss-feed.feed.db/conn
-           :queue #ig/ref :personal-rss-feed.queue/queue}
+           :db/conn                   #ig/ref :personal-rss-feed.feed.db/conn
+           :queue                     #ig/ref :personal-rss-feed.queue/queue
+           :lotus-eaters/username     #n/ref :lotus-eaters/username
+           :lotus-eaters/password     #n/ref :lotus-eaters/password
+           :downloads-per-day         4}
 
           :personal-rss-feed.feed.feed-host/server
-          {:jetty            {:port 3000}
-           :db/conn          #ig/ref :personal-rss-feed.feed.db/conn
-           :public-s3-prefix #n/ref :s3/public-s3-prefix    ;; Only semi secret, but preferable to not post on the internet.
+          {:jetty               {:port 3000}
+           :db/conn             #ig/ref :personal-rss-feed.feed.db/conn
+           :s3/public-s3-prefix #n/ref :s3/public-s3-prefix ;; Only semi secret, but preferable to not post on the internet.
            }}
  ; :lotus-eaters/username "username"
  ; :lotus-eaters/password "password"
