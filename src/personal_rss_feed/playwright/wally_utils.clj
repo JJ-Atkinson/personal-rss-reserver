@@ -3,7 +3,7 @@
    [personal-rss-feed.playwright.wally-state :as wally-state]
    [wally.main :as w])
   (:import
-   (com.microsoft.playwright BrowserType$LaunchOptions)
+   (com.microsoft.playwright Browser BrowserType$LaunchOptions)
    (com.microsoft.playwright.options Cookie)
    (java.nio.file Paths)))
 
@@ -57,9 +57,8 @@
    Mostly useful if you wanted to test multiple users signed in at once."
   [{:keys [browser
            default-timeout]
-    :or {browser default-browser
-         default-timeout 5000}}]
-  (let [context (.newContext browser)]
+    :or {default-timeout 5000}}]
+  (let [context (.newContext ^Browser (or browser (default-browser)))]
     (.setDefaultTimeout context default-timeout)
     context))
 
@@ -87,7 +86,7 @@
    :browser-context The browser context object 
                     https://www.javadoc.io/doc/com.microsoft.playwright/playwright/latest/com/microsoft/playwright/BrowserContext.html"
   [{:keys [browser-context debug]}]
-  (let [ctx (or browser-context
+  (let [ctx (or (and (not debug) browser-context)
               (fresh-browser-context {:browser (if debug
                                                  (debug-browser debug)
                                                  (default-browser))}))]
@@ -98,8 +97,11 @@
   "Accepts a map of :page and :browser-context, see `fresh-page`"
   [page-desc & body]
   `(let [page-desc# ~page-desc]
-     (with-open [page# (:page page-desc#)
-                 browser-context# (:browser-context page-desc#)]
-       (w/with-page page# ~@body))))
+     (if (:autoclose-browser-context? page-desc# true)
+       (with-open [page#            (:page page-desc#)
+                   browser-context# (:browser-context page-desc#)]
+         (w/with-page page# ~@body))
+       (with-open [page#            (:page page-desc#)]
+         (w/with-page page# ~@body)))))
 
 (def navigate w/navigate)

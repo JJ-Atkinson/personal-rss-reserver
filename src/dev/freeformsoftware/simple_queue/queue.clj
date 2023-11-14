@@ -25,6 +25,7 @@
 (s/def ::default-retry-limit number?)
 (s/def ::rate-limit-fn ifn?)                                ;; (fn [lazy-recently-touched-queued-items] bool?)
 (s/def ::timeout?-fn ifn?)
+(s/def ::lockout?-fn ifn?)                                  ;; (fn [queue-item] locked?)
 (s/def ::notify-timed-out! ifn?)
 
 (s/def ::queue
