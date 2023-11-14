@@ -29,7 +29,8 @@
    [dev.freeformsoftware.simple-queue.queue :as queue]
    [dev.freeformsoftware.simple-queue.queue-item :as queue-item]
    [com.fulcrologic.guardrails.core :refer [>defn => ?]]
-   [chime.core :as chime])
+   [chime.core :as chime]
+   [taoensso.timbre :as log])
   (:import (clojure.lang Atom)
            (java.time Instant Duration)
            (java.util Date)))
@@ -127,6 +128,7 @@
      :opt [::queue-item/priority])
    => number?]
   (assert (contains? (set (keys (::name->queue @system))) queue))
+  (log/info "Submitting queue item" queue-entry)
   (let [entry (merge
                 {::queue-item/status      ::queue-item/waiting
                  ::queue-item/retry-count 0
@@ -236,6 +238,8 @@
   "Mark a task as errored-out. Optionally can be marked as retryable? true to re-submit to the top of the queue."
   [system queue-item-id {::keys [retryable?] :as error-info}]
   [::system ::queue-item/id ::queue-item/completion-data => number?]
+  (log/error "Error processing queue item!" {:queue-item (resolve!i system queue-item-id)
+                                             :error-info error-info})
   (-qerror-move!* system queue-item-id error-info))
 
 (defn -activate-timeout!
@@ -321,9 +325,6 @@
   (prune-timeouts! s)
 
   (resolve!i s #uuid"11111111-b2fc-4e21-aa6d-67dc48e9fbfd")
-
-
-
 
   (swap! s update ::id->queue-item assoc #uuid"44444444-b2fc-4e21-aa6d-67dc48e9fbfd"
     {::queue-item/id              #uuid"44444444-b2fc-4e21-aa6d-67dc48e9fbfd"

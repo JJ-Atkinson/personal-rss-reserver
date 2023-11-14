@@ -14,7 +14,7 @@
              :episode/url                  {:db/valueType :db.type/string
                                             :db/unique    :db.unique/identity}
              :episode/id                   {:db/valueType :db.type/string} ;; One of :singleton/current-id, used in the electric app
-             :episode/uuid                 {:db/valueType :db.type/string} ;; A uuid for naming in the s3 bucket, enabling a passwordless CDN
+             :episode/uuid                 {:db/valueType :db.type/uuid} ;; A uuid for naming in the s3 bucket, enabling a passwordless CDN
              :episode/title                {:db/valueType :db.type/string}
              :episode/ep-number            {:db/valueType :db.type/string} ;; OPTIONAL!!
              :episode/thumbnail-origin-uri {:db/valueType :db.type/string}
@@ -23,7 +23,7 @@
              :episode/audio-original-uri   {:db/valueType :db.type/string}
              :episode/video-original-uri   {:db/valueType :db.type/string}
              :episode/podcast              {:db/valueType :db.type/string}
-             :episode/audio-content-length {:db/valueType :db.type/string} ;; only present when the podcast has been downloaded properly.
+             :episode/audio-content-length {:db/valueType :db.type/long} ;; only present when the podcast has been downloaded properly.
 
              :podcast/feed-uri             {:db/valueType :db.type/string
                                             :db/unique    :db.unique/identity} ;; Must be seeded by a user
@@ -109,6 +109,7 @@
   (->>
     (d/q '[:find ?ep-url
            :in $ ?podcast-uri
+           :where
            [?e :episode/podcast ?podcast-uri]
            [?e :episode/url ?ep-url]]
       (d/db conn) feed-uri)
@@ -131,6 +132,14 @@
   (d/close conn))
 
 (comment 
-  (save-podcast! @!conn {:podcast/feed-uri "test"})
+  (save-podcast! @!conn {:podcast/feed-uri "https://www.lotuseaters.com/feed/category/epochs"})
+  (known-podcasts @!conn)
   (known-podcast? (d/db @!conn) "test")
-  )
+  (podcast-feed @!conn "https://www.lotuseaters.com/feed/category/epochs")
+  
+  (->>
+    (d/q '[:find ?url
+           :in $
+           :where [?e :episode/url ?url]]
+      (d/db @!conn))
+    (map first)))

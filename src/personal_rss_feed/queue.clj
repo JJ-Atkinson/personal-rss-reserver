@@ -27,3 +27,7 @@
 (defmethod ig/halt-key! ::queue
   [_ env]
   (simple-queue/close-system! env))
+
+
+(comment 
+  @!system)

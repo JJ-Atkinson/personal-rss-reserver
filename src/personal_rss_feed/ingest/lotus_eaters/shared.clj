@@ -7,20 +7,21 @@
 
 (tools.namespace/disable-reload!)
 
-(def !!shared (atom nil))                                    ;; useful for debugging, atom containing !shared
+(def !!shared (atom nil))                                   ;; useful for debugging, atom containing !shared
 
 (defn start-queue!
   [!shared {:keys [queue-conf
                    poll-ms
                    poll-f]}]
   (simple-queue/qcreate! (:queue @!shared) queue-conf)
-  (swap! !shared update ::close-on-halt
-    conj
-    (time-utils/repeat-every!
-      poll-ms
-      (fn [_] (some->>
-                (simple-queue/qpop! (:queue @!shared) (::queue/name queue-conf))
-                (poll-f !shared))))))
+  (when (:start-auto-poll? @!shared true)
+    (swap! !shared update ::close-on-halt
+      conj
+      (time-utils/repeat-every!
+        poll-ms
+        (fn [_] (some->>
+                  (simple-queue/qpop! (:queue @!shared) (::queue/name queue-conf))
+                  (poll-f !shared)))))))
 
 (defn halt!
   [!shared]
