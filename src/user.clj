@@ -9,6 +9,7 @@
 
 (tools.namespace/set-refresh-dirs "src")
 (tools.namespace/disable-reload!)
+(log/set-min-level! :debug)
 
 (defonce system (atom nil))
 

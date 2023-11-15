@@ -100,7 +100,9 @@
         (simple-queue/qsubmit! queue #::queue-item{:queue    ::le.fetch-metadata/fetch-metadata-queue
                                                    :id       (random-uuid)
                                                    :data     ep
-                                                   :priority (.getTime (Date.))})))
+                                                   :priority (or (some-> ep :episode/publish-date (.getTime)) ;; Priority newest->oldest
+                                                               (.getTime (Date.))) 
+                                                   })))
     (catch Exception e
       (log/error "Failed to parse new feed items!" e))))
 
@@ -108,7 +110,9 @@
   [conn queue]
   (log/info "Parsing rss feeds for new episodes")
   (doseq [{feed-uri :podcast/feed-uri} (db/known-podcasts conn)]
-    (parse-new-feed-items conn queue feed-uri)))
+    (parse-new-feed-items conn queue feed-uri)
+    (Thread/sleep 1234)                                     ;; Don't swamp the server.
+    ))
 
 (defn make-timeline
   "Now, and 3, 4, and 5:30pm GMT"
@@ -117,8 +121,8 @@
                                                      (.adjustInto (ZonedDateTime/now (ZoneId/of "GMT")))
                                                      (.toInstant))
                                  (Period/ofDays 1)))]
-    (chime/without-past-times
-      (cons (.plusSeconds (Instant/now) 3)
+    (cons (.plusSeconds (Instant/now) 3)
+      (chime/without-past-times
         (interleave
           (daily-at 15 0)
           (daily-at 16 0)
@@ -127,12 +131,13 @@
 (comment (take 10 (make-timeline)))
 
 (defn init!
-  [!shared]
+  [shared]
   (log/info "Starting rss feed parser task to run at" (take 5 (make-timeline)) "...")
-  (swap! !shared update ::le.shared/close-on-halt conj
-    (chime/chime-at
-      (make-timeline)
-      (fn [t] (parse-all-feeds (:db/conn @!shared) (:queue @!shared))))))
+  (-> shared
+    (update ::le.shared/close-on-halt conj
+      (chime/chime-at
+        (make-timeline)
+        (fn [t] (parse-all-feeds (:db/conn shared) (::le.shared/queue shared)))))))
 
 (comment
   (def resp

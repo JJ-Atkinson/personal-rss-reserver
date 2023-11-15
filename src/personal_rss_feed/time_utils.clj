@@ -23,11 +23,13 @@
    `limit-count`."
   [{:keys [period-s limit-count]}]
   (fn queue-rate-limit-x-per-period* [_waiting active recent]
-    (enc/when-let [timebox-end (nth (concat active recent) (dec limit-count) nil)
-                   time (::queue-item/activation-time timebox-end)
-                   time (.toInstant time)
-                   dur (Duration/between time (Instant/now))]
-      (boolean (< (/ (.toMillis dur) 1000) period-s)))))
+    (if (zero? limit-count)
+      true                                                  ;; true == always locked.
+      (enc/when-let [timebox-end (nth (concat active recent) (dec limit-count) nil)
+                     time (::queue-item/activation-time timebox-end)
+                     time (.toInstant time)
+                     dur (Duration/between time (Instant/now))]
+        (boolean (< (/ (.toMillis dur) 1000) period-s))))))
 
 (defn queue-lockout-backoff-retry
   [{:keys [base-s-backoff]}]

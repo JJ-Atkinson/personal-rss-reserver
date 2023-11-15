@@ -42,6 +42,13 @@
 (s/def ::default-retry-limit number?)
 (s/def ::system #(instance? Atom %))
 
+(defonce
+  ^{:doc     "For debugging, it can be useful to ratelimit to 0 and manually trigger dequeues. swap! conj onto the set
+   the name of the queue you'd like to manually trigger."
+    :dynamic true}
+  *manual-unlock-1*
+  (atom #{}))
+
 (defn- create-queue-item-map!
   [{::keys [persistence-dir mem-only?]}]
   (let [persistence-dir (str persistence-dir "/queued-items")]
@@ -168,12 +175,20 @@
   [system queue-name]
   [::system ::queue/name => (? ::queue-item/item)]
   (let [queue-ent (get-in @system [::name->queue queue-name])
-        lockout?  (::queue/lockout?-fn queue-ent)]
+        lockout?  (::queue/lockout?-fn queue-ent)
+        ]
     (when-let [possible-id (if lockout?
                              (some->> queue-ent ::queue/waiting-q reverse (map (partial resolve!i system)) (remove lockout?) first ::queue-item/id)
                              (some-> queue-ent ::queue/waiting-q peek))]
       (if-let [rate-limit-f (::queue/rate-limit-fn queue-ent)]
-        (let [sorted-waiting-reversed-lazy   (->> queue-ent ::queue/waiting-q reverse (map #(resolve!i system %)))
+        (let [rate-limit-f                   (fn [& args]
+                                               (if (contains? @*manual-unlock-1* queue-name)
+                                                 (do
+                                                   (log/warn "Allowing manual dequeue!!")
+                                                   (swap! *manual-unlock-1* disj queue-name)
+                                                   false)
+                                                 (apply rate-limit-f args)))
+              sorted-waiting-reversed-lazy   (->> queue-ent ::queue/waiting-q reverse (map #(resolve!i system %)))
               activated-items-lazy           (->> queue-ent ::queue/active-q (map #(resolve!i system %)))
               sorted-recent-queue-items-lazy (->> queue-ent ::queue/dead-q (map #(resolve!i system %)))]
           (when-not (rate-limit-f sorted-waiting-reversed-lazy activated-items-lazy sorted-recent-queue-items-lazy)
@@ -232,6 +247,7 @@
    (qcomplete! system queue-item-id {}))
   ([system queue-item-id completion-data]
    [::system ::queue-item/id ::queue-item/completion-data => number?]
+   (log/info "Successfully completed queue-item!" (resolve!i system queue-item-id))
    (-qfinish!* system queue-item-id completion-data ::queue-item/succeeded)))
 
 (>defn qerror!
@@ -262,6 +278,7 @@
                              queue-names)]
     (doseq [{::queue/keys [timeout?-fn] ::queue-item/keys [id] :as queue-item} questionable-items]
       (when (and timeout?-fn (timeout?-fn queue-item))
+        (log/info "Queue item timed out!" queue-item)
         (-activate-timeout! system id)))))
 
 (defn- start-timeout-watchdog!
@@ -296,7 +313,7 @@
   @s
   (-qsort! s :third/queue)
 
-  (qcreate! s {::queue/name :third/queue
+  (qcreate! s {::queue/name        :third/queue
                ::queue/lockout?-fn #(get-in % [::queue-item/data :locked-eternally?])})
 
   (do
@@ -307,7 +324,7 @@
     (Thread/sleep 1)
     (qsubmit! s {::queue-item/id    #uuid"22222222-b2fc-4e21-aa6d-67dc48e9fbfd"
                  ::queue-item/queue :third/queue
-                 ::queue-item/data  {:data "Low Prio, Add second"
+                 ::queue-item/data  {:data              "Low Prio, Add second"
                                      :locked-eternally? true}})
     (Thread/sleep 2)
     (qsubmit! s {::queue-item/id       #uuid"00000000-b2fc-4e21-aa6d-67dc48e9fbfd"

@@ -11,18 +11,21 @@
           {:hostname          "garage-ct.lan"
            :port              3900
            :region            "us-west-1"
-           :access-key-id     "GKf824d02222f93cb03b3144a1"
-           :secret-access-key #n/ref :s3/secret-access-key}
+           :access-key-id     "GK8082331a3891d8f189e0e45d"
+           :secret-access-key #n/ref :s3/secret-access-key
+           :bucket-name       "lotus-eaters-ci"}
 
           :personal-rss-feed.ingest.lotus-eaters/lotus-eaters-ingest
-          {:start-auto-poll?          false
+          {
+           :start-auto-poll?          true
+           :start-daily-feed-parse?   false                 ;; Override to query any existing podcasts at least once.
            :s3/s3                     #ig/ref :personal-rss-feed.feed.s3/s3
            :apply-playwright-cli-fix? true
            :db/conn                   #ig/ref :personal-rss-feed.feed.db/conn
            :queue                     #ig/ref :personal-rss-feed.queue/queue
            :lotus-eaters/username     #n/ref :lotus-eaters/username
            :lotus-eaters/password     #n/ref :lotus-eaters/password
-           :downloads-per-day         4}
+           :downloads-per-day         0}
 
           :personal-rss-feed.feed.feed-host/server
           {:jetty               {:port 3000}

@@ -8,6 +8,7 @@
    [personal-rss-feed.playwright.wally-utils :as w-utils]
    [personal-rss-feed.time-utils :as time-utils]
    [taoensso.encore :as enc]
+   [taoensso.timbre :as log]
    [wally.main :as w]
    [garden.selectors :as s]
    [personal-rss-feed.playwright.selectors :as ws]
@@ -22,17 +23,17 @@
 (defmacro e->nil [form] `(try ~form (catch Exception e# nil)))
 
 (defn login!
-  [!shared]
+  [{:lotus-eaters/keys [username password] :as shared}]
   (.click (ws/query-1 [".fa-sign-in-alt"]))
 
-  (w/fill (ws/query [".modal" ".input--email" s/input]) (get @!shared :lotus-eaters/username))
-  (w/fill (ws/query [".modal" ".input--password" s/input]) (get @!shared :lotus-eaters/password))
+  (w/fill (ws/query [".modal" ".input--email" s/input]) username)
+  (w/fill (ws/query [".modal" ".input--password" s/input]) password)
   (w/click (ws/query [".modal" (ws/text "Submit")])))
 
 (defn ensure-logged-in!
-  [!shared]
+  [shared]
   (when-not (ws/query-1-now [".fa-sign-out-alt"])
-    (login! !shared)))
+    (login! shared)))
 
 (defn safe-navigate!
   "For some reason playwright doesn't recognize the lotus eaters site as loaded ever. Awaits the appearance of the nav bar."
@@ -92,70 +93,79 @@
                 text)))))
 
 (defn get-detailed-information
-  [!shared {:keys [episode/url]}]
+  [{::keys [browser-context debug] :as shared} {:keys [episode/url]}]
   (w-utils/with-page (merge (w-utils/fresh-page
-                              {:browser-context (::browser-context @!shared)
-                               :debug           (::debug @!shared)})
+                              {:browser-context browser-context
+                               :debug           debug})
                        {:autoclose-browser-context? false})
     (safe-navigate! url)
-    (let [extra-meta (episode-page-get-content-url !shared)]
+    (let [extra-meta (episode-page-get-content-url shared)]
       (when (or (not (contains? extra-meta :episode/audio-origin-uri))
               (not (contains? extra-meta :episode/video-original-uri)))
         (throw (ex-info "Was not able to get any audio/video information from the page" {})))
       (assoc extra-meta :episode/url url))))
 
 (defn augment-episode-information
-  [!shared {::queue-item/keys              [id]
-            {:keys [:episode/url] :as ctx} ::queue-item/data
-            :as                            queue-item}]
-  (let [queue (::le.shared/queue @!shared)]
-    (try
-      (let [episode (get-detailed-information !shared ctx)]
-        (db/save-episode! (:db/conn @!shared) episode)
-        (simple-queue/qsubmit! queue
-          #::queue-item{:queue    ::le.download-file/download-queue
-                        :id       (random-uuid)
-                        :data     (assoc (select-keys episode [:episode/url])
-                                    ::le.download-file/download-type ::le.download-file/audio)
-                        :priority (.getTime (Date.))})
-        (simple-queue/qcomplete! queue id)
-        episode)
-      (catch Exception e
-        (simple-queue/qerror! queue id {:exception                (pr-str e)
-                                        ::simple-queue/retryable? true})))))
+  [{::le.shared/keys [queue]
+    :db/keys         [conn] :as shared}
+   {::queue-item/keys              [id]
+    {:keys [:episode/url] :as ctx} ::queue-item/data
+    :as                            queue-item}]
+  (log/info "augment-episode-information for " queue-item)
+  (try
+    (let [episode (get-detailed-information shared ctx)]
+      (db/save-episode! conn episode)
+      (simple-queue/qsubmit! queue
+        #::queue-item{:queue    ::le.download-file/download-queue
+                      :id       (random-uuid)
+                      :data     (assoc (select-keys episode [:episode/url])
+                                  ::le.download-file/download-type ::le.download-file/audio)
+                      :priority (.getTime (Date.))})
+      (simple-queue/qcomplete! queue id)
+      episode)
+    (catch Exception e
+      (simple-queue/qerror! queue id {:exception                (pr-str e)
+                                      ::simple-queue/retryable? true}))))
 
 (defn init!
-  [!shared]
+  [shared]
   (let [browser-context (w-utils/fresh-browser-context {})]
-    (swap! !shared assoc
-      ::browser-context browser-context
-      ::debug nil)
-    (swap! !shared update ::le.shared/close-on-halt conj browser-context))
-
-  (le.shared/start-queue! !shared
-    {:queue-conf {::queue/name                ::fetch-metadata-queue
-                  ::queue/default-retry-limit 3
-                  ::queue/rate-limit-fn       (time-utils/queue-rate-limit-x-per-period
-                                                {:period-s    (* 60 60 24)
-                                                 :limit-count (:downloads-per-day @!shared)})
-                  ::queue/timeout?-fn         (simple-queue/default-timeout?-fn (* 1000 160))
-                  ::queue/lockout?-fn         (time-utils/queue-lockout-backoff-retry
-                                                {:base-s-backoff (* 60 60 3)})} ;; runs at 0h, 3h, (3+6h) 9h, (6+9h) 15h
-     :poll-ms    1000
-     :poll-f     #'augment-episode-information}))
+    (-> shared
+      (assoc ::browser-context browser-context)
+      (update ::le.shared/close-on-halt conj browser-context)
+      (le.shared/start-queue!
+        {:queue-conf {::queue/name                ::fetch-metadata-queue
+                      ::queue/default-retry-limit 3
+                      ::queue/rate-limit-fn       (time-utils/queue-rate-limit-x-per-period
+                                                    {:period-s    (* 60 60 24)
+                                                     :limit-count (:downloads-per-day shared)})
+                      ::queue/timeout?-fn         (simple-queue/default-timeout?-fn (* 1000 160))
+                      ::queue/lockout?-fn         (time-utils/queue-lockout-backoff-retry
+                                                    {:base-s-backoff (* 60 60 3)})} ;; runs at 0h, 3h, (3+6h) 9h, (6+9h) 15h
+         :poll-ms    1000
+         :poll-f     #'augment-episode-information}))))
 
 (comment
-  (swap! @le.shared/!!shared assoc ::debug {})
+  (get-detailed-information @le.shared/!shared {:episode/url "..."})
+  
+  (defn with-debug [shared] (assoc shared ::debug {}))
 
-  (get-detailed-information @le.shared/!!shared {:episode/url "..."})
-
-  (dev.freeformsoftware.simple-queue.core/qpeek!
-    (::le.shared/queue @@le.shared/!!shared)
+  (simple-queue/qpeek!
+    (::le.shared/queue @le.shared/!shared)
     ::fetch-metadata-queue)
 
-  (augment-episode-information
-    @le.shared/!!shared
-    (dev.freeformsoftware.simple-queue.core/qpop!
-      (::le.shared/queue @@le.shared/!!shared)
-      ::fetch-metadata-queue)))
+  (simple-queue/qview
+    (::le.shared/queue @le.shared/!shared)
+    ::fetch-metadata-queue)
 
+  (swap! simple-queue/*manual-unlock-1*
+    conj ::fetch-metadata-queue)
+
+  (do
+    (swap! simple-queue/*manual-unlock-1*
+      conj ::fetch-metadata-queue)
+    (augment-episode-information
+      (with-debug @le.shared/!shared)
+      (simple-queue/qpop!
+        (::le.shared/queue @le.shared/!shared)
+        ::fetch-metadata-queue))))
