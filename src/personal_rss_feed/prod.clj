@@ -3,7 +3,8 @@
    [integrant.core :as ig]
    [nrepl.server :refer [start-server stop-server default-handler]]
    [personal-rss-feed.config]
-   [taoensso.timbre :as log]))
+   [taoensso.timbre :as log])
+  (:gen-class))
 
 (defonce system (atom {}))
 
@@ -13,7 +14,10 @@
 (defn start-server!
   [& args]
   (defonce server (start-server :bind "0.0.0.0"
-                    :port 8001
-                    :handler (default-handler #'com.gfredericks.debug-repl/wrap-debug-repl)))
+                    :port 8001))
   (reset! system
     (ig/init (personal-rss-feed.config/resolve-config! true))))
+
+(defn -main 
+  [& args]
+  (start-server!))
