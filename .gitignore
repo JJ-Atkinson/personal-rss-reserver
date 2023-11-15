@@ -1,6 +1,6 @@
 /.idea/
 /personal-rss-reserver.iml
-!/resources/config/secrets.edn
-!/.direnv/
-!/.portal/
-!/.cpcache/
+/resources/config/secrets.edn
+/.direnv/
+/.portal/
+/.cpcache/
