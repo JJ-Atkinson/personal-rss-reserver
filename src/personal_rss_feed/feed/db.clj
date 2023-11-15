@@ -63,7 +63,6 @@
                                  (d/db conn)))
                      "aaaa")
         next-id    (inc-str current-id)]
-    (println current-id next-id)
     (d/transact! conn [{:singleton/singleton-id "1"
                         :singleton/current-id   next-id}])
     next-id))
@@ -113,7 +112,7 @@
            [?e :episode/podcast ?podcast-uri]
            [?e :episode/url ?ep-url]]
       (d/db conn) feed-uri)
-    (map #(d/entity (d/db conn) [:episode/url %]))
+    (map #(d/entity (d/db conn) [:episode/url (first %)]))
     (sort-by :episode/publish-date)))
 
 
@@ -135,8 +134,9 @@
   (save-podcast! @!conn {:podcast/feed-uri "https://www.lotuseaters.com/feed/category/epochs"})
   (known-podcasts @!conn)
   (known-podcast? (d/db @!conn) "test")
-  (podcast-feed @!conn "https://www.lotuseaters.com/feed/category/epochs")
-  
+  (map d/touch
+    (podcast-feed @!conn "https://www.lotuseaters.com/feed/category/epochs"))
+
   (->>
     (d/q '[:find ?url
            :in $
