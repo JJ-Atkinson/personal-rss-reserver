@@ -32,6 +32,8 @@
            :db/conn             #ig/ref :personal-rss-feed.feed.db/conn
            :s3/public-s3-prefix #n/ref :s3/public-s3-prefix ;; Only semi secret, but preferable to not post on the internet.
            }}
+ 
+ ;; If you don't care about secrets, just un comment these.
  ; :lotus-eaters/username "username"
  ; :lotus-eaters/password "password"
  ; :s3/secret-access-key "s3-secret-access-key"
