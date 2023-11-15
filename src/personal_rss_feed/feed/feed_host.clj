@@ -1,12 +1,12 @@
 (ns personal-rss-feed.feed.feed-host
   (:require
+   [personal-rss-feed.feed.db :as db]
    [ring.adapter.jetty9 :as ring-jetty]
    [clojure.data.xml :as xml]
    [clj-simple-router.core :as router]
-   [ring.util.request :as request]
    [ring.util.response :as response]
+   [hiccup.core :as hiccup]
    [integrant.core :as ig]
-   [clj-rss.core :as rss]
    [taoensso.timbre :as log])
   (:import (java.time Instant ZoneOffset)
            (java.time.format DateTimeFormatter)
@@ -17,8 +17,12 @@
     (.format (DateTimeFormatter/ofPattern "EEE, dd MMM yyyy HH:mm:ss ZZ" Locale/ENGLISH)
       (.atOffset (.toInstant t) ZoneOffset/UTC))))
 
-(defn download-uuid->link 
-  [])
+(defn generate-description
+  [{:episode/keys [excerpt id uuid url]}]
+  (hiccup/html
+    [:div
+     [:div excerpt] [:br]
+     [:a {:href url} "Lotus eaters website link"]]))
 
 (defn write-podcast-feed
   [podcast
@@ -46,54 +50,56 @@
                                           :length (:episode/audio-content-length episode)
                                           :type   "audio/mp3"})
                  (xml/element :pubDate {} (-> episode :episode/publish-date format-time))
-                 (xml/element :guid {} (-> episode :episode/saved-audio-uuid str))
+                 (xml/element :guid {} (-> episode :episode/id str))
                  (xml/element "content:encoded" {}
-                   (xml/cdata (:episode/excerpt episode)))
+                   (xml/cdata (generate-description episode)))
                  (xml/element "itunes:image" {:href "http://relayfm.s3.amazonaws.com/uploads/broadcast/image/17/cortex_artwork.png"}))))))))
 
+(defn routes
+  [{:keys [db/conn]}]
+  {"GET /feeds"
+   (fn [{}]
+     (let [podcasts (db/known-podcasts conn)]
+       (response/response
+         (hiccup/html
+           [:body
+            [:ul
+             (map (fn [{:podcast/keys [title feed-uri description id]}]
+                    [:li
+                     [:strong title] [:br]
+                     [:i feed-uri] [:br]
+                     [:span description] [:br]
+                     [:strong "ID: " id]])
+               podcasts)]]))))
 
-
-(def routes
-  {"GET /feed/*"
-   (fn [{[feed-id] :path-params}]
-     (->
-       (response/response (xml/emit-str (write-podcast-feed
-                                          #:podcast{:title       "category/brokenomics",
-                                                    :icon-uri    "https://www.lotuseaters.com/logo.svg",
-                                                    :updated-at  #inst"2023-11-07T21:10:22.000-00:00",
-                                                    :description "Latest category_brokenomics posts from The Lotus Eaters"}
-                                          [#:episode{:title                "Thomas Sowell",
-                                                     :thumbnail-origin-uri "https://images.ctfassets.net/khed0tvttjco/10Mh8WilP4C8Un72tKaKwX/5ce4c0064451ea60addf2ebf0234b06f/18.Sowell_-_Prem.jpg",
-                                                     :url                  "https://www.lotuseaters.com/premium-brokenomics-18-or-thomas-sowell-25-04-2023",
-                                                     :excerpt              "Connor joins Dan to discuss one of the LotusEaters favourite Economic thinkers - the Legendary Thomas Sowell.",
-                                                     :saved-audio-uuid     #uuid "7e4acdeb-623f-41fe-9587-93c8f01ec6b0"
-                                                     :publish-date         #inst"2023-04-25T15:00:00.000-00:00"}
-                                           #:episode{:title                "Big Ideas",
-                                                     :thumbnail-origin-uri "https://images.ctfassets.net/khed0tvttjco/62r9kdzk9IbrqLRPBMcA0Y/5181641a530e5e1c1e7f30a93cc1250c/17.5_Big_-_Prem.jpg",
-                                                     :url                  "https://www.lotuseaters.com/premium-brokenomics-17-or-five-big-innovation-platforms-18-04-23",
-                                                     :excerpt              "The world is about to experience a combination of new technologies that could radically alter our economic trajectory and change the way we live and work forever - Dan looks at these technologies and what they might mean",
-                                                     :saved-audio-uuid     #uuid "25de17df-86fa-4619-bf02-e545b383c911"
-                                                     :publish-date         #inst"2023-04-18T15:00:00.000-00:00"}])))
-       (response/content-type "application/rss+xml")))})
+   "GET /feed/*"
+   (fn [{[id] :path-params}]
+     (when-let [podcast (db/podcast-by-id conn id)]
+       (let [episodes (filter :episode/audio-content-length
+                        (db/podcast-feed conn (:podcast/feed-uri podcast)))]
+         (-> (response/response
+               (xml/emit-str (write-podcast-feed podcast episodes)))
+           (response/content-type "application/rss+xml")))))})
 
 
 
 ;;; SERVER COMPONENT ==============================
 
 ;; The indirection for `handler` and `init-key` enable tools.ns.refresh, without the need for suspend/resume. quite handy
-(def handler
+(defn handler
+  [config]
   (let [router (memoize router/router)]
     (fn [req]
       (try
-        (or ((router routes) req)
+        (or ((router (#'routes config)) req)
           (response/not-found "Route not found"))
         (catch Exception e (log/error "Handler error" e))))))
 
 (defmethod ig/init-key ::server
-  [_ {:keys [jetty] :as options}]
+  [_ {:keys [jetty] :as config}]
   (let [options (assoc jetty :join? false)]
     (println "Starting server" options)
-    (ring-jetty/run-jetty handler options)))
+    (ring-jetty/run-jetty (handler config) options)))
 
 (defmethod ig/suspend-key! ::server
   [_ _])

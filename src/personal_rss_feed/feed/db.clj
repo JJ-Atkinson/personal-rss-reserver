@@ -94,6 +94,7 @@
   [conn]
   (->>
     (d/q '[:find (pull ?e [:podcast/feed-uri
+                           :podcast/id
                            :podcast/title
                            :podcast/icon-uri
                            :podcast/description])
@@ -115,6 +116,17 @@
     (map #(d/entity (d/db conn) [:episode/url (first %)]))
     (sort-by :episode/publish-date)))
 
+(defn podcast-by-id
+  [conn id]
+  (some->> (d/q '[:find ?feed-uri
+                  :in $ ?id
+                  :where
+                  [?e :podcast/id ?id]
+                  [?e :podcast/feed-uri ?feed-uri]]
+             (d/db conn) id)
+    (ffirst)
+    (podcast-by-feed-uri (d/db conn))))
+
 
 (defmethod ig/init-key ::conn
   [_ {:keys [uri] :as options}]
@@ -130,12 +142,15 @@
   [_ conn]
   (d/close conn))
 
-(comment 
+(comment
   (save-podcast! @!conn {:podcast/feed-uri "https://www.lotuseaters.com/feed/category/epochs"})
+  (d/touch (d/entity (d/db @!conn) [:podcast/feed-uri "https://www.lotuseaters.com/feed/category/epochs"]))
+  (d/touch (d/entity (d/db @!conn) [:podcast/id "https://www.lotuseaters.com/feed/category/aaab"]))
   (known-podcasts @!conn)
   (known-podcast? (d/db @!conn) "test")
   (map d/touch
     (podcast-feed @!conn "https://www.lotuseaters.com/feed/category/epochs"))
+  (d/touch (podcast-by-id @!conn "aaab"))
 
   (->>
     (d/q '[:find ?url

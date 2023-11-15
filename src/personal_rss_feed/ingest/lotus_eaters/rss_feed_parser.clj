@@ -93,7 +93,8 @@
           {:keys [episodes podcast]} (rss-str->episodes body)
           db   (d/db conn)]
       (log/info "Found episodes" episodes)
-      (db/save-podcast! conn podcast)
+      (log/info "Found podcast description" (assoc podcast :podcast/feed-uri feed-uri))
+      (db/save-podcast! conn (assoc podcast :podcast/feed-uri feed-uri))
       (doseq [ep (remove #(db/known-episode? db (:episode/url %)) episodes)]
         (db/save-episode! conn (assoc ep
                                  :episode/podcast feed-uri))
@@ -149,4 +150,5 @@
   (rss-str->episodes (:body resp))
 
   (http/head "https://cdn.lotuseaters.com/23.03.28-Brokenomics17-5_Big_Innovation_Platforms(P).mp3")
+  (parse-all-feeds (:db/conn @le.shared/!shared) (::le.shared/queue @le.shared/!shared))
   )
