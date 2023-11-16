@@ -28,7 +28,7 @@
          com.fulcrologic/guardrails          {:mvn/version "1.1.13"}} ;; allow guardrails in prod because idc. perf isn't a huge deal
  :aliases
  {:dev {:extra-deps {com.gfredericks/debug-repl {:mvn/version "0.0.12"}}
-        :jvm-opts   ["--add-opens" "java.base/java.nio=ALL-UNNAMED"
+        :jvm-opts   ["--add-opens" "java.base/java.nio=ALL-UNNAMED" ;; ##SeeDepsEDN
                      "--add-opens" "java.base/sun.nio.ch=ALL-UNNAMED"
 
                      ;; https://bugs.openjdk.org/browse/JDK-8213696
