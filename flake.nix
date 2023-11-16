@@ -34,9 +34,7 @@
         launch-rss-server = pkgs.writeShellScriptBin "launch-rss-server" ''
           # Call hello with a traditional greeting 
 
-          PATH=${nixpkgs.lib.makeBinPath runtimeDeps}:${
-            self.packages.${system}.baseCljDerivation
-          }/extra-path
+          PATH=${nixpkgs.lib.makeBinPath runtimeDeps}
           export PATH
 
           ${builtins.readFile ./bin/env-vars}
