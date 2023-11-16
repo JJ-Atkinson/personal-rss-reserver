@@ -3,3 +3,4 @@ export CHROME_LOCATION
 export PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=true
 export DEBUG="pw:install"
 export PLAYWRIGHT_CLI_LOCATION="$PWD/bin"
+alias playwright.sh='playwright'
