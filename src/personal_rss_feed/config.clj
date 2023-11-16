@@ -18,7 +18,7 @@
               (when enable-prod?
                 (log/error "Could not read config file!" e)))))
     [(io/resource "config/config.edn")
-     (io/resource "config/secrets.edn")
+     (io/resource "config/secrets.edn")                     ;; not available in prod since it's not part of the jar build. flakes ftw!
      (when enable-prod? (io/file "/etc/rss-feed-config.edn"))
      (when enable-prod? (io/file "/etc/rss-feed-secrets.edn"))]))
 

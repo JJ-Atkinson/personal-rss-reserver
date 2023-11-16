@@ -12,37 +12,99 @@
     flake-utils.lib.eachDefaultSystem (system: 
     
     let 
-    pkgs = import nixpkgs {
-      inherit system;
-      overlays = [
-        clj-nix.overlays.default
+      pkgs = import nixpkgs {
+        inherit system;
+        overlays = [
+          clj-nix.overlays.default
+        ];
+        config.allowUnfree = true;
+      };
+      
+      runtimeDeps = with pkgs; [
+        google-chrome
+        nodejs
+        playwright-driver
+ 
+        openai-whisper-cpp
+        ffmpeg
+        
+        which # Suprising, but I need this to make my life easier in the ./bin/env-vars file sourced.
       ];
-    };
+      
+      # References self! Interestingly, nix will iterate a function that contains
+      # self until it reaches a fixed point or crashes out because of un-resolvable dependency conflicts.
+      launch-rss-server = pkgs.writeShellScriptBin "launch-rss-server" ''
+        # Call hello with a traditional greeting 
+        
+        PATH=${nixpkgs.lib.makeBinPath runtimeDeps}:${self.packages.${system}.baseCljDerivation}/extra-path
+        export PATH
+        
+        ${ builtins.readFile ./bin/env-vars}
+        
+        exec ${self.packages.${system}.baseCljDerivation}/bin/personal-rss-reserver
+      '';
     in
     {
-      devShell.${system} =
-       with pkgs;
-       mkShell {
+      devShell =
+       pkgs.mkShell {
          buildInputs = [
-           # clojure
-       # 
-           # openjdk17
-           # maven
-       # 
-           # babashka
-           # clj-kondo
-           # clojure-lsp
-           # jet
-       # 
-           # google-chrome
-           # nodejs
-           # playwright-driver
-       # 
-           # openai-whisper-cpp
-           # ffmpeg
-         ];
+           pkgs.clojure
+           pkgs.openjdk17
+           pkgs.maven
+
+           pkgs.babashka
+           pkgs.clj-kondo
+           pkgs.clojure-lsp
+           pkgs.jet
+         ] ++ runtimeDeps;
        };
        
-       
+      packages = {
+      
+        baseCljDerivation = clj-nix.lib.mkCljApp { 
+          pkgs = nixpkgs.legacyPackages.${system};
+          modules = [
+            {
+              projectSrc = ./.;
+              name = "dev.freeformsoftware/personal-rss-reserver";
+              version = "1.0";
+              main-ns = "personal-rss-feed.prod";
+              java-opts = ["--add-opens" "java.base/java.nio=ALL-UNNAMED" # ##SeeDepsEDN
+                           "--add-opens" "java.base/sun.nio.ch=ALL-UNNAMED" 
+                           "-Djdk.httpclient.allowRestrictedHeaders=host"];
+   
+              # nativeImage.enable = true;
+              customJdk.enable = true;
+            }
+          ];
+        };
+
+        default = pkgs.stdenv.mkDerivation {
+          name = "dev.freeformsoftware/personal-rss-server-wrapped";
+          nativeBuildInputs = runtimeDeps ++ [self.packages.${system}.baseCljDerivation launch-rss-server];
+          src = ./bin;
+          
+          installPhase = 
+            let baseCljDerPath = self.packages.${system}.baseCljDerivation;
+            in ''
+              mkdir -p $out/bin/extra-path
+              cp ./* $out/bin/extra-path
+              cp ${launch-rss-server}/bin/* $out/bin
+            '';
+
+          
+          # shellHook = 
+          # let
+          #   addToPath = program: "export PATH=$PATH:${program}/bin";
+          #   # pathAdditions = builtins.concatStringsSep ":" (builtins.map addToPath runtimeDeps);
+          #   pathAdditions = nixpkgs.lib.traceVal (nixpkgs.lib.makeBinPath runtimeDeps);
+          # in
+          # ''
+          #     ${pathAdditions}
+          # '';
+          
+        };
+
+      };
     });
 }

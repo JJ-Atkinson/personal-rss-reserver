@@ -15,9 +15,14 @@
   [& args]
   (defonce server (start-server :bind "0.0.0.0"
                     :port 8001))
+  (println "Repl started at port 8001")
   (reset! system
     (ig/init (personal-rss-feed.config/resolve-config! true))))
 
 (defn -main 
   [& args]
   (start-server!))
+
+(comment
+  (reset! system
+    (ig/init (personal-rss-feed.config/resolve-config! true))))
