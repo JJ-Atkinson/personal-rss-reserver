@@ -34,10 +34,13 @@
         launch-rss-server = pkgs.writeShellScriptBin "launch-rss-server" ''
           # Call hello with a traditional greeting 
 
-          PATH=${nixpkgs.lib.makeBinPath runtimeDeps}
+          PATH=${nixpkgs.lib.makeBinPath runtimeDeps}:${self.packages.${system}.binDerivation}/bin
           export PATH
 
           ${builtins.readFile ./bin/env-vars}
+          
+          # ##FlakeOverridePlaywrightCLI
+          export PLAYWRIGHT_CLI_LOCATION="${self.packages.${system}.binDerivation}/bin"
 
           exec ${
             self.packages.${system}.baseCljDerivation
@@ -80,11 +83,23 @@
               customJdk.enable = true;
             }];
           };
+          
+          binDerivation = pkgs.stdenv.mkDerivation {
+            name = "dev.freeformsoftware/personal-rss-reserver-bin-ext";
+            src = ./bin;
+            
+            installPhase =
+              ''
+                mkdir -p $out/bin
+                cp ./* $out/bin
+              '';
+          };
 
           default = pkgs.stdenv.mkDerivation {
             name = "dev.freeformsoftware/personal-rss-server-wrapped";
             nativeBuildInputs = runtimeDeps ++ [
               self.packages.${system}.baseCljDerivation
+              self.packages.${system}.binDerivation
               launch-rss-server
             ];
             src = ./bin;
