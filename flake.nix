@@ -77,6 +77,7 @@
                 "--add-opens"
                 "java.base/sun.nio.ch=ALL-UNNAMED"
                 "-Djdk.httpclient.allowRestrictedHeaders=host"
+                "-Djavax.net.debug=all" # Temporary while debugging ssl errors
               ];
 
               # nativeImage.enable = true;
