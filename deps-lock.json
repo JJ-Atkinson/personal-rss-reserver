@@ -8,6 +8,16 @@
       "hash": "sha256-JgybqAneWdOkkdLNp563ZXB9tVm7h0XGAfj4NgW3Igk="
     },
     {
+      "mvn-path": "babashka/babashka.curl/0.1.2/babashka.curl-0.1.2.jar",
+      "mvn-repo": "https://repo.clojars.org/",
+      "hash": "sha256-pDtoacQkK+2SkVyXhMNoo/OTCragrGorTyUaRipC5VU="
+    },
+    {
+      "mvn-path": "babashka/babashka.curl/0.1.2/babashka.curl-0.1.2.pom",
+      "mvn-repo": "https://repo.clojars.org/",
+      "hash": "sha256-JS9QdYUUFeKy3ZtTY2rT1bp0kdABjwF4h02mcTHpAb4="
+    },
+    {
       "mvn-path": "babashka/babashka.pods/0.2.0/babashka.pods-0.2.0.jar",
       "mvn-repo": "https://repo.clojars.org/",
       "hash": "sha256-eD8c4DchT9bSVbj/Nx2nkhXTh6l/WNaquuhS6CWGWl0="
