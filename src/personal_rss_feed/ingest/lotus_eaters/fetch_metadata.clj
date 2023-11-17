@@ -66,7 +66,7 @@
   [!shared]
   (ensure-logged-in! !shared)
   (enc/assoc-some {}
-    :episode/audio-origin-uri
+    :episode/audio-original-uri
     (e->nil (.getAttribute (ws/query-1 [".post__body" (ws/title "Download Audio File")]) "href"))
 
     :episode/video-original-uri
@@ -100,7 +100,7 @@
                        {:autoclose-browser-context? false})
     (safe-navigate! url)
     (let [extra-meta (episode-page-get-content-url shared)]
-      (when (or (not (contains? extra-meta :episode/audio-origin-uri))
+      (when (or (not (contains? extra-meta :episode/audio-original-uri))
               (not (contains? extra-meta :episode/video-original-uri)))
         (throw (ex-info "Was not able to get any audio/video information from the page" {})))
       (assoc extra-meta :episode/url url))))
@@ -115,12 +115,13 @@
   (try
     (let [episode (get-detailed-information shared ctx)]
       (db/save-episode! conn episode)
-      (simple-queue/qsubmit! queue
-        #::queue-item{:queue    ::le.download-file/download-queue
-                      :id       (random-uuid)
-                      :data     (assoc (select-keys episode [:episode/url])
-                                  ::le.download-file/download-type ::le.download-file/audio)
-                      :priority (.getTime (Date.))})
+      (when (contains? episode :episode/audio-original-uri)
+        (simple-queue/qsubmit! queue
+          #::queue-item{:queue    ::le.download-file/download-queue
+                        :id       (random-uuid)
+                        :data     (assoc (select-keys episode [:episode/url])
+                                    ::le.download-file/download-type ::le.download-file/audio)
+                        :priority (.getTime (Date.))}))
       (simple-queue/qcomplete! queue id)
       episode)
     (catch Exception e
