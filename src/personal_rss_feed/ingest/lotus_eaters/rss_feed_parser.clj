@@ -1,5 +1,6 @@
 (ns personal-rss-feed.ingest.lotus-eaters.rss-feed-parser
   (:require [babashka.http-client :as bb.http]
+            [clj-http.client :as http]
             [clojure.data.xml :as xml]
             [clojure.string :as str]
             [datalevin.core :as d]
