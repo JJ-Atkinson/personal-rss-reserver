@@ -17,6 +17,8 @@
           overlays = [ clj-nix.overlays.default ];
           config.allowUnfree = true;
         };
+        
+        runtimeJDK = pkgs.openjdk17;
 
         runtimeDeps = with pkgs; [
           google-chrome
@@ -52,7 +54,7 @@
         devShell = pkgs.mkShell {
           buildInputs = [
             pkgs.clojure
-            pkgs.openjdk17
+            runtimeJDK
             pkgs.maven
 
             pkgs.babashka
@@ -68,6 +70,7 @@
             pkgs = nixpkgs.legacyPackages.${system};
             modules = [{
               projectSrc = ./.;
+              jdk = runtimeJDK;
               name = "dev.freeformsoftware/personal-rss-reserver";
               version = "1.0";
               main-ns = "personal-rss-feed.prod";
@@ -81,7 +84,7 @@
               ];
 
               # nativeImage.enable = true;
-              customJdk.enable = true;
+              # customJdk.enable = true;
             }];
           };
           
