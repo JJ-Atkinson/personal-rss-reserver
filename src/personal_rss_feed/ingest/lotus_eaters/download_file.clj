@@ -21,7 +21,7 @@
     (let [episode        (db/episode-by-url (d/db conn) url)
           ep-id          (:episode/uuid episode)
           download-uri   (case download-type
-                           ::audio (:episode/audio-origin-uri episode)
+                           ::audio (:episode/audio-original-uri episode)
                            ::video (:episode/video-original-uri episode))
           dest-key       (case download-type
                            ::audio (name-utils/format-audio ep-id)
