@@ -115,13 +115,15 @@
   (try
     (let [episode (get-detailed-information shared ctx)]
       (db/save-episode! conn episode)
-      (when (contains? episode :episode/audio-original-uri)
-        (simple-queue/qsubmit! queue
-          #::queue-item{:queue    ::le.download-file/download-queue
-                        :id       (random-uuid)
-                        :data     (assoc (select-keys episode [:episode/url])
-                                    ::le.download-file/download-type ::le.download-file/audio)
-                        :priority (.getTime (Date.))}))
+      (simple-queue/qsubmit! queue
+        #::queue-item{:queue    ::le.download-file/download-queue
+                      :id       (random-uuid)
+                      :data     (assoc (select-keys episode [:episode/url])
+                                  ::le.download-file/download-type
+                                  (if (contains? episode :episode/audio-original-uri)
+                                    ::le.download-file/audio
+                                    ::le.download-file/video))
+                      :priority (.getTime (Date.))})
       (simple-queue/qcomplete! queue id)
       episode)
     (catch Exception e

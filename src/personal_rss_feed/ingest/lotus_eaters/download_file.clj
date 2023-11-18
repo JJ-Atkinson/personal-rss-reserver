@@ -7,6 +7,7 @@
             [personal-rss-feed.feed.db :as db]
             [personal-rss-feed.name-utils :as name-utils]
             [personal-rss-feed.ingest.lotus-eaters.shared :as le.shared]
+            [personal-rss-feed.ingest.lotus-eaters.extract-audio :as le.extract-audio]
             [personal-rss-feed.time-utils :as time-utils]
             [taoensso.timbre :as log]))
 
@@ -19,22 +20,30 @@
   (log/info "Downloading file" url download-type)
   (try
     (let [episode        (db/episode-by-url (d/db conn) url)
-          ep-id          (:episode/uuid episode)
+          ep-uuid        (:episode/uuid episode)
           download-uri   (case download-type
                            ::audio (:episode/audio-original-uri episode)
                            ::video (:episode/video-original-uri episode))
           dest-key       (case download-type
-                           ::audio (name-utils/format-audio ep-id)
-                           ::video (name-utils/format-video ep-id))
+                           ::audio (name-utils/format-audio ep-uuid)
+                           ::video (name-utils/format-video ep-uuid (:episode/video-original-uri episode)))
           content-length (s3/upload-uri! s3 download-uri dest-key)]
       (cond (= ::audio download-type)
             (db/save-episode! conn {:episode/url                  url
                                     :episode/audio-content-length content-length})
+            (= ::video download-type)
+            (db/save-episode! conn {:episode/url                  url
+                                    :episode/video-content-length content-length})
             :else nil)
       (log/info "Successfully downloaded the file!" url dest-key)
       (simple-queue/qcomplete! queue id {:destination    dest-key
                                          :content-length content-length
-                                         :download-url   download-uri}))
+                                         :download-url   download-uri})
+      (when (= ::video download-type)
+        (simple-queue/qsubmit! queue {::queue-item/queue ::le.extract-audio/extract-audio-queue
+                                      ::queue-item/id (random-uuid)
+                                      ::queue-item/data (select-keys episode [:episode/url])
+                                      ::queue-item/priority (.getTime (:episode/publish-date episode))})))
     (catch Exception e
       (simple-queue/qerror! queue id {:exception                (pr-str e)
                                       ::simple-queue/retryable? true}))))
@@ -61,7 +70,13 @@
   (simple-queue/qview
     (::le.shared/queue @le.shared/!shared)
     ::download-queue)
-  
+
+  (doseq [qi (->> (simple-queue/qview-dead
+                    (::le.shared/queue @le.shared/!shared)
+                    ::download-queue)
+               (remove #(= ::queue-item/succeeded (::queue-item/status %))))]
+    (simple-queue/qsubmit! (::le.shared/queue @le.shared/!shared) (dissoc qi ::queue-item/retry-count)))
+
   (simple-queue/qsubmit! (::le.shared/queue @le.shared/!shared)
     (assoc (#'simple-queue/resolve!i (::le.shared/queue @le.shared/!shared) #uuid "50b3a4d9-176e-44bc-9d19-f34798d4dbc2")
       ::queue-item/priority Long/MAX_VALUE

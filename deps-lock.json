@@ -18,14 +18,24 @@
       "hash": "sha256-jJosNb8lmgxhomusUYG4ZPgw+EMKsr5apFauzOHsQtg="
     },
     {
-      "mvn-path": "babashka/fs/0.1.6/fs-0.1.6.jar",
+      "mvn-path": "babashka/fs/0.2.12/fs-0.2.12.jar",
       "mvn-repo": "https://repo.clojars.org/",
-      "hash": "sha256-10dINOFvu1Kk2bexqmBSyk0BucZx0f9BWYIxwaF1Vr4="
+      "hash": "sha256-54H6KPHJovUeLj9SI6YGVtwDmZcsdajfdCuG6u8nfkc="
     },
     {
-      "mvn-path": "babashka/fs/0.1.6/fs-0.1.6.pom",
+      "mvn-path": "babashka/fs/0.2.12/fs-0.2.12.pom",
       "mvn-repo": "https://repo.clojars.org/",
-      "hash": "sha256-DGkccdKdMtYY8CpQnoxw3608xKVWiOwsZl7Yao5/Jp8="
+      "hash": "sha256-/wCsLdezFw8C9qPsk96sBUkrWgo48uWOGBgOrKrx2yU="
+    },
+    {
+      "mvn-path": "babashka/process/0.5.21/process-0.5.21.jar",
+      "mvn-repo": "https://repo.clojars.org/",
+      "hash": "sha256-JxlgyYHRvr5k7FVC63dwzwvmOLj22rI3fX77unYRLi0="
+    },
+    {
+      "mvn-path": "babashka/process/0.5.21/process-0.5.21.pom",
+      "mvn-repo": "https://repo.clojars.org/",
+      "hash": "sha256-FDlMFp8+tAMf7TA4bQNSY+tg4guWUjbfc/c7A4xsqmQ="
     },
     {
       "mvn-path": "borkdude/edamame/1.3.22/edamame-1.3.22.jar",

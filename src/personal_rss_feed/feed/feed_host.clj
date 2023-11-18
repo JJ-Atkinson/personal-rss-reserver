@@ -5,6 +5,7 @@
    [clojure.data.xml :as xml]
    [clj-simple-router.core :as router]
    [ring.util.response :as response]
+   [personal-rss-feed.name-utils :as name-utils]
    [hiccup.core :as hiccup]
    [integrant.core :as ig]
    [taoensso.timbre :as log])
@@ -25,7 +26,8 @@
      [:a {:href url} "Lotus eaters website link"]]))
 
 (defn write-podcast-feed
-  [podcast
+  [config 
+   podcast
    episodes]
   (xml/element :rss {:version        "2.0"
                      "xmlns:atom"    "http://www.w3.org/2005/Atom/"
@@ -46,7 +48,7 @@
                (xml/element :item {}
                  (xml/element :title {} (:episode/title episode))
                  (xml/element :description {} (:episode/excerpt episode))
-                 (xml/element :enclosure {:url    (:episode/origin-uri episode)
+                 (xml/element :enclosure {:url    (name-utils/format-audio (:s3/public-s3-prefix config) (:episode/uuid episode))
                                           :length (:episode/audio-content-length episode)
                                           :type   "audio/mp3"})
                  (xml/element :pubDate {} (-> episode :episode/publish-date format-time))
@@ -56,8 +58,8 @@
                  (xml/element "itunes:image" {:href "http://relayfm.s3.amazonaws.com/uploads/broadcast/image/17/cortex_artwork.png"}))))))))
 
 (defn routes
-  [{:keys [db/conn]}]
-  {"GET /feeds"
+  [{:keys [db/conn feed/secret-path-segment feed/public-feed-address] :as config}]
+  {"GET /" secret-path-segment "/feeds"
    (fn [{}]
      (let [podcasts (db/known-podcasts conn)]
        (response/response
@@ -69,16 +71,17 @@
                      [:strong title] [:br]
                      [:i feed-uri] [:br]
                      [:span description] [:br]
-                     [:strong "ID: " id]])
+                     [:strong "ID: " id] [:br]
+                     [:span (str public-feed-address secret-path-segment "/" id)]])
                podcasts)]]))))
 
-   "GET /feed/*"
+   (str "GET /" secret-path-segment "/feed/*")
    (fn [{[id] :path-params}]
      (when-let [podcast (db/podcast-by-id conn id)]
        (let [episodes (filter :episode/audio-content-length
                         (db/podcast-feed conn (:podcast/feed-uri podcast)))]
          (-> (response/response
-               (xml/emit-str (write-podcast-feed podcast episodes)))
+               (xml/emit-str (write-podcast-feed config podcast episodes)))
            (response/content-type "application/rss+xml")))))})
 
 

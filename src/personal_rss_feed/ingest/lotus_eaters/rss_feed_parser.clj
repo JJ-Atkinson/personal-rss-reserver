@@ -19,7 +19,7 @@
   [desc-str]
   (drop 1
     (re-matches #".*\<a href=\"(.*)\" ?>.*\<img src=\"(.*)\" ?\/>.*\<br\>(.*).*<br>"
-      (-> desc-str
+      (some-> desc-str
         (str/trim)
         (str/replace "\t" "")
         (str/replace "\n" "")))))
@@ -79,7 +79,8 @@
          (navigate
            :content
            (map-accumulator
-             [(attribute :title :episode/title #(str/trim (second (str/split (content %) #"\|"))))
+             [(attribute :title :episode/title #(or (some-> (str/split (content %) #"\|") (second) str/trim)
+                                                  (content %)))
               (attribute :description :episode/thumbnail-origin-uri #(nth (parse-description (content %)) 1))
               (attribute :description :episode/url #(nth (parse-description (content %)) 0))
               (attribute :description :episode/excerpt #(nth (parse-description (content %)) 2))
@@ -113,7 +114,7 @@
   (log/info "Parsing rss feeds for new episodes")
   (doseq [{feed-uri :podcast/feed-uri} (db/known-podcasts conn)]
     (parse-new-feed-items conn queue feed-uri)
-    (Thread/sleep 1234)                                     ;; Don't swamp the server.
+    (Thread/sleep 5000)                                     ;; Don't swamp the server.
     ))
 
 (defn make-timeline
