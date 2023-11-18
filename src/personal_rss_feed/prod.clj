@@ -4,12 +4,13 @@
    [nrepl.server :refer [start-server stop-server default-handler]]
    [personal-rss-feed.config]
    [taoensso.timbre :as log])
-  (:gen-class))
+  (:gen-class)
+  (:import (java.util Date)))
 
 (defonce system (atom {}))
 
 (log/merge-config! 
-  {:appenders {:spit (log/spit-appender {:fname "./timbre-split.log"})}})
+  {:appenders {:spit (log/spit-appender {:fname (str "/var/run-" (.getTime (Date.)) "/timbre-split.log")})}})
 
 (defn start-server!
   [& args]

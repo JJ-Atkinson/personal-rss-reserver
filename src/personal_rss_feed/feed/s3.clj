@@ -85,6 +85,10 @@
   (aws/doc (:client @!s3) :ListObjects)
   (upload-uri! (:client @!s3) "..." "test.mp3")
 
+  (aws/invoke (:client @!s3) {:op      :HeadObject
+                              :request {:Bucket "lotus-eaters"
+                                        :Key "audio-f4861adb-faa1-4e8e-ae6d-462c5942c80d.mp3"}})
+
   ;; Clear the CI bucket
   (let [objects (aws/invoke (:client @!s3) {:op      :ListObjects
                                             :request {:Bucket "lotus-eaters-ci"}})]

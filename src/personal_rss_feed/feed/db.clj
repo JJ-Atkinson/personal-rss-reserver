@@ -24,6 +24,7 @@
              :episode/video-original-uri   {:db/valueType :db.type/string}
              :episode/podcast              {:db/valueType :db.type/string}
              :episode/audio-content-length {:db/valueType :db.type/long} ;; only present when the podcast has been downloaded properly.
+             :episode/video-content-length {:db/valueType :db.type/long} ;; only present when the podcast has been downloaded properly.
 
              :podcast/feed-uri             {:db/valueType :db.type/string
                                             :db/unique    :db.unique/identity} ;; Must be seeded by a user
