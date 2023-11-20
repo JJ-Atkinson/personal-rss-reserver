@@ -82,6 +82,12 @@
           then-ms (.getTime activation-time)]
       (> (- now-ms then-ms) ms))))
 
+(defn comp-lockout_rate-limit
+  "Compose lockout? fns or rate-limit? fns."
+  [& lockouts-or-rate-limits]
+  (fn comp-lockout_rate-limit* [& args]
+    (some #(apply % args) lockouts-or-rate-limits)))
+
 (defn- update!q
   "Specifically update a queue, optionally updating a sub-key"
   ([system name f] (swap! system update ::name->queue (fn [n-q] (update n-q name f))))
@@ -94,6 +100,17 @@
 (defn- resolve!i
   [system id]
   (get-in @system [::id->queue-item id]))
+
+(let [item-id (atom nil)]
+  (defn lockout?-intensive-cpu-tasks
+    "A global singleton lockout fn that only allows a single cpu intensive task to be checked out at once. 
+     Automatically closed when the open item is completed or times out."
+    []
+    (fn [system {new-id ::queue-item/id}]
+      (when-let [current-item (resolve!i system item-id)]
+        (if (= ::queue-item/activated (::queue-item/status current-item))
+          true
+          (do (reset! item-id new-id) false))))))
 
 (>defn -qsort!
   "Sort waiting-q, ensuring it's a vector. Low->High priority, suitable for peek/pop. Date new == low priority."
@@ -176,7 +193,7 @@
   
    ::queue/lockout?-fn
    
-   (fn [queue-item] boolean?) 
+   (fn [system queue-item] boolean?) 
    
    if present, when returns true the queue item is \"locked\", meaning the item is basically invisible in the waiting-q. 
    it will be passed over in favor of other lower priority entries. Useful if a specific lockout timer is required for
@@ -187,7 +204,7 @@
         lockout?  (::queue/lockout?-fn queue-ent)
         ]
     (when-let [possible-id (if lockout?
-                             (some->> queue-ent ::queue/waiting-q reverse (map (partial resolve!i system)) (remove lockout?) first ::queue-item/id)
+                             (some->> queue-ent ::queue/waiting-q reverse (map (partial resolve!i system)) (remove #(lockout? system %)) first ::queue-item/id)
                              (some-> queue-ent ::queue/waiting-q peek))]
       (if-let [rate-limit-f (::queue/rate-limit-fn queue-ent)]
         (let [rate-limit-f                   (fn [& args]
@@ -323,7 +340,7 @@
   (-qsort! s :third/queue)
 
   (qcreate! s {::queue/name        :third/queue
-               ::queue/lockout?-fn #(get-in % [::queue-item/data :locked-eternally?])})
+               ::queue/lockout?-fn #(get-in %2 [::queue-item/data :locked-eternally?])})
 
   (do
 
