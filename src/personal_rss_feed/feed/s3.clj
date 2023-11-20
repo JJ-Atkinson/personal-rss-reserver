@@ -27,7 +27,7 @@
                                       :request {:Bucket bucket-name
                                                 :Key    key}})))
 
-(defn s3-name 
+(defn s3-name
   [s3 key]
   (str "s3://" (:bucket-name s3) "/" key))
 
@@ -71,8 +71,8 @@
   [options]
   {"AWS_ACCESS_KEY_ID"     (:access-key-id options)
    "AWS_SECRET_ACCESS_KEY" (:secret-access-key options)
-   "AWS_DEFAULT_REGION" (:region options)
-   "AWS_ENDPOINT_URL" (str "http://" (:hostname options) ":" (:port options))
+   "AWS_DEFAULT_REGION"    (:region options)
+   "AWS_ENDPOINT_URL"      (str "http://" (:hostname options) ":" (:port options))
    })
 
 (defmethod ig/init-key ::s3
@@ -89,7 +89,7 @@
                                                  {:access-key-id     access-key-id
                                                   :secret-access-key secret-access-key})})
          :bucket-name bucket-name
-         :env-awscli (make-extra-env-awscli options)}]
+         :env-awscli  (make-extra-env-awscli options)}]
     (reset! !s3 s3)
     s3))
 
@@ -104,6 +104,7 @@
   (aws/stop (:client s3)))
 
 (comment
+  (keys (aws/ops (:client @!s3)))
   (aws/doc (:client @!s3) :PutObject)
   (aws/doc (:client @!s3) :ListObjects)
   (upload-uri! @!s3 "..." "test-curl44.mp4")
@@ -114,10 +115,29 @@
 
   (download-object! @!s3 "video-a466e883-b8c1-422f-9a01-f2a566738dfd.mp4" "/tmp/file222222.mp4")
   (upload-file! @!s3 "video-temp.mp4" "/tmp/file222222.mp4" {})
-  
+
+  (shell {:extra-env (:env-awscli @!s3)}
+    "aws s3 mv"
+    (s3-name @!s3 "video-69cce50a-a20f-421d-b3a8-2bf681ea07a9.mp4?u=6xvg1&b=1")
+    (s3-name @!s3 "video-69cce50a-a20f-421d-b3a8-2bf681ea07a9.mp4")
+    )
+
+  (def bad-names [["video-69cce50a-a20f-421d-b3a8-2bf681ea07a9.mp4?u=6xvg1&b=1"
+                   "video-69cce50a-a20f-421d-b3a8-2bf681ea07a9.mp4"]
+                  ["video-6d5aecd5-02ba-4cd7-a6f6-c7465ecf93a9.mp4?u=6xvg1&b=1" "video-6d5aecd5-02ba-4cd7-a6f6-c7465ecf93a9.mp4"]
+                  ["video-8b1d9246-2ffe-4d86-8a13-48cd5a8517b7.mp4?u=6xvg1&b=1"
+                   "video-8b1d9246-2ffe-4d86-8a13-48cd5a8517b7.mp4"]])
+
+  (doseq [[old new] bad-names]
+    (aws/invoke (:client @!s3) {:op      :DeleteObject
+                                :request {:Bucket "lotus-eaters"
+                                          :Key    old}})
+
+    #_(upload-uri! @!s3 (str "https://lotus-eaters.s3.pathul-dapneb.com/" old) new))
+
   ;; Clear the CI bucket
   (let [objects (aws/invoke (:client @!s3) {:op      :ListObjects
-                                            :request {:Bucket "lotus-eaters-ci"}})]
+                                            :request {:Bucket "lotus-eaters"}})]
     (:Contents objects)
     #_(doseq [obj (:Contents objects)]
         (println "Deleting" (:Key obj))

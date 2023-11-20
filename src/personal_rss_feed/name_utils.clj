@@ -9,11 +9,15 @@
   ([id] (format-transcript "" id))
   ([s3-prefix id] (str s3-prefix "transcript-" id ".txt")))
 
-(defn extension-of 
+(defn extension-of
   [original-uri]
-  (subs original-uri (str/last-index-of original-uri ".")))
+  (as-> original-uri $
+    (subs $ (str/last-index-of $ "."))
+    (if (str/includes? $ "?")
+      (subs $ 0 (str/index-of $ "?"))
+      $)))
 
 (defn format-video
   ([id original-uri] (format-video "" id original-uri))
-  ([s3-prefix id original-uri] 
+  ([s3-prefix id original-uri]
    (str s3-prefix "video-" id (extension-of original-uri))))
