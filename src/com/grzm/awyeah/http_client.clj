@@ -138,7 +138,6 @@
   [^HttpRequest http-request ^HttpResponse http-response]
   (let [body (when (response-body? http-request)
                (.body http-response))]
-    (tap> [:body body])
     (cond-> {:status  (.statusCode http-response)
              :headers (header-map (.headers http-response))}
       body (assoc :body (ByteBuffer/wrap body)))))
@@ -156,7 +155,6 @@
         (swap! pending-ops dec))
       (try
         (let [http-request (map->http-request request)]
-          (tap> [:http-req http-request request])
           (-> (.sendAsync http-client http-request (HttpResponse$BodyHandlers/ofByteArray))
             (.thenApply
               (reify Function

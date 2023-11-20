@@ -4,6 +4,7 @@
    [dev.freeformsoftware.simple-queue.core :as simple-queue]
    [dev.freeformsoftware.simple-queue.queue :as queue]
    [dev.freeformsoftware.simple-queue.queue-item :as queue-item]
+   [personal-rss-feed.ingest.file-utils :as file-utils]
    [personal-rss-feed.feed.s3 :as s3]
    [personal-rss-feed.feed.db :as db]
    [personal-rss-feed.name-utils :as name-utils]
@@ -12,8 +13,7 @@
    [tempfile.core :as tempfile]
    [babashka.process :refer [shell process exec]]
    [taoensso.timbre :as log])
-  (:import (java.nio.file Files)
-           (java.nio.file.attribute FileAttribute)))
+  )
 
 (defn extract-audio
   [{:db/keys         [conn]
@@ -34,10 +34,9 @@
           (simple-queue/qcomplete! queue id {:audio-file-already-existed? true}))
         (do
           (log/info "Extracting audio from the video for the episode" url)
-          (tempfile/with-tempfile [video-temp (Files/createTempFile "video-dest" (name-utils/extension-of original-uri)
-                                                (make-array FileAttribute 0))
-                                   audio-temp (Files/createTempFile "audio-dest" ".mp3"
-                                                (make-array FileAttribute 0))]
+          (file-utils/with-tempfile
+            [video-temp (file-utils/create-temp-file "video-dest" (name-utils/extension-of original-uri))
+             audio-temp (file-utils/create-temp-file "audio-dest" ".mp3")]
             (s3/download-object! s3 s3-video-key video-temp)
             (shell "ffmpeg" "-i" (.toString video-temp)
               "-q:a 0"                                      ;; variable bitrate
@@ -73,4 +72,25 @@
   (shell "ffmpeg" "-i" (.toString dest) "-q:a" "0" "-map" "a" (.toString out))
 
   (s3/upload-file! (::le.shared/s3 @le.shared/!shared) "audio-1.mp3" (.toString out) {:content-type "audio/mpeg"})
+
+  (simple-queue/qview
+    (::le.shared/queue @le.shared/!shared)
+    ::extract-audio-queue)
+
+  (simple-queue/qpeek!
+    (::le.shared/queue @le.shared/!shared)
+    ::extract-audio-queue)
+
+
+  (#'simple-queue/update!q
+   (::le.shared/queue @le.shared/!shared)
+   ::extract-audio-queue
+   #(assoc % ::queue/lockout?-fn (simple-queue/comp-lockout_rate-limit
+                                   (time-utils/queue-lockout-backoff-retry
+                                     {:base-s-backoff 30})
+                                   (simple-queue/lockout?-intensive-cpu-tasks))))
+
+  (simple-queue/resolve!i
+    (::le.shared/queue @le.shared/!shared)
+    #uuid"721009f2-3b55-440b-9238-41b50bb51b04")
   )

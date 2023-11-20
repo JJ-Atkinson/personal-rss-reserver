@@ -10,7 +10,7 @@
 (defonce system (atom {}))
 
 (log/merge-config! 
-  {:appenders {:spit (log/spit-appender {:fname (str "/var/run-" (.getTime (Date.)) "/timbre-split.log")})}})
+  {:appenders {:spit {:enabled? false}}})
 
 (defn start-server!
   [& args]
