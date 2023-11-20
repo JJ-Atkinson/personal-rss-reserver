@@ -67,17 +67,19 @@
     (::le.shared/queue @le.shared/!shared)
     ::download-queue)
 
-  (simple-queue/qview-dead
+  (simple-queue/qview
     (::le.shared/queue @le.shared/!shared)
     ::download-queue)
   
   (simple-queue/resolve-error! (::le.shared/queue @le.shared/!shared) #uuid"03d76bc6-b9f7-4e8f-9ffe-0956634637cb")
 
-  (doseq [qi (->> (simple-queue/qview-dead
-                    (::le.shared/queue @le.shared/!shared)
-                    ::download-queue)
-               (remove #(= ::queue-item/succeeded (::queue-item/status %))))]
-    (simple-queue/qsubmit! (::le.shared/queue @le.shared/!shared) (dissoc qi ::queue-item/retry-count)))
+  (simple-queue/all-un-resolved-errors
+    (::le.shared/queue @le.shared/!shared)
+    ::download-queue)
+  
+  (simple-queue/qresubmit-item!
+    (::le.shared/queue @le.shared/!shared)
+    #uuid"19b55afb-f7b7-48ac-b9f4-25e60cf744d4")
 
   (simple-queue/qsubmit! (::le.shared/queue @le.shared/!shared)
     (assoc (#'simple-queue/resolve!i (::le.shared/queue @le.shared/!shared) #uuid "50b3a4d9-176e-44bc-9d19-f34798d4dbc2")
@@ -86,6 +88,23 @@
 
   (swap! simple-queue/*manual-unlock-1*
     conj ::download-queue)
+
+  (d/touch
+    (db/episode-by-url
+      (d/db (:db/conn @le.shared/!shared))
+      "https://www.lotuseaters.com/premium-epochs-130-or-the-duke-of-wellington-part-ii-29-10-23"))
+
+  (download-episode
+    @le.shared/!shared
+    #:dev.freeformsoftware.simple-queue.queue-item{:completion-time #inst"2023-11-14T22:40:07.283-00:00",
+                                                   :activation-time #inst"2023-11-14T22:32:53.283-00:00",
+                                                   :retry-count 0
+                                                   :id #uuid"0acef5ec-f8f5-4810-9955-8b04e7a79017",
+                                                   :queue :personal-rss-feed.ingest.lotus-eaters.download-file/download-queue,
+                                                   :data {:episode/url "https://www.lotuseaters.com/premium-epochs-130-or-the-duke-of-wellington-part-ii-29-10-23",
+                                                          :personal-rss-feed.ingest.lotus-eaters.download-file/download-type :personal-rss-feed.ingest.lotus-eaters.download-file/video},
+                                                   :submission-time #inst"2023-11-14T22:36:20.799-00:00",
+                                                   :priority Long/MAX_VALUE})
 
   (simple-queue/qresubmit-item!
     (::le.shared/queue @le.shared/!shared)
@@ -100,6 +119,7 @@
       @le.shared/!shared
       (#'simple-queue/resolve!i (::le.shared/queue @le.shared/!shared) #uuid "50b3a4d9-176e-44bc-9d19-f34798d4dbc2"))
     nil)
+  
 
   (download-episode @le.shared/!shared
     (simple-queue/qpop!

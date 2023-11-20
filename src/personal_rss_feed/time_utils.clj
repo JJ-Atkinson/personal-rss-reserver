@@ -38,5 +38,6 @@
     (when (and (= status ::queue-item/error-retrying)
             activation-time)
       (let [minimum-delay (* base-s-backoff retry-count)
-            run-after     (.plusSeconds (.toInstant activation-time) minimum-delay)]
-        (.isAfter (Instant/now) run-after)))))
+            run-after     (.plusSeconds (.toInstant activation-time) minimum-delay)
+            difference (Duration/between run-after (Instant/now))]
+        (boolean (< (.toSeconds difference) minimum-delay))))))

@@ -27,6 +27,7 @@
 
           openai-whisper-cpp
           ffmpeg
+          awscli2
 
           which # Suprising, but I need this to make my life easier in the ./bin/env-vars file sourced.
         ];
