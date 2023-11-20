@@ -97,7 +97,7 @@
   ([system id f] (swap! system update ::id->queue-item (fn [n-q] (update n-q id f))))
   ([system id key f] (swap! system update ::id->queue-item (fn [n-q] (update n-q id update key f)))))
 
-(defn- resolve!i
+(defn resolve!i
   [system id]
   (get-in @system [::id->queue-item id]))
 
@@ -264,7 +264,7 @@
       (qsubmit! system (assoc item
                          ::queue-item/retry-count ((fnil inc 0) (::queue-item/retry-count item))
                          ::queue-item/status ::queue-item/error-retrying
-                         ::queue-item/priority Long/MAX_VALUE))
+                         ::queue-item/priority (dec Long/MAX_VALUE)))
       (-qfinish!* system queue-item-id completion-data ::queue-item/failed))))
 
 (>defn qcomplete!
@@ -284,9 +284,37 @@
                                              :error-info error-info})
   (-qerror-move!* system queue-item-id error-info))
 
+(defn all-un-resolved-errors
+  "Utility to help find un-resolved errors. A resolved error has the key ::simple-queue/resolved? true
+   in the completion data."
+  ([system]
+   (mapcat #(all-un-resolved-errors system %) (keys (::name->queue system))))
+  ([system queue-name]
+   (filter #(and (= ::queue-item/failed (::queue-item/status %) )
+              (not (::resolved? (::queue-item/completion-data %))))
+     (qview-dead system queue-name))))
+
+(defn resolve-error! 
+  "Resolve an error. See `all-un-resolved-errors`."
+  [system queue-item-id]
+  (update!qi system queue-item-id ::queue-item/completion-data #(assoc % ::resolved? true)))
+
+(defn qresubmit-item! 
+  "Resubmit an item that has previously failed, resetting the retry counter and completion data. Adds a flag indicating re-submission to ::queue-item/data
+   By default, assigns max priority."
+  ([system queue-item-id]
+   (qresubmit-item! system queue-item-id true))
+  ([system queue-item-id max-priority?]
+   (if-let [qi (resolve!i system queue-item-id)]
+     (qsubmit! system (-> qi 
+                        (dissoc ::queue-item/retry-count ::queue-item/completion-data)
+                        (cond-> max-priority? (assoc ::queue-item/priority Long/MAX_VALUE))
+                        (update ::queue-item/data assoc ::resubmitted? true)))
+     (throw (ex-info "Does not exist!" {:queue-item-id queue-item-id})))))
+
 (defn -activate-timeout!
   "Activate the timeout on an item in the active-q. Optionally runs `notify-timed-out!`. If the item exceeds `retry-limit` (default 0),
-   then it is kicked to the dead-q. If not, it is sent back to the active-q with Long/MAX_VALUE priority."
+   then it is kicked to the dead-q. If not, it is sent back to the active-q with Long/MAX_VALUE-1 priority."
   [system queue-item-id]
   (let [i (resolve!i system queue-item-id)]
     (when-let [notify-timed-out! (or (get-in @system [::name->queue (::queue/name i) ::queue/notify-timed-out!])
