@@ -145,7 +145,7 @@
 
 (comment
   (save-podcast! @!conn {:podcast/feed-uri "https://www.lotuseaters.com/feed/category/epochs"})
-  (d/touch (d/entity (d/db @!conn) [:podcast/feed-uri "https://www.lotuseaters.com/feed/category/epochs"]))
+  (d/touch (d/entity (d/db @!conn) [:episode/url "https://www.lotuseaters.com/premium-live-lads-hour-10-or-birthday-special-09-11-2023"]))
   (d/touch (d/entity (d/db @!conn) [:podcast/id "https://www.lotuseaters.com/feed/category/aaab"]))
   (known-podcasts @!conn)
   (known-podcast? (d/db @!conn) "test")

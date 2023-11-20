@@ -297,7 +297,8 @@
 (defn resolve-error! 
   "Resolve an error. See `all-un-resolved-errors`."
   [system queue-item-id]
-  (update!qi system queue-item-id ::queue-item/completion-data #(assoc % ::resolved? true)))
+  (update!qi system queue-item-id ::queue-item/completion-data #(assoc % ::resolved? true))
+  nil)
 
 (defn qresubmit-item! 
   "Resubmit an item that has previously failed, resetting the retry counter and completion data. Adds a flag indicating re-submission to ::queue-item/data

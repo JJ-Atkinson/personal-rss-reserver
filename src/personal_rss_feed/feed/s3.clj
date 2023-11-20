@@ -5,7 +5,8 @@
    [cognitect.aws.client.api :as aws]
    [cognitect.aws.credentials :as aws.creds]
    [com.grzm.awyeah.http-client :as awyeah.http]
-   [integrant.core :as ig])
+   [integrant.core :as ig]
+   [taoensso.timbre :as log])
   (:import (java.net URI URL)))
 
 (defonce !s3 (atom {}))
@@ -16,7 +17,7 @@
     (.toString
       (URI. (.getProtocol url) (.getUserInfo url) (.getHost url) (.getPort url) (.getPath url) (.getQuery url) (.getRef url)))))
 
-(defn content-length 
+(defn content-length!
   [{:as s3 :keys [bucket-name client]} key]
   (:ContentLength (aws/invoke client {:op      :HeadObject
                                       :request {:Bucket bucket-name
@@ -27,9 +28,9 @@
    new s3 obj is deleted."
   [{:as s3 :keys [bucket-name client]} uri key]
   (let [uri (to-uri uri)
-        {:strs [content-type content-length]} (:headers (bb.http/head uri))
-        content-length (Long/parseLong content-length)
-        {:keys [body]} (bb.http/get uri {:as :stream})]
+        {:keys [body] 
+         {:strs [content-type content-length]} :headers} (bb.http/get uri {:as :stream})
+        content-length (Long/parseLong content-length)]
     (with-open [body body]
       (aws/invoke client {:op      :PutObject
                           :request {:Bucket      bucket-name
@@ -37,7 +38,7 @@
                                     :ContentType content-type
                                     :Body        body}}))
 
-    (let [act-content-length (content-length s3 key)]
+    (let [act-content-length (content-length! s3 key)]
       (when-not (= act-content-length content-length)
         (aws/invoke client {:op      :DeleteObject
                             :request {:Bucket bucket-name

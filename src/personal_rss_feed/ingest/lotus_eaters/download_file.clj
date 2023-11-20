@@ -40,9 +40,9 @@
                                          :content-length content-length
                                          :download-url   download-uri})
       (when (= ::video download-type)
-        (simple-queue/qsubmit! queue {::queue-item/queue ::le.extract-audio/extract-audio-queue
-                                      ::queue-item/id (random-uuid)
-                                      ::queue-item/data (select-keys episode [:episode/url])
+        (simple-queue/qsubmit! queue {::queue-item/queue    ::le.extract-audio/extract-audio-queue
+                                      ::queue-item/id       (random-uuid)
+                                      ::queue-item/data     (select-keys episode [:episode/url])
                                       ::queue-item/priority (.getTime (:episode/publish-date episode))})))
     (catch Exception e
       (simple-queue/qerror! queue id {:exception                (pr-str e)
@@ -67,9 +67,11 @@
     (::le.shared/queue @le.shared/!shared)
     ::download-queue)
 
-  (simple-queue/qview
+  (simple-queue/qview-dead
     (::le.shared/queue @le.shared/!shared)
     ::download-queue)
+  
+  (simple-queue/resolve-error! (::le.shared/queue @le.shared/!shared) #uuid"03d76bc6-b9f7-4e8f-9ffe-0956634637cb")
 
   (doseq [qi (->> (simple-queue/qview-dead
                     (::le.shared/queue @le.shared/!shared)
@@ -85,6 +87,14 @@
   (swap! simple-queue/*manual-unlock-1*
     conj ::download-queue)
 
+  (simple-queue/qresubmit-item!
+    (::le.shared/queue @le.shared/!shared)
+    #uuid"247210c6-d4a2-4e1e-9ba2-9d5911fd31b6")
+  
+  (simple-queue/resolve!i
+    (::le.shared/queue @le.shared/!shared)
+    #uuid"247210c6-d4a2-4e1e-9ba2-9d5911fd31b6")
+
   (do
     (download-episode
       @le.shared/!shared
@@ -94,4 +104,6 @@
   (download-episode @le.shared/!shared
     (simple-queue/qpop!
       (::le.shared/queue @le.shared/!shared)
-      ::download-queue)))
+      ::download-queue))
+
+  )
