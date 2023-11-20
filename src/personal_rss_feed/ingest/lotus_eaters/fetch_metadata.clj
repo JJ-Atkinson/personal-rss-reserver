@@ -38,13 +38,13 @@
 (defn safe-navigate!
   "For some reason playwright doesn't recognize the lotus eaters site as loaded ever. Awaits the appearance of the nav bar."
   [url]
-  (.setDefaultTimeout w/*page* 5000)
+  (.setDefaultTimeout w/*page* 10000)
   (try
     (w-utils/navigate url)
     (catch Exception e nil))
   (.setDefaultTimeout w/*page* 20000)
   (ws/query-1 [".navBar__left"])
-  (.setDefaultTimeout w/*page* 5000))
+  (.setDefaultTimeout w/*page* 10000))
 
 (defn parse-date
   [date-s]
@@ -65,6 +65,7 @@
   "In the context of an existing navigated page, get the CDN url for the download"
   [!shared]
   (ensure-logged-in! !shared)
+  (break!)
   (enc/assoc-some {}
     :episode/audio-original-uri
     (e->nil (.getAttribute (ws/query-1 [".post__body" (ws/title "Download Audio File")]) "href"))
@@ -100,7 +101,7 @@
                        {:autoclose-browser-context? false})
     (safe-navigate! url)
     (let [extra-meta (episode-page-get-content-url shared)]
-      (when (or (not (contains? extra-meta :episode/audio-original-uri))
+      (when (and (not (contains? extra-meta :episode/audio-original-uri))
               (not (contains? extra-meta :episode/video-original-uri)))
         (throw (ex-info "Was not able to get any audio/video information from the page" {})))
       (assoc extra-meta :episode/url url))))
@@ -149,9 +150,17 @@
          :poll-f     #'augment-episode-information}))))
 
 (comment
-  (get-detailed-information @le.shared/!shared {:episode/url "..."})
   
   (defn with-debug [shared] (assoc shared ::debug {}))
+  
+  (get-detailed-information (with-debug @le.shared/!shared)
+    {:episode/url "..."})
+
+  (simple-queue/all-un-resolved-errors
+    (::le.shared/queue @le.shared/!shared)
+    ::fetch-metadata-queue)
+  
+  (simple-queue)
 
   (simple-queue/qpeek!
     (::le.shared/queue @le.shared/!shared)
@@ -160,9 +169,12 @@
   (simple-queue/qview
     (::le.shared/queue @le.shared/!shared)
     ::fetch-metadata-queue)
+  
+  (simple-queue/qresubmit-item! (::le.shared/queue @le.shared/!shared) #uuid "cafd67d2-7735-4671-b7b6-eddcbe03dc5c")
 
   (swap! simple-queue/*manual-unlock-1*
     conj ::fetch-metadata-queue)
+  (simple-queue/resolve!i (::le.shared/queue @le.shared/!shared) #uuid "cafd67d2-7735-4671-b7b6-eddcbe03dc5c")
 
   (do
     (swap! simple-queue/*manual-unlock-1*

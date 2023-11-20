@@ -16,6 +16,12 @@
     (.toString
       (URI. (.getProtocol url) (.getUserInfo url) (.getHost url) (.getPort url) (.getPath url) (.getQuery url) (.getRef url)))))
 
+(defn content-length 
+  [{:as s3 :keys [bucket-name client]} key]
+  (:ContentLength (aws/invoke client {:op      :HeadObject
+                                      :request {:Bucket bucket-name
+                                                :Key    key}})))
+
 (defn upload-uri!
   "Returns content-length. If the content length of the uploaded file does not match, an exception is thrown and the
    new s3 obj is deleted."
@@ -31,9 +37,7 @@
                                     :ContentType content-type
                                     :Body        body}}))
 
-    (let [act-content-length (:ContentLength (aws/invoke client {:op      :HeadObject
-                                                                 :request {:Bucket bucket-name
-                                                                           :Key    key}}))]
+    (let [act-content-length (content-length s3 key)]
       (when-not (= act-content-length content-length)
         (aws/invoke client {:op      :DeleteObject
                             :request {:Bucket bucket-name
