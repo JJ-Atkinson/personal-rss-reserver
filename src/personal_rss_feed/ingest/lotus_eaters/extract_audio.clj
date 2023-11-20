@@ -26,11 +26,11 @@
           ep-uuid      (:episode/uuid episode)
           original-uri (:episode/video-original-uri episode)
           s3-video-key (name-utils/format-video ep-uuid original-uri)
-          s3-audio-key (name-utils/format-audio ep-uuid original-uri)]
+          s3-audio-key (name-utils/format-audio ep-uuid ".mp3")]
 
       (if (:episode/audio-content-length episode)
         (do
-          (log/info "No need to extract audio for existing audio file" url)
+          (log/info "No need to extract audio for existing audio file" url ", saved at " s3-audio-key)
           (simple-queue/qcomplete! queue id {:audio-file-already-existed? true}))
         (do
           (log/info "Extracting audio from the video for the episode" url)
@@ -39,18 +39,20 @@
              audio-temp (file-utils/create-temp-file "audio-dest" ".mp3")]
             (s3/download-object! s3 s3-video-key video-temp)
             (shell "ffmpeg" "-i" (.toString video-temp)
-              "-q:a 0"                                      ;; variable bitrate
-              "-map a"                                      ;; Extract audio only, no subtitles
+              "-q:a" "0"                                      ;; variable bitrate
+              "-map" "a"                                      ;; Extract audio only, no subtitles
               "-nostdin"                                    ;; Force ffmpeg into non interactive mode
               "-y"                                          ;; Automatically allow file overwrite (shouldn't happen)
               (.toString audio-temp))
             (s3/upload-file! s3 s3-audio-key (.toString audio-temp) {:content-type "audio/mpeg"})
             (db/save-episode! conn (assoc episode
                                      :episode/audio-content-length (s3/content-length! s3 s3-audio-key))))
-          (simple-queue/qcomplete! queue id))))
+          (simple-queue/qcomplete! queue id)
+          nil)))
     (catch Exception e
-      (simple-queue/qerror! queue id {:exception                e
-                                      ::simple-queue/retryable? true}))))
+      (simple-queue/qerror! queue id {:exception                (pr-str e)
+                                      ::simple-queue/retryable? true})
+      nil)))
 
 (defn init!
   [shared]
@@ -60,7 +62,8 @@
                   ::queue/lockout?-fn         (simple-queue/comp-lockout_rate-limit
                                                 (time-utils/queue-lockout-backoff-retry
                                                   {:base-s-backoff 30})
-                                                (simple-queue/lockout?-intensive-cpu-tasks))}
+                                                (simple-queue/lockout?-intensive-cpu-tasks))
+                  ::queue/timeout?-fn (simple-queue/default-timeout?-fn (* 1000 60 60 2))}
      :poll-ms    1000
      :poll-f     #'extract-audio}))
 
@@ -73,9 +76,15 @@
 
   (s3/upload-file! (::le.shared/s3 @le.shared/!shared) "audio-1.mp3" (.toString out) {:content-type "audio/mpeg"})
 
-  (simple-queue/qview
+  (simple-queue/qresubmit-item!
     (::le.shared/queue @le.shared/!shared)
-    ::extract-audio-queue)
+    (::queue-item/id (first
+                       (simple-queue/all-un-resolved-errors
+                         (::le.shared/queue @le.shared/!shared)
+                         ::extract-audio-queue))))
+  
+  (extract-audio @le.shared/!shared
+    {::queue-item/data {:episode/url "https://www.lotuseaters.com/premium-live-lads-hour-10-or-birthday-special-09-11-2023"}})
 
   (simple-queue/qpeek!
     (::le.shared/queue @le.shared/!shared)

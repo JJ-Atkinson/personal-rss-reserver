@@ -70,7 +70,11 @@
   (simple-queue/qview
     (::le.shared/queue @le.shared/!shared)
     ::download-queue)
-  
+
+  (simple-queue/qview-dead
+    (::le.shared/queue @le.shared/!shared)
+    ::download-queue)
+
   (simple-queue/resolve-error! (::le.shared/queue @le.shared/!shared) #uuid"03d76bc6-b9f7-4e8f-9ffe-0956634637cb")
 
   (simple-queue/all-un-resolved-errors
@@ -88,7 +92,7 @@
 
   (swap! simple-queue/*manual-unlock-1*
     conj ::download-queue)
-
+  
   (d/touch
     (db/episode-by-url
       (d/db (:db/conn @le.shared/!shared))

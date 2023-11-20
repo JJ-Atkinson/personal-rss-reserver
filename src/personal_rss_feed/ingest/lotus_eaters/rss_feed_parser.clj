@@ -71,7 +71,7 @@
                    (map (partial merge (select-keys intermediate [:podcast/id]))))
        :podcast  (dissoc intermediate :items)})
     (map-accumulator
-      [(attribute :title :podcast/title content)
+      [#_(attribute :title :podcast/title content)
        (attribute :icon :podcast/icon-uri content)
        (attribute :updated :podcast/updated-at (comp parse-date content))
        (attribute :description :podcast/description content)
