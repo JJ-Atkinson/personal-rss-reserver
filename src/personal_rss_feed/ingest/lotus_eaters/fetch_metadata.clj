@@ -65,7 +65,6 @@
   "In the context of an existing navigated page, get the CDN url for the download"
   [!shared]
   (ensure-logged-in! !shared)
-  (break!)
   (enc/assoc-some {}
     :episode/audio-original-uri
     (e->nil (.getAttribute (ws/query-1 [".post__body" (ws/title "Download Audio File")]) "href"))
