@@ -53,6 +53,15 @@
                                                         :Key    key}}))]
     (io/copy body (io/file dest))))
 
+(defn upload-file!
+  [{:as s3 :keys [bucket-name client]} key src-file {:as options :keys [content-type]}]
+  (with-open [body (io/input-stream src-file)]
+    (aws/invoke client {:op      :PutObject
+                        :request {:Bucket bucket-name
+                                  :Key    key
+                                  :ContentType content-type
+                                  :Body   body}})))
+
 (defmethod ig/init-key ::s3
   [_ {:keys [hostname port region bucket-name access-key-id secret-access-key] :as options}]
   (let [s3

@@ -33,10 +33,10 @@
 
 (defn queue-lockout-backoff-retry
   [{:keys [base-s-backoff]}]
-  (fn queue-lockout?-backoff-retry* 
-    [{::queue-item/keys [activation-time status retry-count]}]
+  (fn queue-lockout?-backoff-retry*
+    [_system {::queue-item/keys [activation-time status retry-count]}]
     (when (and (= status ::queue-item/error-retrying)
             activation-time)
       (let [minimum-delay (* base-s-backoff retry-count)
-            run-after (.plusSeconds  (.toInstant activation-time) minimum-delay)]
+            run-after     (.plusSeconds (.toInstant activation-time) minimum-delay)]
         (.isAfter (Instant/now) run-after)))))

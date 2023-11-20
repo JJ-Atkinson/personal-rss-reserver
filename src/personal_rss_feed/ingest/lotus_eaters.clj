@@ -6,6 +6,7 @@
    [clojure.java.io]
    [integrant.core :as ig]
    [personal-rss-feed.ingest.lotus-eaters.download-file :as le.download-file]
+   [personal-rss-feed.ingest.lotus-eaters.extract-audio :as le.extract-audio]
    [personal-rss-feed.ingest.lotus-eaters.fetch-metadata :as le.fetch-metadata]
    [personal-rss-feed.ingest.lotus-eaters.rss-feed-parser :as le.rss-feed-parser]
    [personal-rss-feed.ingest.lotus-eaters.shared :as le.shared]
@@ -28,6 +29,7 @@
                  ::le.shared/s3 s3)
           (dissoc :queue)
 
+          (le.extract-audio/init!)
           (le.download-file/init!)
           (le.fetch-metadata/init!)
           (cond->
