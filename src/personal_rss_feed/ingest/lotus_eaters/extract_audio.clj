@@ -47,7 +47,7 @@
               (.toString audio-temp))
             (s3/upload-file! s3 s3-audio-key (.toString audio-temp) {:content-type "audio/mpeg"})
             (db/save-episode! conn (assoc episode
-                                     :episode/audio-content-length (s3/content-length s3 s3-audio-key))))
+                                     :episode/audio-content-length (s3/content-length! s3 s3-audio-key))))
           (simple-queue/qcomplete! queue id))))
     (catch Exception e
       (simple-queue/qerror! queue id {:exception                e
