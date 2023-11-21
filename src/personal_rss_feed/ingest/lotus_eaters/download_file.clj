@@ -48,6 +48,31 @@
       (simple-queue/qerror! queue id {:exception                (pr-str e)
                                       ::simple-queue/retryable? true}))))
 
+(defn download-now!
+  "Trigger an immediate download. Returns a queue item representing the task. Does _not_ re-submit a failed task."
+  [{:db/keys         [conn]
+    ::le.shared/keys [queue s3] :as system}
+   {:keys [:episode/url ::download-type] :as data}]
+  (assert (contains? #{::video ::audio} download-type))
+  (let [existing-items       (concat
+                               (simple-queue/qview-active queue ::download-queue)
+                               (simple-queue/qview queue ::download-queue))
+        existing-download-id (->> existing-items
+                               (filter #(and (= (get-in % [::queue-item/data :episode/url]) url)
+                                          (= (get-in % [::queue-item/data ::download-type]) download-type)))
+                               (first)
+                               ::queue-item/id)
+        new-download         (when-not existing-download-id
+                               {::queue-item/queue    ::download-queue
+                                ::queue-item/priority Long/MAX_VALUE
+                                ::queue-item/id       (random-uuid)
+                                ::queue-item/data     data})
+        _                    (some->> new-download (simple-queue/qsubmit! queue))
+        download-id          (or existing-download-id (::queue-item/id new-download))]
+    (when (= ::queue-item/waiting (::queue-item/status (simple-queue/resolve!i queue download-id)))
+      (future (download-episode system (simple-queue/manual-dequeue! queue download-id))))
+    (simple-queue/resolve!i queue download-id)))
+
 (defn init!
   [shared]
   (le.shared/start-queue! shared
@@ -80,7 +105,7 @@
   (simple-queue/all-un-resolved-errors
     (::le.shared/queue @le.shared/!shared)
     ::download-queue)
-  
+
   (simple-queue/qresubmit-item!
     (::le.shared/queue @le.shared/!shared)
     #uuid"19b55afb-f7b7-48ac-b9f4-25e60cf744d4")
@@ -92,7 +117,7 @@
 
   (swap! simple-queue/*manual-unlock-1*
     conj ::download-queue)
-  
+
   (d/touch
     (db/episode-by-url
       (d/db (:db/conn @le.shared/!shared))
@@ -100,20 +125,12 @@
 
   (download-episode
     @le.shared/!shared
-    #:dev.freeformsoftware.simple-queue.queue-item{:completion-time #inst"2023-11-14T22:40:07.283-00:00",
-                                                   :activation-time #inst"2023-11-14T22:32:53.283-00:00",
-                                                   :retry-count 0
-                                                   :id #uuid"0acef5ec-f8f5-4810-9955-8b04e7a79017",
-                                                   :queue :personal-rss-feed.ingest.lotus-eaters.download-file/download-queue,
-                                                   :data {:episode/url "https://www.lotuseaters.com/premium-epochs-130-or-the-duke-of-wellington-part-ii-29-10-23",
-                                                          :personal-rss-feed.ingest.lotus-eaters.download-file/download-type :personal-rss-feed.ingest.lotus-eaters.download-file/video},
-                                                   :submission-time #inst"2023-11-14T22:36:20.799-00:00",
-                                                   :priority Long/MAX_VALUE})
+    )
 
   (simple-queue/qresubmit-item!
     (::le.shared/queue @le.shared/!shared)
     #uuid"247210c6-d4a2-4e1e-9ba2-9d5911fd31b6")
-  
+
   (simple-queue/resolve!i
     (::le.shared/queue @le.shared/!shared)
     #uuid"247210c6-d4a2-4e1e-9ba2-9d5911fd31b6")
@@ -123,7 +140,7 @@
       @le.shared/!shared
       (#'simple-queue/resolve!i (::le.shared/queue @le.shared/!shared) #uuid "50b3a4d9-176e-44bc-9d19-f34798d4dbc2"))
     nil)
-  
+
 
   (download-episode @le.shared/!shared
     (simple-queue/qpop!

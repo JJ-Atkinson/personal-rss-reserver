@@ -1,8 +1,10 @@
 (ns personal-rss-feed.feed.feed-host
   (:require
    [personal-rss-feed.feed.db :as db]
+   [personal-rss-feed.ingest.lotus-eaters.download-file :as le.download-file]
    [ring.adapter.jetty9 :as ring-jetty]
    [clojure.data.xml :as xml]
+   [dev.freeformsoftware.simple-queue.queue-item :as queue-item]
    [clj-simple-router.core :as router]
    [ring.util.response :as response]
    [personal-rss-feed.name-utils :as name-utils]
@@ -19,14 +21,24 @@
       (.atOffset (.toInstant t) ZoneOffset/UTC))))
 
 (defn generate-description
-  [{:episode/keys [excerpt id uuid url]}]
+  [{:as config :s3/keys [public-s3-prefix]} {:episode/keys [excerpt video-content-length video-original-uri uuid url]}]
   (hiccup/html
     [:div
      [:div excerpt] [:br]
-     [:a {:href url} "Lotus eaters website link"]]))
+     [:a {:href url} "Lotus eaters website link"] [:br]
+     (cond
+       video-content-length
+       [:<> [:a {:href (name-utils/format-video public-s3-prefix uuid video-original-uri)} "Watch Now"] [:br]]
+
+       video-original-uri
+       [:<> [:a {:href video-original-uri} "Watch Now on LE CDN"] [:br]
+        [:a {:href} "Start video download now."]]
+
+       :else
+       [:span "No video for this episode."])]))
 
 (defn write-podcast-feed
-  [config 
+  [config
    podcast
    episodes]
   (xml/element :rss {:version        "2.0"
@@ -41,17 +53,17 @@
       (xml/element :description {} (:podcast/description podcast))
       (xml/element :language {} "en-US")
       (xml/element "itunes:author" {} "Lotus Eaters")
-      (xml/element "itunes:image" {} (or
-                                       (some->> podcast :podcast/generated-icon-relative-uri (str (:s3/public-s3-prefix config)))
-                                       (:podcast/icon-uri podcast)))
+      (xml/element "itunes:image" {:href (or
+                                           (some->> podcast :podcast/generated-icon-relative-uri (str (:s3/public-s3-prefix config)))
+                                           (:podcast/icon-uri podcast))})
 
       (->> (or (seq episodes)
-             [{:episode/url "dne"
+             [{:episode/url                  "dne"
                :episode/audio-content-length 1
-               :episode/title "Does not exist"
-               :episode/id (str "fake" (:podcast/id podcast))
-               ::override-url "blank.mp3"                   ;; This was manually added to the s3 host
-               :episode/publish-date (Date.)}])
+               :episode/title                "Does not exist"
+               :episode/id                   (str "fake" (:podcast/id podcast))
+               ::override-url                "blank.mp3"    ;; This was manually added to the s3 host
+               :episode/publish-date         (Date.)}])
         (map (fn [episode]
                (xml/element :item {}
                  (xml/element :title {} (:episode/title episode))
@@ -64,8 +76,20 @@
                  (xml/element :pubDate {} (-> episode :episode/publish-date format-time))
                  (xml/element :guid {} (-> episode :episode/id str))
                  (xml/element "content:encoded" {}
-                   (xml/cdata (generate-description episode)))
+                   (xml/cdata (generate-description config episode)))
                  (xml/element "itunes:image" {:href "http://relayfm.s3.amazonaws.com/uploads/broadcast/image/17/cortex_artwork.png"}))))))))
+
+(defn download-status-page
+  [config ep-url type]
+  (let [queue-item (le.download-file/download-now!
+                     (:lotus-eaters-ingest config)
+                     {:episode/url ep-url
+                      ::le.download-file/download-type type})]
+    (response/response
+      (hiccup/html
+        [:body
+         [:h1 "Download initiated"]
+         [:span "Status:" (name (::queue-item/status queue-item))]]))))
 
 (defn routes
   [{:keys [db/conn feed/secret-path-segment feed/public-feed-address] :as config}]
@@ -93,7 +117,17 @@
                         (db/podcast-feed conn (:podcast/feed-uri podcast)))]
          (-> (response/response
                (xml/emit-str (write-podcast-feed config podcast episodes)))
-           (response/content-type "application/rss+xml")))))})
+           (response/content-type "application/rss+xml")))))
+
+   (str "GET /" secret-path-segment "/content/video/*")
+   (fn [{[id] :path-params}]
+     (when-let [episode (db/episode-by-id conn id)]
+       (let []
+         (if (:episode/video-content-length episode)
+           (response/redirect
+             (name-utils/format-video (:s3/public-s3-prefix config) (:episode/uuid episode) (:episode/video-original-uri episode))
+             :moved-permanently)
+           (download-status-page config (:episode/url episode) ::le.download-file/video)))))})
 
 
 

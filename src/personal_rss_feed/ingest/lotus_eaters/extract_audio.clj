@@ -10,8 +10,7 @@
    [personal-rss-feed.name-utils :as name-utils]
    [personal-rss-feed.ingest.lotus-eaters.shared :as le.shared]
    [personal-rss-feed.time-utils :as time-utils]
-   [tempfile.core :as tempfile]
-   [babashka.process :refer [shell process exec]]
+   [personal-rss-feed.ingest.shell-utils :refer [throwing-shell]]
    [taoensso.timbre :as log])
   )
 
@@ -38,7 +37,7 @@
             [video-temp (file-utils/create-temp-file "video-dest" (name-utils/extension-of original-uri))
              audio-temp (file-utils/create-temp-file "audio-dest" ".mp3")]
             (s3/download-object! s3 s3-video-key video-temp)
-            (shell "ffmpeg" "-i" (.toString video-temp)
+            (throwing-shell "ffmpeg" "-i" (.toString video-temp)
               "-q:a" "0"                                      ;; variable bitrate
               "-map" "a"                                      ;; Extract audio only, no subtitles
               "-nostdin"                                    ;; Force ffmpeg into non interactive mode
@@ -72,7 +71,7 @@
   (s3/download-object! (::le.shared/s3 @le.shared/!shared) "audio-a466e883-b8c1-422f-9a01-f2a566738dfd.mp3" (.toString dest))
 
   (def out (Files/createTempFile "audio-file-out" ".mp3" (make-array FileAttribute 0)))
-  (shell "ffmpeg" "-i" (.toString dest) "-q:a" "0" "-map" "a" (.toString out))
+  (throwing-shell "ffmpeg" "-i" (.toString dest) "-q:a" "0" "-map" "a" (.toString out))
 
   (s3/upload-file! (::le.shared/s3 @le.shared/!shared) "audio-1.mp3" (.toString out) {:content-type "audio/mpeg"})
   

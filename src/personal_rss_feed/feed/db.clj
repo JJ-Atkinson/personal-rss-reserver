@@ -73,6 +73,17 @@
   [db url]
   (d/entity db [:episode/url url]))
 
+(defn episode-by-id
+  [conn id]
+  (some->> (d/q '[:find ?feed-uri
+                  :in $ ?id
+                  :where
+                  [?e :episode/id ?id]
+                  [?e :episode/url ?feed-uri]]
+             (d/db conn) id)
+    (ffirst)
+    (episode-by-url (d/db conn))))
+
 (def known-episode? (comp boolean episode-by-url))
 
 (defn podcast-by-feed-uri
@@ -99,7 +110,8 @@
                            :podcast/id
                            :podcast/title
                            :podcast/icon-uri
-                           :podcast/description])
+                           :podcast/description
+                           :podcast/generated-icon-relative-uri])
            :in $
            :where [?e :podcast/feed-uri _]]
       (d/db conn))
@@ -150,8 +162,7 @@
   (d/touch (d/entity (d/db @!conn) [:podcast/id "https://www.lotuseaters.com/feed/category/aaab"]))
   (known-podcasts @!conn)
   (known-podcast? (d/db @!conn) "test")
-  (map d/touch
-    (podcast-feed @!conn "https://www.lotuseaters.com/feed/category/epochs"))
+  
   (d/touch (podcast-by-id @!conn "aaab"))
 
   (->>
