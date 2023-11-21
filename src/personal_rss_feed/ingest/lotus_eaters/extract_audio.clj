@@ -26,7 +26,7 @@
           ep-uuid      (:episode/uuid episode)
           original-uri (:episode/video-original-uri episode)
           s3-video-key (name-utils/format-video ep-uuid original-uri)
-          s3-audio-key (name-utils/format-audio ep-uuid ".mp3")]
+          s3-audio-key (name-utils/format-audio ep-uuid)]
 
       (if (:episode/audio-content-length episode)
         (do
@@ -75,6 +75,10 @@
   (shell "ffmpeg" "-i" (.toString dest) "-q:a" "0" "-map" "a" (.toString out))
 
   (s3/upload-file! (::le.shared/s3 @le.shared/!shared) "audio-1.mp3" (.toString out) {:content-type "audio/mpeg"})
+  
+  (simple-queue/all-un-resolved-errors
+    (::le.shared/queue @le.shared/!shared)
+    ::extract-audio-queue)
 
   (simple-queue/qresubmit-item!
     (::le.shared/queue @le.shared/!shared)

@@ -5,37 +5,38 @@
 
 (defonce !conn (atom nil))
 
-(def schema {:aka                          {:db/cardinality :db.cardinality/many}
+(def schema {:aka                                 {:db/cardinality :db.cardinality/many}
              ;; :db/valueType is optional, if unspecified, the attribute will be
              ;; treated as EDN blobs, and may not be optimal for range queries
-             :name                         {:db/valueType :db.type/string
-                                            :db/unique    :db.unique/identity}
+             :name                                {:db/valueType :db.type/string
+                                                   :db/unique    :db.unique/identity}
 
-             :episode/url                  {:db/valueType :db.type/string
-                                            :db/unique    :db.unique/identity}
-             :episode/id                   {:db/valueType :db.type/string} ;; One of :singleton/current-id, used in the electric app
-             :episode/uuid                 {:db/valueType :db.type/uuid} ;; A uuid for naming in the s3 bucket, enabling a passwordless CDN
-             :episode/title                {:db/valueType :db.type/string}
-             :episode/ep-number            {:db/valueType :db.type/string} ;; OPTIONAL!!
-             :episode/thumbnail-origin-uri {:db/valueType :db.type/string}
-             :episode/excerpt              {:db/valueType :db.type/string}
-             :episode/publish-date         {:db/valueType :db.type/instant}
-             :episode/audio-original-uri   {:db/valueType :db.type/string}
-             :episode/video-original-uri   {:db/valueType :db.type/string}
-             :episode/podcast              {:db/valueType :db.type/string}
-             :episode/audio-content-length {:db/valueType :db.type/long} ;; only present when the podcast has been downloaded properly.
-             :episode/video-content-length {:db/valueType :db.type/long} ;; only present when the podcast has been downloaded properly.
+             :episode/url                         {:db/valueType :db.type/string
+                                                   :db/unique    :db.unique/identity}
+             :episode/id                          {:db/valueType :db.type/string} ;; One of :singleton/current-id, used in the electric app
+             :episode/uuid                        {:db/valueType :db.type/uuid} ;; A uuid for naming in the s3 bucket, enabling a passwordless CDN
+             :episode/title                       {:db/valueType :db.type/string}
+             :episode/ep-number                   {:db/valueType :db.type/string} ;; OPTIONAL!!
+             :episode/thumbnail-origin-uri        {:db/valueType :db.type/string}
+             :episode/excerpt                     {:db/valueType :db.type/string}
+             :episode/publish-date                {:db/valueType :db.type/instant}
+             :episode/audio-original-uri          {:db/valueType :db.type/string}
+             :episode/video-original-uri          {:db/valueType :db.type/string}
+             :episode/podcast                     {:db/valueType :db.type/string}
+             :episode/audio-content-length        {:db/valueType :db.type/long} ;; only present when the podcast has been downloaded properly.
+             :episode/video-content-length        {:db/valueType :db.type/long} ;; only present when the podcast has been downloaded properly.
 
-             :podcast/feed-uri             {:db/valueType :db.type/string
-                                            :db/unique    :db.unique/identity} ;; Must be seeded by a user
-             :podcast/id                   {:db/valueType :db.type/string} ;; One of :singleton/current-id
-             :podcast/title                {:db/valueType :db.type/string}
-             :podcast/icon-uri             {:db/valueType :db.type/string}
-             :podcast/description          {:db/valueType :db.type/string}
+             :podcast/feed-uri                    {:db/valueType :db.type/string
+                                                   :db/unique    :db.unique/identity} ;; Must be seeded by a user
+             :podcast/id                          {:db/valueType :db.type/string} ;; One of :singleton/current-id
+             :podcast/title                       {:db/valueType :db.type/string}
+             :podcast/icon-uri                    {:db/valueType :db.type/string}
+             :podcast/generated-icon-relative-uri {:db/valueType :db.type/string}
+             :podcast/description                 {:db/valueType :db.type/string}
 
-             :singleton/singleton-id       {:db/valueType :db.type/string
-                                            :db/unique    :db.unique/identity} ;; Always going to be "1" so there's only one in the db
-             :singleton/current-id         {:db/valueType :db.type/string}
+             :singleton/singleton-id              {:db/valueType :db.type/string
+                                                   :db/unique    :db.unique/identity} ;; Always going to be "1" so there's only one in the db
+             :singleton/current-id                {:db/valueType :db.type/string}
              })
 
 (defn inc-str
