@@ -41,14 +41,24 @@
       (xml/element :description {} (:podcast/description podcast))
       (xml/element :language {} "en-US")
       (xml/element "itunes:author" {} "Lotus Eaters")
-      (xml/element "itunes:image" {} (:podcast/icon-uri podcast))
+      (xml/element "itunes:image" {} (or
+                                       (some->> podcast :podcast/generated-icon-relative-uri (str (:s3/public-s3-prefix config)))
+                                       (:podcast/icon-uri podcast)))
 
-      (->> episodes
+      (->> (or (seq episodes)
+             [{:episode/url "dne"
+               :episode/audio-content-length 1
+               :episode/title "Does not exist"
+               :episode/id (str "fake" (:podcast/id podcast))
+               ::override-url "blank.mp3"                   ;; This was manually added to the s3 host
+               :episode/publish-date (Date.)}])
         (map (fn [episode]
                (xml/element :item {}
                  (xml/element :title {} (:episode/title episode))
                  (xml/element :description {} (:episode/excerpt episode))
-                 (xml/element :enclosure {:url    (name-utils/format-audio (:s3/public-s3-prefix config) (:episode/uuid episode))
+                 (xml/element :enclosure {:url    (or
+                                                    (some->> episode ::override-url (str (:s3/public-s3-prefix config)))
+                                                    (name-utils/format-audio (:s3/public-s3-prefix config) (:episode/uuid episode)))
                                           :length (:episode/audio-content-length episode)
                                           :type   "audio/mp3"})
                  (xml/element :pubDate {} (-> episode :episode/publish-date format-time))
@@ -59,7 +69,7 @@
 
 (defn routes
   [{:keys [db/conn feed/secret-path-segment feed/public-feed-address] :as config}]
-  {"GET /" secret-path-segment "/feeds"
+  {(str "GET /" secret-path-segment "/feeds")
    (fn [{}]
      (let [podcasts (db/known-podcasts conn)]
        (response/response
@@ -72,7 +82,8 @@
                      [:i feed-uri] [:br]
                      [:span description] [:br]
                      [:strong "ID: " id] [:br]
-                     [:span (str public-feed-address secret-path-segment "/" id)]])
+                     (let [link (str public-feed-address secret-path-segment "/feed/" id)]
+                       [:a {:href link} link])])
                podcasts)]]))))
 
    (str "GET /" secret-path-segment "/feed/*")

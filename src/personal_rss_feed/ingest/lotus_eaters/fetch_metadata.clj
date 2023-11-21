@@ -165,7 +165,7 @@
     (::le.shared/queue @le.shared/!shared)
     ::fetch-metadata-queue)
 
-  (simple-queue/qview
+  (simple-queue/qview-active
     (::le.shared/queue @le.shared/!shared)
     ::fetch-metadata-queue)
   

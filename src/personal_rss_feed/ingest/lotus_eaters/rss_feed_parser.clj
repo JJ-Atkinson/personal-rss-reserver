@@ -151,6 +151,6 @@
 
   (rss-str->episodes (:body resp))
 
-  (http/head "https://cdn.lotuseaters.com/23.03.28-Brokenomics17-5_Big_Innovation_Platforms(P).mp3")
+  (http/head "")
   (parse-all-feeds (:db/conn @le.shared/!shared) (::le.shared/queue @le.shared/!shared))
   )

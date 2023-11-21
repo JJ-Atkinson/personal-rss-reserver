@@ -171,7 +171,7 @@
   (->> (get-in @system [::name->queue queue-name ::queue/waiting-q])
     (map #(resolve!i system %))))
 
-(>defn qview-dead 
+(>defn qview-dead
   "Lazy view of the dead items. Items may be changed before resolved if the required items are not fully realized before 
    queue operations are made."
   [system queue-name]
@@ -180,8 +180,19 @@
     (map #(resolve!i system %))
     (sort-by ::queue-item/completion-time)))
 
+(>defn qview-active
+  "Lazy view of the dead items. Items may be changed before resolved if the required items are not fully realized before 
+   queue operations are made."
+  [system queue-name]
+  [::system ::queue/name => (s/coll-of ::queue-item/item)]
+  (->> (get-in @system [::name->queue queue-name ::queue/active-q])
+    (map #(resolve!i system %))
+    (sort-by ::queue-item/completion-time)))
+
 (>defn qpeek!
-  "Read the top non locked entry off the queue. Nil if none is found. Respects rate-limit-fn and lockout?-fn
+  "Read the top non locked entry off the queue. Nil if none is found. Respects rate-limit-fn and lockout?-fn. 
+   Rate limit can be overridden by *manual-unlock-1* (see docstr), and lockout? can be overridden by ::lockout-override?
+   set on the queue item.
   
   ::queue/rate-limit-fn
   
@@ -204,7 +215,9 @@
         lockout?  (::queue/lockout?-fn queue-ent)
         ]
     (when-let [possible-id (if lockout?
-                             (some->> queue-ent ::queue/waiting-q reverse (map (partial resolve!i system)) (remove #(lockout? system %)) first ::queue-item/id)
+                             (some->> queue-ent ::queue/waiting-q reverse (map (partial resolve!i system))
+                               (remove #(and (lockout? system %)
+                                          (not (::lockout-override? %)))) first ::queue-item/id)
                              (some-> queue-ent ::queue/waiting-q peek))]
       (if-let [rate-limit-f (::queue/rate-limit-fn queue-ent)]
         (let [rate-limit-f                   (fn [& args]
@@ -264,7 +277,8 @@
       (qsubmit! system (assoc item
                          ::queue-item/retry-count ((fnil inc 0) (::queue-item/retry-count item))
                          ::queue-item/status ::queue-item/error-retrying
-                         ::queue-item/priority (dec Long/MAX_VALUE)))
+                         ::queue-item/priority (dec Long/MAX_VALUE)
+                         ::queue-item/completion-data {::failure-data completion-data}))
       (-qfinish!* system queue-item-id completion-data ::queue-item/failed))))
 
 (>defn qcomplete!
@@ -290,24 +304,24 @@
   ([system]
    (mapcat #(all-un-resolved-errors system %) (keys (::name->queue system))))
   ([system queue-name]
-   (filter #(and (= ::queue-item/failed (::queue-item/status %) )
+   (filter #(and (= ::queue-item/failed (::queue-item/status %))
               (not (::resolved? (::queue-item/completion-data %))))
      (qview-dead system queue-name))))
 
-(defn resolve-error! 
+(defn resolve-error!
   "Resolve an error. See `all-un-resolved-errors`."
   [system queue-item-id]
   (update!qi system queue-item-id ::queue-item/completion-data #(assoc % ::resolved? true))
   nil)
 
-(defn qresubmit-item! 
+(defn qresubmit-item!
   "Resubmit an item that has previously failed, resetting the retry counter and completion data. Adds a flag indicating re-submission to ::queue-item/data
    By default, assigns max priority."
   ([system queue-item-id]
    (qresubmit-item! system queue-item-id true))
   ([system queue-item-id max-priority?]
    (if-let [qi (resolve!i system queue-item-id)]
-     (qsubmit! system (-> qi 
+     (qsubmit! system (-> qi
                         (dissoc ::queue-item/retry-count ::queue-item/completion-data)
                         (cond-> max-priority? (assoc ::queue-item/priority Long/MAX_VALUE))
                         (update ::queue-item/data assoc ::resubmitted? true)))

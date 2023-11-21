@@ -107,7 +107,7 @@
   (keys (aws/ops (:client @!s3)))
   (aws/doc (:client @!s3) :PutObject)
   (aws/doc (:client @!s3) :ListObjects)
-  (upload-uri! @!s3 "..." "test-curl44.mp4")
+  (upload-uri! @!s3 "https://github.com/anars/blank-audio/raw/master/1-second-of-silence.mp3" "blank.mp3")
 
   (aws/invoke (:client @!s3) {:op      :HeadObject
                               :request {:Bucket "lotus-eaters"
@@ -115,25 +115,6 @@
 
   (download-object! @!s3 "video-a466e883-b8c1-422f-9a01-f2a566738dfd.mp4" "/tmp/file222222.mp4")
   (upload-file! @!s3 "video-temp.mp4" "/tmp/file222222.mp4" {})
-
-  (shell {:extra-env (:env-awscli @!s3)}
-    "aws s3 mv"
-    (s3-name @!s3 "video-69cce50a-a20f-421d-b3a8-2bf681ea07a9.mp4?u=6xvg1&b=1")
-    (s3-name @!s3 "video-69cce50a-a20f-421d-b3a8-2bf681ea07a9.mp4")
-    )
-
-  (def bad-names [["video-69cce50a-a20f-421d-b3a8-2bf681ea07a9.mp4?u=6xvg1&b=1"
-                   "video-69cce50a-a20f-421d-b3a8-2bf681ea07a9.mp4"]
-                  ["video-6d5aecd5-02ba-4cd7-a6f6-c7465ecf93a9.mp4?u=6xvg1&b=1" "video-6d5aecd5-02ba-4cd7-a6f6-c7465ecf93a9.mp4"]
-                  ["video-8b1d9246-2ffe-4d86-8a13-48cd5a8517b7.mp4?u=6xvg1&b=1"
-                   "video-8b1d9246-2ffe-4d86-8a13-48cd5a8517b7.mp4"]])
-
-  (doseq [[old new] bad-names]
-    (aws/invoke (:client @!s3) {:op      :DeleteObject
-                                :request {:Bucket "lotus-eaters"
-                                          :Key    old}})
-
-    #_(upload-uri! @!s3 (str "https://lotus-eaters.s3.pathul-dapneb.com/" old) new))
 
   ;; Clear the CI bucket
   (let [objects (aws/invoke (:client @!s3) {:op      :ListObjects
