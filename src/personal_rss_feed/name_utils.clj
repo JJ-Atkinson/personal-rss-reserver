@@ -6,8 +6,8 @@
   ([s3-prefix uuid] (str s3-prefix "audio-" uuid ".mp3")))
 
 (defn format-transcript
-  ([id] (format-transcript "" id))
-  ([s3-prefix id] (str s3-prefix "transcript-" id ".txt")))
+  ([uuid] (format-transcript "" uuid))
+  ([s3-prefix uuid] (str s3-prefix "transcript-" uuid ".txt")))
 
 (defn extension-of
   [original-uri]
@@ -18,6 +18,6 @@
       $)))
 
 (defn format-video
-  ([id original-uri] (format-video "" id original-uri))
-  ([s3-prefix id original-uri]
-   (str s3-prefix "video-" id (extension-of original-uri))))
+  ([uuid original-uri] (format-video "" uuid original-uri))
+  ([s3-prefix uuid original-uri]
+   (str s3-prefix "video-" uuid (extension-of original-uri))))

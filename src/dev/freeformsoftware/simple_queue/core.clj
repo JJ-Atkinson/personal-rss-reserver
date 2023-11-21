@@ -88,18 +88,18 @@
   (fn comp-lockout_rate-limit* [& args]
     (some #(apply % args) lockouts-or-rate-limits)))
 
-(defn- update!q
+(defn update!q
   "Specifically update a queue, optionally updating a sub-key"
-  ([system name f] (swap! system update ::name->queue (fn [n-q] (update n-q name f))))
-  ([system name key f] (swap! system update ::name->queue (fn [n-q] (update n-q name update key f)))))
+  ([system queue-name f] (swap! system update ::name->queue (fn [n-q] (update n-q queue-name f))))
+  ([system queue-name key f] (swap! system update ::name->queue (fn [n-q] (update n-q queue-name update key f)))))
 
-(defn- update!qi
-  ([system id f] (swap! system update ::id->queue-item (fn [n-q] (update n-q id f))))
-  ([system id key f] (swap! system update ::id->queue-item (fn [n-q] (update n-q id update key f)))))
+(defn update!qi
+  ([system queue-item-id f] (swap! system update ::id->queue-item (fn [n-q] (update n-q queue-item-id f))))
+  ([system queue-item-id key f] (swap! system update ::id->queue-item (fn [n-q] (update n-q queue-item-id update key f)))))
 
 (defn resolve!i
-  [system id]
-  (get-in @system [::id->queue-item id]))
+  [system queue-item-id]
+  (get-in @system [::id->queue-item queue-item-id]))
 
 (let [item-id (atom nil)]
   (defn lockout?-intensive-cpu-tasks
@@ -234,20 +234,27 @@
             (resolve!i system possible-id)))
         (resolve!i system possible-id)))))
 
+(>defn manual-dequeue!
+  "Dequeue an existing item, regardless of priority, lockout, or rate-limit."
+  [system queue-item-id]
+  [::system ::queue-item/id => (? ::queue-item/item)]
+  (when-let [ret (resolve!i system queue-item-id)]
+    (let [ret (assoc ret
+                ::queue-item/activation-time (Date.)
+                ::queue-item/status ::queue-item/activated)
+          {::queue-item/keys [queue]} ret]
+      (update!q system queue #(-> %
+                                (update ::queue/waiting-q (fn [wq] (vec (remove (partial = queue-item-id) wq))))
+                                (update ::queue/active-q conj queue-item-id)))
+      (update!qi system queue-item-id (fn [qi] (merge qi ret)))
+      ret)))
+
 (>defn qpop!
   "Same as peek, but sets the entity as ::submitted"
   [system queue-name]
   [::system ::queue/name => (? ::queue-item/item)]
   (when-let [peekv (qpeek! system queue-name)]
-    (let [ret   (assoc peekv
-                  ::queue-item/activation-time (Date.)
-                  ::queue-item/status ::queue-item/activated)
-          qi-id (::queue-item/id peekv)]
-      (update!q system queue-name #(-> %
-                                     (update ::queue/waiting-q (fn [wq] (vec (remove (partial = qi-id) wq))))
-                                     (update ::queue/active-q conj qi-id)))
-      (update!qi system qi-id (fn [qi] (merge qi ret)))
-      ret)))
+    (manual-dequeue! system (::queue-item/id peekv))))
 
 (defn- -qfinish!*
   [system queue-item-id completion-data status]
@@ -404,6 +411,9 @@
   (qpeek! s :third/queue)
   (qpop! s :third/queue)
   (qview s :third/queue)
+  (manual-dequeue! s #uuid"22222222-b2fc-4e21-aa6d-67dc48e9fbfd")
+  
+  (qview-active s :third/queue)
 
   (qcomplete! s #uuid"22222222-b2fc-4e21-aa6d-67dc48e9fbfd" {:best :success :ever! :yay})
   (qerror! s #uuid"11111111-b2fc-4e21-aa6d-67dc48e9fbfd" {:error       :some-random-error

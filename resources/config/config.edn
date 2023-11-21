@@ -33,6 +33,7 @@
                              :s3/public-s3-prefix      #n/ref :s3/public-s3-prefix ;; Only semi secret, but preferable to not post on the internet.
                              :feed/public-feed-address #n/ref :feed/public-feed-address
                              :feed/secret-path-segment #n/ref :feed/secret-path-segment ;; Easier to implement with overcast than actual http basic auth
+                             :lotus-eaters-ingest      #ig/ref :personal-rss-feed.ingest.lotus-eaters/lotus-eaters-ingest
                              }}
 
  :lotus-eaters/username    "username"

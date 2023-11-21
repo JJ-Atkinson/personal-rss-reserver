@@ -3,7 +3,7 @@
    [clj-http.client :as http]
    [clojure.java.io :as io]
    [babashka.http-client :as bb.http]
-   [babashka.process :refer [shell process exec]]
+   [personal-rss-feed.ingest.shell-utils :refer [throwing-shell]]
    [cognitect.aws.client.api :as aws]
    [cognitect.aws.credentials :as aws.creds]
    [com.grzm.awyeah.http-client :as awyeah.http]
@@ -33,7 +33,7 @@
 
 (defn upload-file!
   [{:as s3 :keys [bucket-name client env-awscli]} key src-file {:as options :keys [content-type]}]
-  (shell {:extra-env env-awscli} "aws s3 cp"
+  (throwing-shell {:extra-env env-awscli} "aws s3 cp"
     "--content-type" content-type
     (.toString src-file) (s3-name s3 key)))
 
@@ -64,7 +64,7 @@
 (defn download-object!
   "Download a file out of s3 to dest, which should be convertable to a file."
   [{:as s3 :keys [bucket-name client env-awscli]} key dest]
-  (shell {:extra-env env-awscli} "aws s3 cp"
+  (throwing-shell {:extra-env env-awscli} "aws s3 cp"
     (s3-name s3 key) (.toString dest)))
 
 (defn make-extra-env-awscli
@@ -109,12 +109,6 @@
   (aws/doc (:client @!s3) :ListObjects)
   (upload-uri! @!s3 "https://github.com/anars/blank-audio/raw/master/1-second-of-silence.mp3" "blank.mp3")
 
-  (aws/invoke (:client @!s3) {:op      :HeadObject
-                              :request {:Bucket "lotus-eaters"
-                                        :Key    "audio-f4861adb-faa1-4e8e-ae6d-462c5942c80d.mp3"}})
-
-  (download-object! @!s3 "video-a466e883-b8c1-422f-9a01-f2a566738dfd.mp4" "/tmp/file222222.mp4")
-  (upload-file! @!s3 "video-temp.mp4" "/tmp/file222222.mp4" {})
 
   ;; Clear the CI bucket
   (let [objects (aws/invoke (:client @!s3) {:op      :ListObjects
