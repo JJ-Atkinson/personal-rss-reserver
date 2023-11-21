@@ -8,7 +8,7 @@
 
 (tools.namespace/disable-reload!)
 
-(def !shared (atom nil))                                   ;; useful for debugging, atom containing !shared
+(def !shared (atom nil))                                   ;; useful for debugging, atom containing shared
 
 (defn start-queue!
   "(fn poll-f [shared queue-item] ...)"

@@ -21,7 +21,10 @@
       (.atOffset (.toInstant t) ZoneOffset/UTC))))
 
 (defn generate-description
-  [{:as config :s3/keys [public-s3-prefix]} {:episode/keys [excerpt video-content-length video-original-uri uuid url]}]
+  [{:as config 
+    :s3/keys [public-s3-prefix]
+    :feed/keys [public-feed-address secret-path-segment]}
+   {:episode/keys [excerpt video-content-length video-original-uri id uuid url]}]
   (hiccup/html
     [:div
      [:div excerpt] [:br]
@@ -32,7 +35,7 @@
 
        video-original-uri
        [:<> [:a {:href video-original-uri} "Watch Now on LE CDN"] [:br]
-        [:a {:href} "Start video download now."]]
+        [:a {:href (str public-feed-address secret-path-segment "/content/video/" id)} "Start video download now."]]
 
        :else
        [:span "No video for this episode."])]))
