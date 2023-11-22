@@ -80,7 +80,7 @@
                   ::queue/default-retry-limit 3
                   ::queue/rate-limit-fn       (time-utils/queue-rate-limit-x-per-period
                                                 {:period-s    (* 60 60 24)
-                                                 :limit-count (:downloads-per-day shared)})
+                                                 :limit-count (+ 8 (:downloads-per-day shared))})
                   ::queue/timeout?-fn         (simple-queue/default-timeout?-fn (* 1000 200))
                   ::queue/lockout?-fn         (time-utils/queue-lockout-backoff-retry
                                                 {:base-s-backoff (* 60 60 3)})}
