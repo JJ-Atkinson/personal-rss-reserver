@@ -58,7 +58,7 @@
   (le.shared/start-queue! shared
     {:queue-conf {::queue/name                ::extract-audio-queue
                   ::queue/default-retry-limit 4
-                  ::queue/lockout?-fn         (simple-queue/comp-lockout_rate-limit
+                  ::queue/lockout?-fn         (simple-queue/comp-or_lockout_rate-limit
                                                 (time-utils/queue-lockout-backoff-retry
                                                   {:base-s-backoff 30})
                                                 (simple-queue/lockout?-intensive-cpu-tasks))
@@ -97,7 +97,7 @@
   (#'simple-queue/update!q
    (::le.shared/queue @le.shared/!shared)
    ::extract-audio-queue
-   #(assoc % ::queue/lockout?-fn (simple-queue/comp-lockout_rate-limit
+   #(assoc % ::queue/lockout?-fn (simple-queue/comp-or_lockout_rate-limit
                                    (time-utils/queue-lockout-backoff-retry
                                      {:base-s-backoff 30})
                                    (simple-queue/lockout?-intensive-cpu-tasks))))
