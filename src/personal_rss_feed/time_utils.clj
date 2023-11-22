@@ -37,11 +37,11 @@
   tasks to be processed."
   [{:keys [period-s]}]
   (fn queue-rate-limit-x-per-period* [waiting _active _recent]
-    (enc/if-let [time (::queue-item/activation-time (pop (vec waiting)))
+    (enc/if-let [time (::queue-item/submission-time (peek (vec waiting)))
                  time (.toInstant time)
                  dur (Duration/between time (Instant/now))]
-      (boolean (< (/ (.toMillis dur) 1000) period-s))
-      true)))
+      (boolean (> (/ (.toMillis dur) 1000) period-s))       ;; do _NOT_ lock if within the last day.
+      true)))                                               ;; always locked if no available waiting item exists
 
 (defn queue-lockout-backoff-retry
   [{:keys [base-s-backoff]}]
