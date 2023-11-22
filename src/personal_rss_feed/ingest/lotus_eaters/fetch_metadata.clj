@@ -139,9 +139,12 @@
       (le.shared/start-queue!
         {:queue-conf {::queue/name                ::fetch-metadata-queue
                       ::queue/default-retry-limit 3
-                      ::queue/rate-limit-fn       (time-utils/queue-rate-limit-x-per-period
-                                                    {:period-s    (* 60 60 24)
-                                                     :limit-count (:downloads-per-day shared)})
+                      ::queue/rate-limit-fn       (simple-queue/comp-and_lockout_rate-limit
+                                                    (time-utils/queue-rate-limit-x-per-period
+                                                      {:period-s    (* 60 60 24)
+                                                       :limit-count (:downloads-per-day shared)})
+                                                    (time-utils/queue-rate-limit-allow-only-recent-tasks
+                                                      {:period-s (* 60 60 24)}))
                       ::queue/timeout?-fn         (simple-queue/default-timeout?-fn (* 1000 160))
                       ::queue/lockout?-fn         (time-utils/queue-lockout-backoff-retry
                                                     {:base-s-backoff (* 60 60 3)})} ;; runs at 0h, 3h, (3+6h) 9h, (6+9h) 15h
@@ -149,9 +152,9 @@
          :poll-f     #'augment-episode-information}))))
 
 (comment
-  
+
   (defn with-debug [shared] (assoc shared ::debug {}))
-  
+
   (get-detailed-information (with-debug @le.shared/!shared)
     {:episode/url "..."})
 
@@ -165,7 +168,7 @@
     (::le.shared/queue @le.shared/!shared)
     ::fetch-metadata-queue)
 
-  (simple-queue/qview-active
+  (simple-queue/qview-dead
     (::le.shared/queue @le.shared/!shared)
     ::fetch-metadata-queue)
 

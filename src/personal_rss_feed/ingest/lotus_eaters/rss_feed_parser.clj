@@ -104,7 +104,7 @@
                                                    :id       (random-uuid)
                                                    :data     ep
                                                    :priority (or (some-> ep :episode/publish-date (.getTime)) ;; Priority newest->oldest
-                                                               (.getTime (Date.))) 
+                                                               (.getTime (Date.)))
                                                    })))
     (catch Exception e
       (log/error "Failed to parse new feed items!" e))))

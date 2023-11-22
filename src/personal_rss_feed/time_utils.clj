@@ -31,6 +31,18 @@
                      dur (Duration/between time (Instant/now))]
         (boolean (< (/ (.toMillis dur) 1000) period-s))))))
 
+(defn queue-rate-limit-allow-only-recent-tasks
+  "Rate limit only allowing tasks submitted today. Only cares about the highest priority item. Most useful
+  in comp-and_lockout_rate-limit with some other normal rate limiter, since this will never allow old
+  tasks to be processed."
+  [{:keys [period-s]}]
+  (fn queue-rate-limit-x-per-period* [waiting _active _recent]
+    (enc/if-let [time (::queue-item/activation-time (pop waiting))
+                 time (.toInstant time)
+                 dur (Duration/between time (Instant/now))]
+      (boolean (< (/ (.toMillis dur) 1000) period-s))
+      true)))
+
 (defn queue-lockout-backoff-retry
   [{:keys [base-s-backoff]}]
   (fn queue-lockout?-backoff-retry*
@@ -39,5 +51,5 @@
             activation-time)
       (let [minimum-delay (* base-s-backoff retry-count)
             run-after     (.plusSeconds (.toInstant activation-time) minimum-delay)
-            difference (Duration/between run-after (Instant/now))]
+            difference    (Duration/between run-after (Instant/now))]
         (boolean (< (.toSeconds difference) minimum-delay))))))

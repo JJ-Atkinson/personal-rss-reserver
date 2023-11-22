@@ -82,11 +82,19 @@
           then-ms (.getTime activation-time)]
       (> (- now-ms then-ms) ms))))
 
-(defn comp-lockout_rate-limit
-  "Compose lockout? fns or rate-limit? fns."
+(defn comp-or_lockout_rate-limit
+  "Compose lockout? fns or rate-limit? fns with (or), making them pessimistic. 
+   If every limit is disabled, then the item will dequeue."
   [& lockouts-or-rate-limits]
-  (fn comp-lockout_rate-limit* [& args]
+  (fn comp-or_lockout_rate-limit* [& args]
     (some #(apply % args) lockouts-or-rate-limits)))
+
+(defn comp-and_lockout_rate-limit
+  "Compose lockout? fns or rate-limit? fns with (and), making them optimistic. 
+   If any limit is disabled, then the item will dequeue."
+  [& lockouts-or-rate-limits]
+  (fn comp-and_lockout_rate-limit* [& args]
+    (every? #(apply % args) lockouts-or-rate-limits)))
 
 (defn update!q
   "Specifically update a queue, optionally updating a sub-key"
@@ -192,7 +200,7 @@
     (vec)))
 
 (>defn qpeek!
-  "Read the top non locked entry off the queue. Nil if none is found. Respects rate-limit-fn and lockout?-fn. 
+  "Read the top non-locked entry off the queue. Nil if none is found. Respects rate-limit-fn and lockout?-fn. 
    Rate limit can be overridden by *manual-unlock-1* (see docstr), and lockout? can be overridden by ::lockout-override?
    set on the queue item.
   
