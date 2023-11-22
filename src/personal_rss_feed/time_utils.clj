@@ -37,7 +37,7 @@
   tasks to be processed."
   [{:keys [period-s]}]
   (fn queue-rate-limit-x-per-period* [waiting _active _recent]
-    (enc/if-let [time (::queue-item/activation-time (pop waiting))
+    (enc/if-let [time (::queue-item/activation-time (pop (vec waiting)))
                  time (.toInstant time)
                  dur (Duration/between time (Instant/now))]
       (boolean (< (/ (.toMillis dur) 1000) period-s))
