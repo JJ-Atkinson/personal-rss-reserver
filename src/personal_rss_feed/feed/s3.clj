@@ -16,6 +16,7 @@
 (defonce !s3 (atom {}))
 
 (defn- to-uri
+  "Properly encode a URL with spaces into a URI that http/get can handle."
   [s]
   (let [url (URL. s)]
     (.toString

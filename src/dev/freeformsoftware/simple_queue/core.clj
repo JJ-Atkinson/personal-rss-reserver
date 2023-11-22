@@ -169,7 +169,7 @@
   [system queue-name]
   [::system ::queue/name => (s/coll-of ::queue-item/item)]
   (->> (get-in @system [::name->queue queue-name ::queue/waiting-q])
-    (map #(resolve!i system %))))
+    (mapv #(resolve!i system %))))
 
 (>defn qview-dead
   "Lazy view of the dead items. Items may be changed before resolved if the required items are not fully realized before 
@@ -177,8 +177,9 @@
   [system queue-name]
   [::system ::queue/name => (s/coll-of ::queue-item/item)]
   (->> (get-in @system [::name->queue queue-name ::queue/dead-q])
-    (map #(resolve!i system %))
-    (sort-by ::queue-item/completion-time)))
+    (mapv #(resolve!i system %))
+    (sort-by ::queue-item/completion-time)
+    (vec)))
 
 (>defn qview-active
   "Lazy view of the dead items. Items may be changed before resolved if the required items are not fully realized before 
@@ -187,7 +188,8 @@
   [::system ::queue/name => (s/coll-of ::queue-item/item)]
   (->> (get-in @system [::name->queue queue-name ::queue/active-q])
     (map #(resolve!i system %))
-    (sort-by ::queue-item/completion-time)))
+    (sort-by ::queue-item/completion-time)
+    (vec)))
 
 (>defn qpeek!
   "Read the top non locked entry off the queue. Nil if none is found. Respects rate-limit-fn and lockout?-fn. 

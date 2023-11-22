@@ -28,14 +28,15 @@
   (hiccup/html
     [:div
      [:div excerpt] [:br]
+     [:span "ID:" id] [:br]
      [:a {:href url} "Lotus eaters website link"] [:br]
      (cond
        video-content-length
-       [:<> [:a {:href (name-utils/format-video public-s3-prefix uuid video-original-uri)} "Watch Now"] [:br]]
+       (list [:a {:href (name-utils/format-video public-s3-prefix uuid video-original-uri)} "Watch Now"] [:br])
 
        video-original-uri
-       [:<> [:a {:href video-original-uri} "Watch Now on LE CDN"] [:br]
-        [:a {:href (str public-feed-address secret-path-segment "/content/video/" id)} "Start video download now."]]
+       (list [:a {:href video-original-uri} "Watch Now on LE CDN"] [:br]
+        [:a {:href (str public-feed-address secret-path-segment "/content/video/" id)} "Start video download now."])
 
        :else
        [:span "No video for this episode."])]))

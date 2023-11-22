@@ -168,7 +168,7 @@
   (simple-queue/qview-active
     (::le.shared/queue @le.shared/!shared)
     ::fetch-metadata-queue)
-  
+
   (simple-queue/qresubmit-item! (::le.shared/queue @le.shared/!shared) #uuid "cafd67d2-7735-4671-b7b6-eddcbe03dc5c")
 
   (swap! simple-queue/*manual-unlock-1*
