@@ -110,6 +110,12 @@
   (aws/doc (:client @!s3) :ListObjects)
   (upload-uri! @!s3 "https://github.com/anars/blank-audio/raw/master/1-second-of-silence.mp3" "blank.mp3")
 
+  (aws/invoke (:client @!s3) {:op      :HeadObject
+                              :request {:Bucket "lotus-eaters"
+                                        :Key    "audio-f4861adb-faa1-4e8e-ae6d-462c5942c80d.mp3"}})
+
+  (download-object! @!s3 "video-a466e883-b8c1-422f-9a01-f2a566738dfd.mp4" "/tmp/file222222.mp4")
+  (upload-file! @!s3 "bd71488f-6091-4f9a-a381-8562e966de7d-crt.png" "/home/jarrett/Downloads/DALL·E 2023-11-22 16.39.15 - Adjust the podcast thumbnail for 'CRT' to have slightly less detail, while including a Pride flag and maintaining the original color scheme of purple,.png" {:content-type "image/png"})
 
   ;; Clear the CI bucket
   (let [objects (aws/invoke (:client @!s3) {:op      :ListObjects

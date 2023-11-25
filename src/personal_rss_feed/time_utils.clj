@@ -22,7 +22,7 @@
    the top 2. If they error immediately, they can be dequeued immediately again, since they stopped counting against the 
    `limit-count`."
   [{:keys [period-s limit-count]}]
-  (fn queue-rate-limit-x-per-period* [_waiting active recent]
+  (fn queue-rate-limit-x-per-period* [_waiting-reversed active recent]
     (if (zero? limit-count)
       true                                                  ;; true == always locked.
       (enc/when-let [timebox-end (nth (concat active recent) (dec limit-count) nil)
@@ -36,8 +36,8 @@
   in comp-and_lockout_rate-limit with some other normal rate limiter, since this will never allow old
   tasks to be processed."
   [{:keys [period-s]}]
-  (fn queue-rate-limit-x-per-period* [waiting _active _recent]
-    (enc/if-let [time (::queue-item/submission-time (peek (vec waiting)))
+  (fn queue-rate-limit-x-per-period* [waiting-reversed _active _recent]
+    (enc/if-let [time (::queue-item/submission-time (first waiting-reversed))
                  time (.toInstant time)
                  dur (Duration/between time (Instant/now))]
       (boolean (> (/ (.toMillis dur) 1000) period-s))       ;; do _NOT_ lock if within the last day.

@@ -162,11 +162,32 @@
     (::le.shared/queue @le.shared/!shared)
     ::fetch-metadata-queue)
   
-  (simple-queue)
+  (do
+    (simple-queue/update!q
+      (::le.shared/queue @le.shared/!shared)
+      ::fetch-metadata-queue
+      ::queue/rate-limit-fn (constantly (simple-queue/comp-and_lockout_rate-limit
+                                          (time-utils/queue-rate-limit-x-per-period
+                                            {:period-s    (* 60 60 24)
+                                             :limit-count 8})
+                                          (time-utils/queue-rate-limit-allow-only-recent-tasks
+                                            {:period-s (* 60 60 24)}))))
+    nil)
 
-  (simple-queue/qpeek!
-    (::le.shared/queue @le.shared/!shared)
-    ::fetch-metadata-queue)
+  ((simple-queue/comp-and_lockout_rate-limit
+     (time-utils/queue-rate-limit-x-per-period
+       {:period-s    (* 60 60 24)
+        :limit-count 8})
+     (time-utils/queue-rate-limit-allow-only-recent-tasks
+       {:period-s (* 60 60 24)}))
+   [{::queue-item/submission-time #inst"2023-11-20T22:09:53.828-00:00"}]
+   (repeat 8 {::queue-item/activation-time (Date.)}) nil)
+
+  (peek
+    (simple-queue/qview
+      (::le.shared/queue @le.shared/!shared)
+      ::fetch-metadata-queue))
+
 
   (simple-queue/qview-dead
     (::le.shared/queue @le.shared/!shared)

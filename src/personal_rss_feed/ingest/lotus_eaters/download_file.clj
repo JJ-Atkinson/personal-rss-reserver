@@ -92,13 +92,15 @@
     (::le.shared/queue @le.shared/!shared)
     ::download-queue)
 
-  (simple-queue/qview
-    (::le.shared/queue @le.shared/!shared)
-    ::download-queue)
-
   (simple-queue/qview-dead
     (::le.shared/queue @le.shared/!shared)
     ::download-queue)
+
+  (simple-queue/update!qi
+    (::le.shared/queue @le.shared/!shared)
+    #uuid"33b9d25c-1d28-4045-90b3-72b507096fb3"
+    ::simple-queue/lockout-override? (constantly true))
+  simple-queue/qpeek!
 
   (simple-queue/resolve-error! (::le.shared/queue @le.shared/!shared) #uuid"03d76bc6-b9f7-4e8f-9ffe-0956634637cb")
 

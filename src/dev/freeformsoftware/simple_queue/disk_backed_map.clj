@@ -1,4 +1,5 @@
 (ns dev.freeformsoftware.simple-queue.disk-backed-map
+  "TODO: this probably makes more sense to use the datalevin KV store functionality for EDN..."
   (:require
    [clojure.edn :as edn]
    [clojure.java.io :as io]

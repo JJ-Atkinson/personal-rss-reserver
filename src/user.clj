@@ -10,28 +10,35 @@
 (tools.namespace/disable-reload!)
 (log/set-min-level! :debug)
 
-(defonce system (atom nil))
+(def shadow-start! (delay @(requiring-resolve 'shadow.cljs.devtools.server/start!)))
+(def shadow-watch (delay @(requiring-resolve 'shadow.cljs.devtools.api/watch)))
+
+(defonce !system (atom nil))
 
 (defn start
   []
-  (reset! system
-    (ig/init (#'config/resolve-config! false))))
+  (reset! !system
+    (ig/init (#'config/resolve-config! false)))
+
+  (@shadow-start!) ; serves index.html as well
+  (@shadow-watch :dev) ; depends on shadow server
+  )
 
 (defn stop
   []
-  (ig/halt! @system))
+  (ig/halt! @!system))
 
 (defn suspend
   []
-  (ig/suspend! @system))
+  (ig/suspend! @!system))
 
 (defn resume
   []
-  (ig/resume (#'config/resolve-config! false) @system))
+  (ig/resume (#'config/resolve-config! false) @!system))
 
 (defn restart 
   []
-  (when @system (stop))
+  (when @!system (stop))
   (start))
 
 (defn dev-main
