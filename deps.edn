@@ -12,10 +12,12 @@
          tempfile/tempfile                   {:mvn/version "0.2.0"}
          hiccup/hiccup                       {:mvn/version "1.0.5"}
 
-         info.sunng/ring-jetty9-adapter      {:mvn/version "0.30.2"} ;; ignore the name, it's jetty 12
-         org.eclipse.jetty/jetty-client      {:mvn/version "12.0.3"} ;; also import jetty-client 12 for cognitect aws api
+         ;;info.sunng/ring-jetty9-adapter      {:mvn/version "0.30.2"
+         ;;                                      Electric specific exclusions
+         ;;:exclusions  [org.slf4j/slf4j-api info.sunng/ring-jetty9-adapter-http3]} ;; ignore the name, it's jetty 12, suitable for electric
+         ;;org.eclipse.jetty/jetty-client      {:mvn/version "12.0.3"} ;; also import jetty-client 12 for cognitect aws api
          com.cognitect.aws/api               {:mvn/version "0.8.686"
-                                              :exclusions  [org.eclipse.jetty/jetty-client]} ;; Using jetty 9, while we use jetty 12
+                                              :exclusions  [org.eclipse.jetty/jetty-client]} ;; Using jetty 9, while we use jetty 12 for electric
 
          com.cognitect.aws/endpoints         {:mvn/version "1.1.12.504"}
          com.cognitect.aws/s3                {:mvn/version "848.2.1413.0" :aws/serviceFullName "Amazon Simple Storage Service"},
@@ -23,12 +25,30 @@
          babashka/process                    {:mvn/version "0.5.21"}
          io.github.tonsky/clj-simple-router  {:mvn/version "0.1.0"}
          ring/ring                           {:mvn/version "1.10.0"}
+         ring/ring-defaults                  {:mvn/version "0.4.0"}
          integrant/integrant                 {:mvn/version "0.8.1"}
          jarohen/chime                       {:mvn/version "0.3.3"}
          org.clojure/tools.namespace         {:mvn/version "1.4.4"}
-         com.fulcrologic/guardrails          {:mvn/version "1.1.13"}} ;; allow guardrails in prod because idc. perf isn't a huge deal
+         com.fulcrologic/guardrails          {:mvn/version "1.1.13"} ;; allow guardrails in prod because idc. perf isn't a huge deal
+
+         buddy/buddy-hashers                 {:mvn/version "2.0.167"}
+         buddy/buddy-sign                    {:mvn/version "3.5.351"}
+
+         com.hyperfiddle/electric            {:mvn/version "v2-alpha-469-gb6d9865c"}
+         com.hyperfiddle/rcf                 {:mvn/version "20220926-202227"}
+         info.sunng/ring-jetty9-adapter      {
+                                              ;;:mvn/version "0.14.3" ; (Jetty 9) is Java 8 compatible;
+                                              :mvn/version "0.17.7" ; (Jetty 10) is NOT Java 8 compatible
+                                              :exclusions  [org.slf4j/slf4j-api info.sunng/ring-jetty9-adapter-http3]} ; no need
+         org.clojure/clojure                 {:mvn/version "1.12.0-alpha5"}
+         org.clojure/clojurescript           {:mvn/version "1.11.60"}
+         org.clojure/tools.logging           {:mvn/version "1.2.4"}
+         ch.qos.logback/logback-classic      {:mvn/version "1.2.11"}
+         datascript/datascript               {:mvn/version "1.5.2"}}
  :aliases
- {:dev {:extra-deps {com.gfredericks/debug-repl {:mvn/version "0.0.12"}}
+ {:dev {:extra-deps {com.gfredericks/debug-repl {:mvn/version "0.0.12"}
+                     binaryage/devtools         {:mvn/version "1.0.6"}
+                     thheller/shadow-cljs       {:mvn/version "2.25.2"}}
         :jvm-opts   ["--add-opens" "java.base/java.nio=ALL-UNNAMED" ;; ##SeeDepsEDN
                      "--add-opens" "java.base/sun.nio.ch=ALL-UNNAMED"
 
@@ -36,4 +56,8 @@
                      ;; Required to allow signing to procede normally for the cognitect aws api. 
                      ;; It signs the headers as well, and by default the jdk http client sets its
                      ;; own (wrong) `host` header, breaking the signature.
-                     "-Djdk.httpclient.allowRestrictedHeaders=host"]}}}
+                     "-Djdk.httpclient.allowRestrictedHeaders=host"
+
+                     "-Xss2m"                               ; https://github.com/hyperfiddle/photon/issues/11
+                     "-XX:-OmitStackTraceInFastThrow"       ;; RCF
+                     ]}}}

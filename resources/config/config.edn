@@ -11,7 +11,8 @@
                             {:hostname          "garage-ct.lan"
                              :port              3900
                              :region            "us-west-1"
-                             :access-key-id     "GK8082331a3891d8f189e0e45d"
+                             :access-key-id     "GK8082331a3891d8f189e0e45d" ;; CI
+                             ;;:access-key-id     "GKf824d02222f93cb03b3144a1"
                              :secret-access-key #n/ref :s3/secret-access-key
                              :bucket-name       "lotus-eaters-ci"}
 
@@ -34,6 +35,23 @@
                              :feed/public-feed-address #n/ref :feed/public-feed-address
                              :feed/secret-path-segment #n/ref :feed/secret-path-segment ;; Easier to implement with overcast than actual http basic auth
                              :lotus-eaters-ingest      #ig/ref :personal-rss-feed.ingest.lotus-eaters/lotus-eaters-ingest
+                             }
+
+                            :personal-rss-feed.admin.auth/auth
+                            {:db/conn                                   #ig/ref :personal-rss-feed.feed.db/conn
+                             :personal-rss-feed.admin.auth/hash-options {:alg :bcrypt+sha512}
+                             :personal-rss-feed.admin.auth/jwt-options  {:secret       #n/ref :auth/jwt-secret
+                                                                         :exp-period-s 86400 ;; 1 day
+                                                                         :buddy        {:skip-validation false
+                                                                                        :alg             :hs512}}}
+
+                            :personal-rss-feed.admin.server/server
+                            {:jetty                    {:port 3001}
+                             :db/conn                  #ig/ref :personal-rss-feed.feed.db/conn
+                             :auth                     #ig/ref :personal-rss-feed.admin.auth/auth
+                             :s3/public-s3-prefix      #n/ref :s3/public-s3-prefix ;; Only semi secret, but preferable to not post on the internet.
+                             :feed/secret-path-segment #n/ref :feed/secret-path-segment ;; Easier to implement with overcast than actual http basic auth
+                             :queue                    #ig/ref :personal-rss-feed.queue/queue
                              }}
 
  :lotus-eaters/username    "username"
@@ -42,5 +60,6 @@
  :s3/public-s3-prefix      "https://s3.amazaonaws....com/prefix/" ; to be appended with "uuid.extension"
  :feed/secret-path-segment "a"
  :feed/public-feed-address "http://localhost:3000/"
+ :auth/jwt-secret          "secret"                         ;; preferably a 256bit random number
  }
 

@@ -207,7 +207,7 @@
   ::queue/rate-limit-fn
   
   (fn [
-   sorted-waiting-reversed-lazy          ; is reversed so that about to be pulled queue items are first
+   sorted-waiting-reversed-lazy          ; is reversed so that about to be pulled queue items are first. not a vec so resolution is lazy
    activated-items-lazy                  ; any currently activated items
    sorted-recent-queue-items-lazy        ; is sorted newest->oldest
    ] boolean? ) ;; if true, then rate limit is active and no-one can peek/pop

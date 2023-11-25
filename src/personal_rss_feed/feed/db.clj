@@ -5,11 +5,11 @@
 
 (defonce !conn (atom nil))
 
-(def schema {:aka                                 {:db/cardinality :db.cardinality/many}
-             ;; :db/valueType is optional, if unspecified, the attribute will be
-             ;; treated as EDN blobs, and may not be optimal for range queries
-             :name                                {:db/valueType :db.type/string
-                                                   :db/unique    :db.unique/identity}
+(def schema {:user/uname                          {:db/valueType :db.type/string
+                                                   :db/unique :db.unique/identity}
+             :user/password-crypt                 {:db/valueType :db.type/string}
+             :user/admin?                         {:db/valueType :db.type/boolean}
+
 
              :episode/url                         {:db/valueType :db.type/string
                                                    :db/unique    :db.unique/identity}
@@ -157,17 +157,36 @@
   (d/close conn))
 
 (comment
-  (save-podcast! @!conn {:podcast/feed-uri "https://www.lotuseaters.com/feed/category/epochs"})
-  (d/touch (d/entity (d/db @!conn) [:episode/url "https://www.lotuseaters.com/premium-live-lads-hour-10-or-birthday-special-09-11-2023"]))
+  (save-podcast! @!conn {:podcast/feed-uri "https://lotuseaters.com/feed/category/health"
+                         :podcast/generated-icon-relative-uri "bd71488f-6091-4f9a-a381-8562e966de7d-crt.png"})
+  (d/touch (d/entity (d/db @!conn) [:episode/url "https://www.lotuseaters.com/premium-live-lads-hour-12-or-zombie-apocalypse-21-11-2023"]))
   (d/touch (d/entity (d/db @!conn) [:podcast/id "https://www.lotuseaters.com/feed/category/aaab"]))
   (known-podcasts @!conn)
   (known-podcast? (d/db @!conn) "test")
-  
-  (d/touch (podcast-by-id @!conn "aaab"))
+  (map :episode/url (podcast-feed @!conn "https://lotuseaters.com/feed/category/symposium"))
 
+  (d/touch (podcast-by-id @!conn "aaab"))
+  (d/touch (episode-by-id @!conn "aahf"))
+  
+  
+  ;; Add a user
+  (d/transact! @!conn [{:user/uname "jarrett"
+                        :user/password-crypt (personal-rss-feed.admin.auth/generate-password-crypt
+                                               @personal-rss-feed.admin.auth/!config
+                                               "password")
+                        :user/admin? true}])
+  
   (->>
     (d/q '[:find ?url
            :in $
            :where [?e :episode/url ?url]]
       (d/db @!conn))
-    (map first)))
+    (map first)
+    (map #(d/entity (d/db @!conn) [:episode/url %]))
+    (map #(select-keys % [:episode/url 
+                          :episode/publish-date
+                          :episode/title
+                          :episode/podcast
+                          :episode/audio-content-length]))
+    (sort-by :episode/publish-date)
+    (count)))
