@@ -136,6 +136,18 @@
       (simple-queue/qerror! queue id {:exception                (pr-str e)
                                       ::simple-queue/retryable? true}))))
 
+(defn rate-limit-fn 
+  [shared]
+  (simple-queue/comp-or_lockout_rate-limit
+    (simple-queue/rate-limit-number-active 1)
+    (simple-queue/comp-and_lockout_rate-limit
+      (time-utils/queue-rate-limit-x-per-period
+        {:period-s    (* 60 60 24)
+         :limit-count (:downloads-per-day shared)})
+      (time-utils/queue-rate-limit-allow-only-recent-tasks
+        {:period-s     (* 60 60 24)
+         :limit-recent 4}))))
+
 (defn init!
   [shared]
   (let [browser-context (w-utils/fresh-browser-context {})]
@@ -145,15 +157,7 @@
       (le.shared/start-queue!
         {:queue-conf {::queue/name                ::fetch-metadata-queue
                       ::queue/default-retry-limit 3
-                      ::queue/rate-limit-fn       (simple-queue/comp-or_lockout_rate-limit
-                                                    (simple-queue/rate-limit-number-active 1)
-                                                    (simple-queue/comp-and_lockout_rate-limit
-                                                      (time-utils/queue-rate-limit-x-per-period
-                                                        {:period-s    (* 60 60 24)
-                                                         :limit-count (:downloads-per-day shared)})
-                                                      (time-utils/queue-rate-limit-allow-only-recent-tasks
-                                                        {:period-s     (* 60 60 24)
-                                                         :limit-recent 4})))
+                      ::queue/rate-limit-fn       (rate-limit-fn shared)
                       ::queue/timeout?-fn         (simple-queue/default-timeout?-fn (* 1000 160))
                       ::queue/lockout?-fn         (time-utils/queue-lockout-backoff-retry
                                                     {:base-s-backoff (* 60 60 3)})} ;; runs at 0h, 3h, (3+6h) 9h, (6+9h) 15h
