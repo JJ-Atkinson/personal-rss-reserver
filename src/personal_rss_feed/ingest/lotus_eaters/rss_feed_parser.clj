@@ -145,7 +145,7 @@
 (comment
   (def resp
     (bb.http/get
-      "https://lotuseaters.com/feed/category/brokenomics"))
+      "https://www.lotuseaters.com/feed/category/tv-and-movies"))
   (def resp2 (remus/parse-url "https://lotuseaters.com/feed/category/brokenomics"))
   (xml/parse-str (:body resp))
 
