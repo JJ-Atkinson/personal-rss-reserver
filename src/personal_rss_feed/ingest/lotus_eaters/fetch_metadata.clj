@@ -14,6 +14,7 @@
    [personal-rss-feed.playwright.selectors :as ws]
    [personal-rss-feed.ingest.lotus-eaters.shared :as le.shared]
    [personal-rss-feed.feed.db :as db]
+   [datalevin.core :as d]
    [remus])
   (:import (java.time ZoneId ZonedDateTime)
            (java.time.format DateTimeFormatter)
@@ -61,10 +62,16 @@
   (parse-date "8th Nov at 03:00 am")
   (parse-date "8th Nov, 2021 at 03:00 pm"))
 
+(defn blob->nil
+  [s]
+  (when-not (str/starts-with? s "blob:")
+    s))
+
 (defn episode-page-get-content-url
   "In the context of an existing navigated page, get the CDN url for the download"
   [!shared]
   (ensure-logged-in! !shared)
+  (Thread/sleep 2000)
   (enc/assoc-some {}
     :episode/audio-original-uri
     (e->nil (.getAttribute (ws/query-1 [".post__body" (ws/title "Download Audio File")]) "href"))
@@ -75,7 +82,8 @@
       (e->nil (.getAttribute (ws/query-1 [".post__body" (ws/title "Download Video File")]) "src")) ;; Fallback when only one res exists
 
       ;; Hangouts/interview videos are rumble only for now. Query the video element
-      (e->nil (.getAttribute (first (ws/query [".post__body" ".embeddedEntry" "video"])) "src")))
+      (e->nil (blob->nil (.getAttribute (first (ws/query [".post__body" ".embeddedEntry" "video"])) "src")))
+      (e->nil (blob->nil (.getAttribute (second (ws/query [".post__body" ".embeddedEntry" "video"])) "src"))))
 
     :episode/excerpt
     (e->nil (.textContent (first (ws/query [".post__body" s/div s/p s/span]))))
@@ -123,7 +131,7 @@
                                   (if (contains? episode :episode/audio-original-uri)
                                     ::le.download-file/audio
                                     ::le.download-file/video))
-                      :priority (.getTime (Date.))})
+                      :priority (or (some-> episode :episode/publish-date (.getTime)) 0)})
       (simple-queue/qcomplete! queue id)
       episode)
     (catch Exception e
@@ -158,20 +166,32 @@
   (get-detailed-information (with-debug @le.shared/!shared)
     {:episode/url "..."})
 
-  (simple-queue/all-un-resolved-errors
+  
+  (peek (simple-queue/qview
+          (::le.shared/queue @le.shared/!shared)
+          ::fetch-metadata-queue))
+  
+  (doseq [qi (simple-queue/qview
+               (::le.shared/queue @le.shared/!shared)
+               ::fetch-metadata-queue)]
+    (let [ep-data (db/episode-by-url (d/db (:db/conn @le.shared/!shared)) (:episode/url (::queue-item/data qi)))]
+      (simple-queue/update!qi
+        (::le.shared/queue @le.shared/!shared)
+        (::queue-item/id qi)
+        ::queue-item/priority (constantly (or (e->nil (.getTime (:episode/publish-date ep-data)))
+                                            0)))))
+
+  (simple-queue/-qsort!
     (::le.shared/queue @le.shared/!shared)
     ::fetch-metadata-queue)
-  
+
   (do
     (simple-queue/update!q
       (::le.shared/queue @le.shared/!shared)
       ::fetch-metadata-queue
-      ::queue/rate-limit-fn (constantly (simple-queue/comp-and_lockout_rate-limit
-                                          (time-utils/queue-rate-limit-x-per-period
-                                            {:period-s    (* 60 60 24)
-                                             :limit-count 8})
-                                          (time-utils/queue-rate-limit-allow-only-recent-tasks
-                                            {:period-s (* 60 60 24)}))))
+      ::queue/rate-limit-fn (constantly (time-utils/queue-rate-limit-x-per-period
+                                          {:period-s    (* 60 60 24)
+                                           :limit-count 8})))
     nil)
 
   ((simple-queue/comp-and_lockout_rate-limit
@@ -183,13 +203,28 @@
    [{::queue-item/submission-time #inst"2023-11-20T22:09:53.828-00:00"}]
    (repeat 8 {::queue-item/activation-time (Date.)}) nil)
 
-  (peek
-    (simple-queue/qview
+  (filter
+    (comp (partial = "https://www.lotuseaters.com/premium-the-politics-of-skyrim-29-11-23") :episode/url ::queue-item/data)
+    (map-indexed (fn [i q]
+                   (assoc q :i i))
+      (simple-queue/qview
+        (::le.shared/queue @le.shared/!shared)
+        ::fetch-metadata-queue)))
+
+  (augment-episode-information
+    @le.shared/!shared
+    (simple-queue/manual-dequeue!
+      (::le.shared/queue @le.shared/!shared)
+      #uuid"d47f3a16-a501-4fd5-b45d-b024422d1b23"))
+
+
+  (count
+    (simple-queue/qview-dead
       (::le.shared/queue @le.shared/!shared)
       ::fetch-metadata-queue))
 
 
-  (simple-queue/qview-dead
+  (simple-queue/all-un-resolved-errors
     (::le.shared/queue @le.shared/!shared)
     ::fetch-metadata-queue)
 
@@ -197,6 +232,7 @@
 
   (swap! simple-queue/*manual-unlock-1*
     conj ::fetch-metadata-queue)
+  (simple-queue/qview-active (::le.shared/queue @le.shared/!shared) ::fetch-metadata-queue)
   (simple-queue/resolve!i (::le.shared/queue @le.shared/!shared) #uuid "cafd67d2-7735-4671-b7b6-eddcbe03dc5c")
 
   (do

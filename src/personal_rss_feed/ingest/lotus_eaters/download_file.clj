@@ -92,9 +92,28 @@
     (::le.shared/queue @le.shared/!shared)
     ::download-queue)
 
-  (simple-queue/qview-dead
+  (doseq [{::queue-item/keys [id data]} (simple-queue/qview
+                                          (::le.shared/queue @le.shared/!shared)
+                                          ::download-queue)]
+    (let [data (db/episode-by-url (d/db (:db/conn @le.shared/!shared)) (:episode/url data))]
+      (simple-queue/update!qi
+        (::le.shared/queue @le.shared/!shared)
+        id
+        ::queue-item/priority (constantly (.getTime (:episode/publish-date data))))
+      #_(println id (:episode/publish-date data))))
+  (simple-queue/-qsort!
     (::le.shared/queue @le.shared/!shared)
     ::download-queue)
+
+
+  (d/touch (db/episode-by-url (d/db (:db/conn @le.shared/!shared)) "https://www.lotuseaters.com/premium-why-ideology-is-theology-14-07-23"))
+
+  (db/save-episode! (:db/conn @le.shared/!shared) {:episode/url                "https://www.lotuseaters.com/premium-live-lads-hour-12-or-zombie-apocalypse-21-11-2023"
+                                                   :episode/video-original-uri "https://ak2.rmbl.ws/s8/2/3/L/5/j/3L5jo.Faa.rec.mp4"})
+
+  (take 10 (reverse (simple-queue/qview
+                      (::le.shared/queue @le.shared/!shared)
+                      ::download-queue)))
 
   (simple-queue/update!qi
     (::le.shared/queue @le.shared/!shared)
@@ -123,11 +142,7 @@
   (d/touch
     (db/episode-by-url
       (d/db (:db/conn @le.shared/!shared))
-      "https://www.lotuseaters.com/premium-epochs-130-or-the-duke-of-wellington-part-ii-29-10-23"))
-
-  (download-episode
-    @le.shared/!shared
-    )
+      "https://www.lotuseaters.com/premium-the-politics-of-skyrim-29-11-23"))
 
   (simple-queue/qresubmit-item!
     (::le.shared/queue @le.shared/!shared)
