@@ -8,13 +8,14 @@
                              }
 
                             :personal-rss-feed.feed.s3/s3
-                            {:hostname          "garage-ct.lan"
-                             :port              3900
-                             :region            "us-west-1"
-                             :access-key-id     "GK8082331a3891d8f189e0e45d" ;; CI
-                             ;;:access-key-id     "GKf824d02222f93cb03b3144a1"
-                             :secret-access-key #n/ref :s3/secret-access-key
-                             :bucket-name       "lotus-eaters-ci"}
+                             #n/ref [:s3 :CI]
+                            ;;#n/ref [:s3 :PROD]
+                            #_{:hostname          "something.com"
+                               :port              3900
+                               :region            "us-west-1"
+                               :access-key-id     "..."
+                               :secret-access-key "..."
+                               :bucket-name       "name"}
 
                             :personal-rss-feed.ingest.lotus-eaters/lotus-eaters-ingest
                             {

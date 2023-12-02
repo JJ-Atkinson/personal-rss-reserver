@@ -6,9 +6,6 @@
             [ring.adapter.jetty9 :as ring-jetty]
             [ring.middleware.head :as head]
             [personal-rss-feed.admin.electric-jetty :as electric-jetty]
-            [ring.util.request :as request]
-            [ring.middleware.resource :as resource]
-            [hiccup.form :as form]
             [hiccup.page :as page]
             [ring.middleware.defaults :as ring.defaults]
             [ring.util.response :as response]
@@ -82,7 +79,6 @@
        (-> (response/resource-response path {:root "/public"})
          (head/head-response req))
        (response/not-found "No resource found")))})
-
 
 
 ;;; SERVER COMPONENT ==============================

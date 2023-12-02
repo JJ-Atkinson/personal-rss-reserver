@@ -4,10 +4,18 @@
             [integrant.core :as ig]
             [taoensso.timbre :as log]))
 
-(defn deep-merge [a b]
-  (merge-with (fn [x y]
-                (if (and (map? x) (map? y)) (deep-merge x y) y))
-    a b))
+(defn nref? 
+  [x]
+  (and (map? x) (contains? x ::nref)))
+
+(defn deep-merge
+  "Deep merge maps, with understanding that an nref is a scalar not a map."
+  [a b]
+  (if (or (nref? a) (nref? b))
+    b                                                       ;; When a value is scalar (nref), the second value always wins
+    (merge-with (fn [x y]
+                  (if (and (map? x) (map? y)) (deep-merge x y) y))
+      a b)))
 
 (defn read-config-files!
   [enable-prod?]
@@ -37,7 +45,7 @@
                         (get m (last path))))]
     (walk/prewalk
       (fn [x]
-        (if (and (map? x) (contains? x ::nref))
+        (if (nref? x)
           (get-exists! (::nref x))
           x))
       config)))
