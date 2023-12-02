@@ -96,6 +96,11 @@
   (fn comp-and_lockout_rate-limit* [& args]
     (every? #(apply % args) lockouts-or-rate-limits)))
 
+(defn rate-limit-number-active
+  [max-active-tasks]
+  (fn [_waiting-reversed active _completed]
+    (>= max-active-tasks (count active))))
+
 (defn update!q
   "Specifically update a queue, optionally updating a sub-key"
   ([system queue-name f] (swap! system update ::name->queue (fn [n-q] (update n-q queue-name f))))

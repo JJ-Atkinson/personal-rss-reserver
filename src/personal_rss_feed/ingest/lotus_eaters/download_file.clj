@@ -49,7 +49,8 @@
                                       ::simple-queue/retryable? true}))))
 
 (defn download-now!
-  "Trigger an immediate download. Returns a queue item representing the task. Does _not_ re-submit a failed task."
+  "Trigger an immediate download of a possibly queued item. Returns a queue item representing the task.
+   Does _not_ re-submit a failed task."
   [{:db/keys         [conn]
     ::le.shared/keys [queue s3] :as system}
    {:keys [:episode/url ::download-type] :as data}]
@@ -88,9 +89,15 @@
      :poll-f     #'download-episode}))
 
 (comment
-  (simple-queue/qpeek!
+  (simple-queue/qview
     (::le.shared/queue @le.shared/!shared)
     ::download-queue)
+  
+  (download-now!
+    @le.shared/!shared
+    {:episode/url "https://www.lotuseaters.com/premium-video-nietzsches-critique-of-critical-race-theory-21-07-2022"
+     ::download-type ::audio})
+  
 
   (doseq [{::queue-item/keys [id data]} (simple-queue/qview
                                           (::le.shared/queue @le.shared/!shared)

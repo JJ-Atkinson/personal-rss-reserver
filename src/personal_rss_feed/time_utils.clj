@@ -2,7 +2,8 @@
   (:require
    [chime.core :as chime]
    [dev.freeformsoftware.simple-queue.queue-item :as queue-item]
-   [taoensso.encore :as enc])
+   [taoensso.encore :as enc]
+   [taoensso.timbre :as log])
   (:import (java.time Duration Instant)))
 
 (defn repeat-every!
@@ -26,22 +27,31 @@
     (if (zero? limit-count)
       true                                                  ;; true == always locked.
       (enc/when-let [timebox-end (nth (concat active recent) (dec limit-count) nil)
-                     time (::queue-item/activation-time timebox-end)
-                     time (.toInstant time)
-                     dur (Duration/between time (Instant/now))]
+                     time        (::queue-item/activation-time timebox-end)
+                     time        (.toInstant time)
+                     dur         (Duration/between time (Instant/now))]
         (boolean (< (/ (.toMillis dur) 1000) period-s))))))
+
+(defn queue-item-within-period-of-now?
+  [period-s queue-item]
+  (enc/when-let [time (::queue-item/submission-time queue-item)
+                 time (.toInstant time)
+                 dur  (Duration/between time (Instant/now))]
+    (< (/ (.toMillis dur) 1000) period-s)))
 
 (defn queue-rate-limit-allow-only-recent-tasks
   "Rate limit only allowing tasks submitted today. Only cares about the highest priority item. Most useful
   in comp-and_lockout_rate-limit with some other normal rate limiter, since this will never allow old
   tasks to be processed."
-  [{:keys [period-s]}]
-  (fn queue-rate-limit-x-per-period* [waiting-reversed _active _recent]
-    (enc/if-let [time (::queue-item/submission-time (first waiting-reversed))
-                 time (.toInstant time)
-                 dur (Duration/between time (Instant/now))]
-      (boolean (> (/ (.toMillis dur) 1000) period-s))       ;; do _NOT_ lock if within the last day.
-      true)))                                               ;; always locked if no available waiting item exists
+  [{:keys [period-s limit-recent]}]
+  (fn queue-rate-limit-x-per-period* [waiting-reversed active recent]
+    (let [count-allowed-because-recent
+          (count (filter (partial queue-item-within-period-of-now? period-s)
+                   (concat active recent)))]
+      (if (and (queue-item-within-period-of-now? period-s (first waiting-reversed))
+            (not (< limit-recent count-allowed-because-recent)))
+        false                                               ;; not locked when 1. recent and 2. not too many recent have been processed
+        true)))) 
 
 (defn queue-lockout-backoff-retry
   [{:keys [base-s-backoff]}]

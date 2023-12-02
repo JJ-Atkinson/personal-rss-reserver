@@ -158,7 +158,7 @@
 
 (comment
   (save-podcast! @!conn {:podcast/feed-uri "https://lotuseaters.com/feed/category/health"
-                         :podcast/generated-icon-relative-uri "bd71488f-6091-4f9a-a381-8562e966de7d-crt.png"})
+                         :podcast/generated-icon-relative-uri ""})
   (d/touch (d/entity (d/db @!conn) [:episode/url "https://www.lotuseaters.com/premium-live-lads-hour-12-or-zombie-apocalypse-21-11-2023"]))
   (d/touch (d/entity (d/db @!conn) [:podcast/id "https://www.lotuseaters.com/feed/category/aaab"]))
   (known-podcasts @!conn)
@@ -167,7 +167,6 @@
 
   (d/touch (podcast-by-id @!conn "aaab"))
   (d/touch (episode-by-id @!conn "aahf"))
-  
   
   ;; Add a user
   (d/transact! @!conn [{:user/uname "jarrett"
@@ -189,4 +188,5 @@
                           :episode/podcast
                           :episode/audio-content-length]))
     (sort-by :episode/publish-date)
+    (filter :episode/audio-content-length)
     (count)))
