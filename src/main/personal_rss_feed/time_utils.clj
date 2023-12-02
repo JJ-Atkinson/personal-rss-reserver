@@ -26,11 +26,12 @@
   (fn queue-rate-limit-x-per-period* [_waiting-reversed active recent]
     (if (zero? limit-count)
       true                                                  ;; true == always locked.
-      (enc/when-let [timebox-end (nth (concat active recent) (dec limit-count) nil)
-                     time        (::queue-item/activation-time timebox-end)
-                     time        (.toInstant time)
-                     dur         (Duration/between time (Instant/now))]
-        (boolean (< (/ (.toMillis dur) 1000) period-s))))))
+      (boolean
+        (enc/when-let [timebox-end (nth (concat active recent) (dec limit-count) nil)
+                       time        (::queue-item/activation-time timebox-end)
+                       time        (.toInstant time)
+                       dur         (Duration/between time (Instant/now))]
+          (< (/ (.toMillis dur) 1000) period-s))))))
 
 (defn queue-item-within-period-of-now?
   [period-s queue-item]
@@ -49,7 +50,7 @@
           (count (filter (partial queue-item-within-period-of-now? period-s)
                    (concat active recent)))]
       (if (and (queue-item-within-period-of-now? period-s (first waiting-reversed))
-            (not (< limit-recent count-allowed-because-recent)))
+            (not (<= limit-recent count-allowed-because-recent)))
         false                                               ;; not locked when 1. recent and 2. not too many recent have been processed
         true)))) 
 

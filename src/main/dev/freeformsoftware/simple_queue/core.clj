@@ -87,7 +87,7 @@
    If every limit is disabled, then the item will dequeue."
   [& lockouts-or-rate-limits]
   (fn comp-or_lockout_rate-limit* [& args]
-    (some #(apply % args) lockouts-or-rate-limits)))
+    (boolean (some #(apply % args) lockouts-or-rate-limits))))
 
 (defn comp-and_lockout_rate-limit
   "Compose lockout? fns or rate-limit? fns with (and), making them optimistic. 
@@ -99,7 +99,7 @@
 (defn rate-limit-number-active
   [max-active-tasks]
   (fn [_waiting-reversed active _completed]
-    (>= max-active-tasks (count active))))
+    (<= max-active-tasks (count active))))
 
 (defn update!q
   "Specifically update a queue, optionally updating a sub-key"
