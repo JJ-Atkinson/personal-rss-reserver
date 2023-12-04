@@ -46,14 +46,16 @@
          ch.qos.logback/logback-classic      {:mvn/version "1.2.11"}
          datascript/datascript               {:mvn/version "1.5.2"}}
  :aliases
- {:dev {:extra-paths ["src/test"] 
+ {:dev {:extra-paths ["src/test" "src/dev"] 
         :extra-deps {com.gfredericks/debug-repl {:mvn/version "0.0.12"}
                      binaryage/devtools         {:mvn/version "1.0.6"}
                      thheller/shadow-cljs       {:mvn/version "2.25.2"}
                      fulcrologic/fulcro-spec    {:mvn/version "3.1.12"}
                      dev.freeformsoftware/portal-test-reporter
                      {:git/url "https://github.com/JJ-Atkinson/portal-test-reporter.git"
-                      :sha     "4862723d4c53ea66347f16e16d8cb51143555137"}}
+                      :sha     "4862723d4c53ea66347f16e16d8cb51143555137"}
+                     io.github.clojure/tools.build {:mvn/version "0.9.5" :exclusions [com.google.guava/guava]}
+                     io.github.seancorfield/build-clj {:git/tag "v0.8.0" :git/sha "9bd8b8a"}}
         :jvm-opts   ["--add-opens" "java.base/java.nio=ALL-UNNAMED" ;; ##SeeDepsEDN
                      "--add-opens" "java.base/sun.nio.ch=ALL-UNNAMED"
 
