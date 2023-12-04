@@ -4,3 +4,5 @@
 /.direnv/
 /.portal/
 /.cpcache/
+/result/
+/target/

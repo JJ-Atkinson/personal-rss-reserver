@@ -1,2 +1,0 @@
-#!/bin/sh
-clj -A:local/devtools:spyscope:dev -X personal-rss-feed.prod/start-server!

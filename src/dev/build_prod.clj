@@ -12,7 +12,7 @@
             [shadow.cljs.devtools.server :as shadow-server]
             ))
 
-(def version (b/git-process {:git-args "describe --tags --long --always --dirty"}))
+;;(def version (b/git-process {:git-args "describe --tags --long --always --dirty"}))
 
 (defn str->json
   [s]
@@ -24,14 +24,15 @@
 (defn build-client!
   "Prod optimized ClojureScript client build. (Note: in dev, the client is built 
 on startup)"
-  [{:keys [optimize debug verbose version]
-    :or   {optimize true, debug false, verbose false, version version}}]
-  (println "Building client. Version:" version)
+  [{:keys [optimize debug verbose ref]
+    :or   {optimize true, debug false, verbose false}}]
+  (println "Building client. Ref:" ref)
+  (assert ref "Version should be specified for a build, generally it's a sha")
   (shadow-server/start!)
   (shadow-api/release :prod {:debug        debug,
                              :verbose      verbose,
                              :config-merge [{:compiler-options {:optimizations (if optimize :advanced :simple)}
-                                             :closure-defines  {'hyperfiddle.electric-client/VERSION version}}]})
+                                             :closure-defines  {'hyperfiddle.electric-client/VERSION ref}}]})
   (shadow-server/stop!))
 
 (defn remove-timestamp!
@@ -91,8 +92,9 @@ on startup)"
   (let [{:keys [main-ns compile-clj-opts client-opts]
          :as   opts} (-> opts
                        (update :compile-clj-opts str->json)
-                       (update :client-opts str->json))
-        
+                       (update :client-opts str->json)
+                       (update :client-opts assoc :ref (:ref opts)))
+
         {:keys [src-dirs basis output-jar]} (common-compile-options opts)]
     ;; Build cljs before copying to the target dir
     (clean-cljs)
@@ -101,10 +103,10 @@ on startup)"
 
     (b/copy-dir {:src-dirs   src-dirs
                  :target-dir class-dir})
-    (b/compile-clj (cond-> {:basis     basis
-                            :src-dirs  src-dirs
+    (b/compile-clj (cond-> {:basis      basis
+                            :src-dirs   src-dirs
                             :ns-compile [(symbol main-ns)]
-                            :class-dir class-dir}
+                            :class-dir  class-dir}
                      compile-clj-opts (merge (parse-compile-clj-opts compile-clj-opts))))
 
     (b/uber {:class-dir class-dir
