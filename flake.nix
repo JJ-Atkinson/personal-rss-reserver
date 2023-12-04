@@ -75,35 +75,35 @@
             version = "1.0";
             main-ns = "personal-rss-feed.prod";
           in
-            clj-nix.lib.mkCljApp {
-              pkgs = nixpkgs.legacyPackages.${system};
-              modules = [{
-                projectSrc = ./.;
-                jdk = runtimeJDK;
-                name = fullId;
-                version = version;
-                main-ns = main-ns;
-                java-opts = [
-                  "--add-opens"
-                  "java.base/java.nio=ALL-UNNAMED" # ##SeeDepsEDN
-                  "--add-opens"
-                  "java.base/sun.nio.ch=ALL-UNNAMED"
-                  "-Djdk.httpclient.allowRestrictedHeaders=host"
-                ];
-                buildCommand = ''
-                  clj -A:dev -X build-prod/uber! :lib-name "${fullId}" :version "${version}" :main-ns "${main-ns}"
-                '';
-                # :lib-name :version :main-ns :compile-clj-opts :javac-opts
-                # Default build command, slightly munged.
-                #         ''
-                #          clj-builder uber "${fullId}" "${version}" "${main-ns}" \
-                #            '${builtins.toJSON compileCljOpts}' \
-                #            '${builtins.toJSON javacOpts}'
-                #        ''
-  
-                # nativeImage.enable = true;
-                # customJdk.enable = true;
-              }];
+            pkgs.mkCljBin {
+              # pkgs = nixpkgs.legacyPackages.${system};
+              nativeBuildInputs = [pkgs.git];
+
+              projectSrc = ./.;
+              jdkRunner = runtimeJDK;
+              name = fullId;
+              version = version;
+              main-ns = main-ns;
+              java-opts = [
+                "--add-opens"
+                "java.base/java.nio=ALL-UNNAMED" # ##SeeDepsEDN
+                "--add-opens"
+                "java.base/sun.nio.ch=ALL-UNNAMED"
+                "-Djdk.httpclient.allowRestrictedHeaders=host"
+              ];
+              buildCommand = ''
+                clj -A:build -X build-prod/uber! :lib-name "${fullId}" :version "${version}" :main-ns "${main-ns}" :ref "${self.rev}"
+              '';
+              # :lib-name :version :main-ns :compile-clj-opts :javac-opts
+              # Default build command, slightly munged.
+              #         ''
+              #          clj-builder uber "${fullId}" "${version}" "${main-ns}" \
+              #            '${builtins.toJSON compileCljOpts}' \
+              #            '${builtins.toJSON javacOpts}'
+              #        ''
+
+              # nativeImage.enable = true;
+              # customJdk.enable = true;
             };
           
           binDerivation = pkgs.stdenv.mkDerivation {

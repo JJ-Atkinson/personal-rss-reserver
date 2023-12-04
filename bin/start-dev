@@ -1,2 +1,2 @@
 #!/bin/sh
-clj -A:local/devtools:spyscope:dev -X user/dev-main
+clj -A:local/devtools:spyscope:dev:build -X user/dev-main
