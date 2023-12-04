@@ -67,26 +67,44 @@
 
         packages = {
 
-          baseCljDerivation = clj-nix.lib.mkCljApp {
-            pkgs = nixpkgs.legacyPackages.${system};
-            modules = [{
-              projectSrc = ./.;
-              jdk = runtimeJDK;
-              name = "dev.freeformsoftware/personal-rss-reserver";
-              version = "1.0";
-              main-ns = "personal-rss-feed.prod";
-              java-opts = [
-                "--add-opens"
-                "java.base/java.nio=ALL-UNNAMED" # ##SeeDepsEDN
-                "--add-opens"
-                "java.base/sun.nio.ch=ALL-UNNAMED"
-                "-Djdk.httpclient.allowRestrictedHeaders=host"
-              ];
-
-              # nativeImage.enable = true;
-              # customJdk.enable = true;
-            }];
-          };
+          baseCljDerivation = 
+          let 
+            groupId = "dev.freeformsoftware";
+            artifactId = "personal-rss-reserver";
+            fullId = "${groupId}/${artifactId}";
+            version = "1.0";
+            main-ns = "personal-rss-feed.prod";
+          in
+            clj-nix.lib.mkCljApp {
+              pkgs = nixpkgs.legacyPackages.${system};
+              modules = [{
+                projectSrc = ./.;
+                jdk = runtimeJDK;
+                name = fullId;
+                version = version;
+                main-ns = main-ns;
+                java-opts = [
+                  "--add-opens"
+                  "java.base/java.nio=ALL-UNNAMED" # ##SeeDepsEDN
+                  "--add-opens"
+                  "java.base/sun.nio.ch=ALL-UNNAMED"
+                  "-Djdk.httpclient.allowRestrictedHeaders=host"
+                ];
+                buildCommand = ''
+                  clj -A:dev -X build-prod/uber! :lib-name "${fullId}" :version "${version}" :main-ns "${main-ns}"
+                '';
+                # :lib-name :version :main-ns :compile-clj-opts :javac-opts
+                # Default build command, slightly munged.
+                #         ''
+                #          clj-builder uber "${fullId}" "${version}" "${main-ns}" \
+                #            '${builtins.toJSON compileCljOpts}' \
+                #            '${builtins.toJSON javacOpts}'
+                #        ''
+  
+                # nativeImage.enable = true;
+                # customJdk.enable = true;
+              }];
+            };
           
           binDerivation = pkgs.stdenv.mkDerivation {
             name = "dev.freeformsoftware/personal-rss-reserver-bin-ext";

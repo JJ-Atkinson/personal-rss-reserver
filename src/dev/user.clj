@@ -36,7 +36,7 @@
   []
   (ig/resume (#'config/resolve-config! false) @!system))
 
-(defn restart 
+(defn restart
   []
   (when @!system (stop))
   (start))

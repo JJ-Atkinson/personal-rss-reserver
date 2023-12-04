@@ -3,9 +3,7 @@
    [integrant.core :as ig]
    [nrepl.server :refer [start-server stop-server default-handler]]
    [personal-rss-feed.config]
-   [taoensso.timbre :as log])
-  (:gen-class)
-  (:import (java.util Date)))
+   [taoensso.timbre :as log]))
 
 (defonce system (atom {}))
 
