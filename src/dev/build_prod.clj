@@ -93,7 +93,7 @@ on startup)"
          :as   opts} (-> opts
                        (update :compile-clj-opts str->json)
                        (update :client-opts str->json)
-                       (update :client-opts assoc :ref (:ref opts)))
+                       (update :client-opts assoc :ref (System/getenv "GIT_REF")))
 
         {:keys [src-dirs basis output-jar]} (common-compile-options opts)]
     ;; Build cljs before copying to the target dir
