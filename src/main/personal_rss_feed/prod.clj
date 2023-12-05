@@ -3,7 +3,8 @@
    [integrant.core :as ig]
    [nrepl.server :refer [start-server stop-server default-handler]]
    [personal-rss-feed.config]
-   [taoensso.timbre :as log]))
+   [taoensso.timbre :as log])
+  (:gen-class))
 
 (defonce system (atom {}))
 
