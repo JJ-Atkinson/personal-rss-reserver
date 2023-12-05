@@ -92,7 +92,9 @@
                 "-Djdk.httpclient.allowRestrictedHeaders=host"
               ];
               buildCommand = ''
-                clj -A:build -X build-prod/uber! :lib-name '${fullId}' :version '${version}' :main-ns '${main-ns}' :ref '${self.rev}'
+                GIT_REF="${self.rev}"
+                export GIT_REF
+                clj -A:build -X build-prod/uber! :lib-name '${fullId}' :version '${version}' :main-ns '${main-ns}'
               '';
               # :lib-name :version :main-ns :compile-clj-opts :javac-opts
               # Default build command, slightly munged.
