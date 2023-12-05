@@ -1,15 +1,17 @@
 (ns personal-rss-feed.admin.server
-  (:require [clj-simple-router.core :as router]
-            [clojure.string :as str]
-            [integrant.core :as ig]
-            [personal-rss-feed.admin.auth :as auth]
-            [ring.adapter.jetty9 :as ring-jetty]
-            [ring.middleware.head :as head]
-            [personal-rss-feed.admin.electric-jetty :as electric-jetty]
-            [hiccup.page :as page]
-            [ring.middleware.defaults :as ring.defaults]
-            [ring.util.response :as response]
-            [taoensso.timbre :as log]))
+  (:require
+   personal-rss-feed.admin.app
+   [clj-simple-router.core :as router]
+   [clojure.string :as str]
+   [integrant.core :as ig]
+   [personal-rss-feed.admin.auth :as auth]
+   [ring.adapter.jetty9 :as ring-jetty]
+   [ring.middleware.head :as head]
+   [personal-rss-feed.admin.electric-jetty :as electric-jetty]
+   [hiccup.page :as page]
+   [ring.middleware.defaults :as ring.defaults]
+   [ring.util.response :as response]
+   [taoensso.timbre :as log]))
 
 (def safe-prefixes
   "Prefixes for URI that should ALWAYS be allowed"
