@@ -6,3 +6,5 @@
 /.cpcache/
 /result/
 /target/
+/.shadow_cljs/
+/resources/public/js/
