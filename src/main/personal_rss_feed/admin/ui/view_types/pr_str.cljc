@@ -1,4 +1,4 @@
-(ns personal-rss-feed.admin.ui.view-types.table
+(ns personal-rss-feed.admin.ui.view-types.pr-str
   (:require
    contrib.str
    [hyperfiddle.electric :as e]

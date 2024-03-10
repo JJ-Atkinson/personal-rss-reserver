@@ -1,0 +1,68 @@
+{:width 120
+ :style :respect-nl
+ :binding {:justify? true
+           :justify {:max-variance 100}
+           :indent 0}
+ :map {:sort? false
+       :justify? true
+       :comma? false
+       :indent 0
+       :justify {:max-variance 100}}
+ :set {:sort? false}
+ :fn-map {"defn" :arg1-force-nl-body
+          "defsc" :arg2-force-nl-body
+          ":require" [:force-nl-body
+                      {:list {:indent 1}}]
+          "apply" :none
+          "assoc" :none
+          "filter" :none
+          "filterv" :none
+          "map" :none
+          "mapv" :none
+          "reduce" :none
+          "remove" :none
+          "with-meta" :none-body
+          "->>" :none
+
+          "div" [:arg1-body {:list {:indent 2}}]
+          "span" [:arg1-body {:list {:indent 2}}]
+          "button" [:arg1-body {:list {:indent 2}}]
+          "table" [:arg1-body {:list {:indent 2}}]
+          "thead" [:arg1-body {:list {:indent 2}}]
+          "tbody" [:arg1-body {:list {:indent 2}}]
+          "tr" [:arg1-body {:list {:indent 2}}]
+          "th" [:arg1-body {:list {:indent 2}}]
+          "td" [:arg1-body {:list {:indent 2}}]
+          "label" [:arg1-body {:list {:indent 2}}]
+          "h1" [:arg1-body {:list {:indent 2}}]
+          "h2" [:arg1-body {:list {:indent 2}}]
+          "h3" [:arg1-body {:list {:indent 2}}]
+          "h4" [:arg1-body {:list {:indent 2}}]
+          "h5" [:arg1-body {:list {:indent 2}}]
+          "h6" [:arg1-body {:list {:indent 2}}]
+          "svg" [:arg1-body {:list {:indent 2}}]
+          "path" [:arg1-body {:list {:indent 2}}]
+          "p" [:arg1-body {:list {:indent 2}}]
+          "input" [:arg1-body {:list {:indent 2}}]
+          "form" [:arg1-body {:list {:indent 2}}]
+          "i" [:arg1-body {:list {:indent 2}}]
+          "a" [:arg1-body {:list {:indent 2}}]
+          "em" [:arg1-body {:list {:indent 2}}]
+          "strong" [:arg1-body {:list {:indent 2}}]
+          "hr" [:arg1-body {:list {:indent 2}}]
+          "ul" [:arg1-body {:list {:indent 2}}]
+          "ol" [:arg1-body {:list {:indent 2}}]
+          "li" [:arg1-body {:list {:indent 2}}]
+          "textarea" [:arg1-body {:list {:indent 2}}]
+          "set-state!" [:arg1-body {:list {:indent 2}}]
+          "defattr" [:list {:list {:indent 2 :indent-only? true}
+                            :map {:justify? true}}]
+
+          "swap!->" "->"
+          ">defn" "defn"
+          "sp/cond-path" [:arg1-body {:list {:indent 2}}]}
+ :list {:indent-arg 1},
+ :pair {:indent 0
+        :justify? true
+        :justify {:max-variance 100}}
+ :reader-cond {:indent 0}}

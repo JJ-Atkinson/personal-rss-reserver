@@ -1,0 +1,112 @@
+; This is the Calva evaluation results output window.
+; TIPS: The keyboard shortcut `ctrl+alt+o o` shows and focuses this window
+;   when connected to a REPL session.
+; Please see https://calva.io/output/ for more info.
+; Happy coding! ♥️
+
+; Connecting ...
+; Reading port file: file:///home/jarrett/code/personal/personal-rss-reserver/.nrepl-port ...
+; No nrepl port file found.
+; Hooking up nREPL sessions ...
+; Connected session: clj
+; TIPS:
+;   - You can edit the contents here. Use it as a REPL if you like.
+;   - `alt+enter` evaluates the current top level form.
+;   - `ctrl+enter` evaluates the current form.
+;   - `alt+up` and `alt+down` traverse up and down the REPL command history
+;      when the cursor is after the last contents at the prompt
+;   - Clojure lines in stack traces are peekable and clickable.
+; Evaluating code from settings: 'calva.autoEvaluateCode.onConnect.clj'
+(when-let [requires (resolve 'clojure.main/repl-requires)] (clojure.core/apply clojure.core/require @requires))
+nil
+clj꞉user꞉>  ; Use `alt+enter` to evaluate
+clj꞉user꞉> 
+(defmethod ig/init-key ::auth
+  [_ config]
+  (reset! !config config)
+  config)
+#object[clojure.lang.MultiFn 0x20804c38 "clojure.lang.MultiFn@20804c38"]
+clj꞉personal-rss-feed.admin.auth꞉> 
+(generate-jwt-from-credentials @!config "jarrett" "password")
+nil
+clj꞉personal-rss-feed.admin.auth꞉> 
+@!config
+{:db/conn #object[clojure.lang.Atom 0x249f45c0 {:status :ready, :val {:db-name "aa4b2bff-0c02-44f8-ab74-bd36d9ef3f4f", :last-modified 1710005471085, :datom-count 0, :max-eid 833, :max-tx 7330}}], :personal-rss-feed.admin.auth/hash-options {:alg :bcrypt+sha512}, :personal-rss-feed.admin.auth/jwt-options {:secret "e9695eed57c76f383686e0d311dc6b2fe128d5b9a21740633f6974db08a79819", :exp-period-s 86400, :buddy {:skip-validation false, :alg :hs512}}}
+clj꞉personal-rss-feed.admin.auth꞉> 
+(generate-jwt-from-credentials @!config "jarrett" "password")
+nil
+clj꞉personal-rss-feed.admin.auth꞉> 
+(generate-jwt-from-credentials @!config "jarrett" "password")
+nil
+clj꞉personal-rss-feed.admin.auth꞉> 
+(generate-password-crypt @!config "hello-world")
+"bcrypt+sha512$f4e99112c15598a13c31952022ee45e6$12$fe33051aa35e46b3f9de4088bb3eb5c4271642b13f643e62"
+clj꞉personal-rss-feed.admin.auth꞉> 
+(generate-password-crypt @!config "hello-world")
+"bcrypt+sha512$d3ba298e7c32c240c1faab4983106345$12$b18f747890b68de38d344862bd404a345b66994c283ae339"
+clj꞉personal-rss-feed.admin.auth꞉> 
+(d/transact! @!conn
+               [{:user/uname "jarrett",
+                 :user/password-crypt
+                   (personal-rss-feed.admin.auth/generate-password-crypt
+                     @personal-rss-feed.admin.auth/!config
+                     "rvtqpRL4Wqb9dGjzQczJ"),
+                 :user/admin? true}])
+{:datoms-transacted 3}
+clj꞉personal-rss-feed.feed.db꞉> 
+(d/touch (d/entity (d/db @!conn) [:user/uname "jarrett"]))
+{:user/password-crypt "bcrypt+sha512$e6c9e2740c94f67715281d36d28ce2f6$12$f2fc9043a27d61078f17f7284e2ca55c7d8fca90ca22923d", :user/uname "jarrett", :user/admin? true, :db/id 834}
+clj꞉personal-rss-feed.feed.db꞉> 
+; nREPL Connection was closed
+; Connecting using "Tyba" project type.
+; You can make Calva auto-select this.
+;   - See https://calva.io/connect-sequences/
+; 
+; Connecting ...
+; Reading port file: file:///home/jarrett/code/personal/personal-rss-reserver/.nrepl-port ...
+; No nrepl port file found.
+; Connecting using "Tyba" project type.
+; You can make Calva auto-select this.
+;   - See https://calva.io/connect-sequences/
+; 
+; Connecting ...
+; Reading port file: file:///home/jarrett/code/personal/personal-rss-reserver/.nrepl-port ...
+; No nrepl port file found.
+; Hooking up nREPL sessions ...
+; Connected session: clj
+; TIPS:
+;   - You can edit the contents here. Use it as a REPL if you like.
+;   - `alt+enter` evaluates the current top level form.
+;   - `ctrl+enter` evaluates the current form.
+;   - `alt+up` and `alt+down` traverse up and down the REPL command history
+;      when the cursor is after the last contents at the prompt
+;   - Clojure lines in stack traces are peekable and clickable.
+; Evaluating code from settings: 'calva.autoEvaluateCode.onConnect.clj'
+(when-let [requires (resolve 'clojure.main/repl-requires)] (clojure.core/apply clojure.core/require @requires))
+nil
+clj꞉user꞉> 
+clj꞉user꞉> 
+; Creating cljs repl session...
+; Connecting cljs repl: Tyba...
+;   The Calva Connection Log might have more connection progress information.
+; Starting cljs repl for: Tyba...
+; Cljs builds started
+; Failed starting cljs repl
+ig/resume-key
+#object[clojure.lang.MultiFn 0x36edb10e "clojure.lang.MultiFn@36edb10e"]
+clj꞉personal-rss-feed.admin.server꞉> 
+(d/transact! @!conn [{:user/uname "jarrett"
+                        :user/password-crypt (personal-rss-feed.admin.auth/generate-password-crypt
+                                               @personal-rss-feed.admin.auth/!config
+                                               "password")
+                        :user/admin? true}])
+{:datoms-transacted 3}
+clj꞉personal-rss-feed.feed.db꞉> 
+(d/transact! @!conn [{:user/uname "jarrett"
+                        :user/password-crypt (personal-rss-feed.admin.auth/generate-password-crypt
+                                               @personal-rss-feed.admin.auth/!config
+                                               "password")
+                        :user/admin? true}])
+{:datoms-transacted 2}
+clj꞉personal-rss-feed.feed.db꞉> 
+; nREPL Connection was closed

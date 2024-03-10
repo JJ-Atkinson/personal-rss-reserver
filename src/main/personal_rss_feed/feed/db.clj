@@ -174,6 +174,8 @@
                                                @personal-rss-feed.admin.auth/!config
                                                "password")
                         :user/admin? true}])
+
+  (d/touch (d/entity (d/db @!conn) [:user/uname "jarrett"]))
   
   (->>
     (d/q '[:find ?url

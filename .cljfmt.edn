@@ -1,0 +1,71 @@
+;; [[:inner 0]] means "indent all lines with 2 spaces", i.e. this:
+;;
+;; (div :.bg-red-600
+;;   {:key "abc"}
+;;   "hello")
+;;
+;; instead of this:
+;;
+;; (div :.bg-red-600
+;;      {:key "abc"}
+;;      "hello")
+;;
+;; Unfortunately cljfmt doesn't let us specify indentation rules by namespace,
+;; so we have to do it by individual function.
+{:extra-indents {;; com.fulcrologic.fulcro.{dom,dom-server}
+                 div [[:inner 0]],
+                 span [[:inner 0]],
+                 button [[:inner 0]],
+                 table [[:inner 0]],
+                 thead [[:inner 0]],
+                 tbody [[:inner 0]],
+                 tr [[:inner 0]],
+                 th [[:inner 0]],
+                 td [[:inner 0]],
+                 label [[:inner 0]],
+                 h1 [[:inner 0]],
+                 h2 [[:inner 0]],
+                 h3 [[:inner 0]],
+                 h4 [[:inner 0]],
+                 h5 [[:inner 0]],
+                 h6 [[:inner 0]],
+                 svg [[:inner 0]],
+                 path [[:inner 0]],
+                 p [[:inner 0]],
+                 input [[:inner 0]],
+                 form [[:inner 0]],
+                 i [[:inner 0]],
+                 a [[:inner 0]],
+                 em [[:inner 0]],
+                 strong [[:inner 0]],
+                 hr [[:inner 0]],
+                 ul [[:inner 0]],
+                 ol [[:inner 0]],
+                 li [[:inner 0]],
+                 textarea [[:inner 0]],
+                 ;; Other random fulcro functions
+                 set-state! [[:inner 0]],
+                 defattr [[:inner 0]],
+                 swap!-> [[:block 1]],
+                 ;; fulcro specs
+                 behavior [[:inner 0]],
+                 component [[:inner 0]],
+                 specification [[:inner 0]],
+                 ;; guardrails
+                 >defn [[:inner 0]],
+                 ;clojure
+                 defrecord [[:inner 0] [:inner 1]],
+                 warn-on-exception [[:block 1]],
+                 ;; Pathom
+                 defmutation [[:inner 1]],
+                 defplugin [[:inner 0]],
+                 defresolver [[:inner 0]],
+                 ;; Specter
+                 sp/cond-path [[:inner 0]],
+                 sp/recursive-path [[:block 2]],
+                 sp/collected? [[:block 1]],
+                 sp/if-path [[:block 1]],
+                 ;; Malli
+                 constraints/with-constraints [[:block 1]],
+                 constraints/immutable-entity [[:block 1]]},
+ :sort-ns-references? true}
