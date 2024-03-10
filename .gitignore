@@ -8,3 +8,5 @@
 /target/
 /.shadow_cljs/
 /resources/public/js/
+/tmp/
+/.clj-kondo/*
