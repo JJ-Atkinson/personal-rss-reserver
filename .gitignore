@@ -6,7 +6,7 @@
 /.cpcache/
 /result/
 /target/
-.shadow_cljs/*
+/.shadow-cljs/*
 resources/public/js/
 /tmp/
 .clj-kondo/*
