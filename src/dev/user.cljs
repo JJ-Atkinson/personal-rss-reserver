@@ -1,13 +1,14 @@
 (ns ^:dev/always user ; Electric currently needs to rebuild everything when any file changes. Will fix
   (:require
    personal-rss-feed.admin.app
+   personal-rss-feed.admin.ui.recursive-viewer
    hyperfiddle.electric
    hyperfiddle.electric-dom2))
 
 (def electric-main
   (hyperfiddle.electric/boot ; Electric macroexpansion - Clojure to signals compiler
     (binding [hyperfiddle.electric-dom2/node js/document.body]
-      (personal-rss-feed.admin.app/Todo-list.))))
+      (personal-rss-feed.admin.ui.recursive-viewer/Viewer.))))
 
 (defonce reactor nil)
 

@@ -1,6 +1,7 @@
 (ns personal-rss-feed.admin.server
   (:require
    personal-rss-feed.admin.app
+   personal-rss-feed.admin.ui.recursive-viewer
    [clj-simple-router.core :as router]
    [clojure.string :as str]
    [integrant.core :as ig]

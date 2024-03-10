@@ -2,7 +2,9 @@
                             {:uri "/tmp/datalevin/personal-rss-server"}
 
                             :personal-rss-feed.queue/queue
-                            {:dev.freeformsoftware.simple-queue.core/persistence-dir    "/tmp/simple-queue/personal-rss-server"
+                            {:dev.freeformsoftware.simple-queue.core/persistence-dir
+                             ;;"/tmp/simple-queue/personal-rss-server"
+                             "/home/jarrett/code/personal/personal-rss-reserver/tmp/simple-queue"
                              :dev.freeformsoftware.simple-queue.core/default-timeout-ms 100000 ;; 100s
                              :dev.freeformsoftware.simple-queue.core/watchdog-ms        1000
                              }
@@ -19,7 +21,7 @@
 
                             :personal-rss-feed.ingest.lotus-eaters/lotus-eaters-ingest
                             {
-                             :start-auto-poll?          true
+                             :start-auto-poll?          false
                              :start-daily-feed-parse?   false ;; Override to query any existing podcasts at least once.
                              :s3/s3                     #ig/ref :personal-rss-feed.feed.s3/s3
                              :apply-playwright-cli-fix? true

@@ -1,1 +1,1 @@
-(ns personal-rss-feed.admin.ui-2.viewers)
+(ns personal-rss-feed.admin.ui-2.viewers.table)
