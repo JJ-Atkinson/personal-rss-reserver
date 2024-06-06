@@ -3,7 +3,7 @@
    [hyperfiddle.electric :as e]
    [hyperfiddle.electric-ui4 :as ui]
    [hyperfiddle.electric-dom2 :as dom]
-   [com.tybaenergy.electric.env :as e.env]
+   [personal-rss-feed.admin.electric-app.env :as e.env]
   ))
 
 ;; Saving this file will automatically recompile and update in your browser
@@ -27,11 +27,9 @@
             (dom/style {:margin "0.5em 3em"})
             (if page
               (ui/button (e/fn [] (swap! client-state assoc ::page nil))
-                (dom/props {:class "uk-button uk-button-secondary"})
                 (dom/text "< Back"))
               (dom/h1
-                (dom/props {:class "uk-heading-medium"})
-                (dom/text "Tyba Admin Dashboard")))
+                (dom/text "RSS Server Main")))
 
             (if page
               (case page nil nil nil)

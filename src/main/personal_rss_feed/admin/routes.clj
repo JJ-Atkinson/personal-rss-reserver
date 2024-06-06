@@ -31,11 +31,14 @@
 (defn wrap-logged-in
   [handler {::keys [safe-prefixes] :as config}]
   (fn [req]
-    (let [claims (p.login/logged-in-claims config req)]
-      (if (or claims
-              (some #(str/starts-with? (:uri req) %)
-                    (conj safe-prefixes
-                          "/login"))) ;; make sure we don't kill things that are logins
+    (let [claims       (p.login/logged-in-claims config req)
+          safe-prefix? (some #(str/starts-with? (:uri req) %)
+                             (conj safe-prefixes
+                                   "/login"))] ;; make sure we don't kill things that are logins
+      (tap> {:urii          (:uri req)
+             :safe-prefix? safe-prefix?
+             :claims       claims})
+      (if (or claims safe-prefix?)
         (handler (assoc req :auth/claims claims))
         (response/redirect "/login")))))
 
