@@ -19,6 +19,8 @@
   (reset! system
     (ig/init (personal-rss-feed.config/resolve-config! true))))
 
+(clojure.pprint/pprint @system)
+
 (defn -main 
   [& args]
   (start-server!))
