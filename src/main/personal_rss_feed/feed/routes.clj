@@ -6,6 +6,7 @@
    [dev.freeformsoftware.simple-queue.queue-item :as queue-item]
    [ring.util.response :as response]
    [personal-rss-feed.name-utils :as name-utils]
+   [ring.util.mime-type :as mime]
    [hiccup.core :as hiccup])
   (:import (java.time Instant ZoneOffset)
            (java.time.format DateTimeFormatter)
@@ -129,19 +130,20 @@
   {(str "GET /" secret-path-segment "/feeds")
    (fn [{}]
      (let [podcasts (db/known-podcasts conn)]
-       (response/response
-        (hiccup/html
-         [:body
-          [:ul
-           (map (fn [{:podcast/keys [title feed-uri description id]}]
-                  [:li
-                   [:strong title] [:br]
-                   [:i feed-uri] [:br]
-                   [:span description] [:br]
-                   [:strong "ID: " id] [:br]
-                   (let [link (str public-feed-address secret-path-segment "/feed/" id)]
-                     [:a {:href link} link])])
-                podcasts)]]))))
+       (-> (hiccup/html
+            [:body
+             [:ul
+              (map (fn [{:podcast/keys [title feed-uri description id]}]
+                     [:li
+                      [:strong title] [:br]
+                      [:i feed-uri] [:br]
+                      [:span description] [:br]
+                      [:strong "ID: " id] [:br]
+                      (let [link (str public-feed-address secret-path-segment "/feed/" id)]
+                        [:a {:href link} link])])
+                   podcasts)]])
+           (response/response)
+           (response/content-type (get mime/default-mime-types "html")))))
 
    (str "GET /" secret-path-segment "/feed/*")
    (fn [{[id] :path-params}]
@@ -163,6 +165,6 @@
           :moved-permanently)
          (download-status-page config (:episode/url episode) ::le.download-file/video))))})
 
-(defn safe-prefixes 
+(defn safe-prefixes
   [{:keys [feed/secret-path-segment] :as config}]
-  ["/" secret-path-segment])
+  [(str "/" secret-path-segment)])

@@ -1,15 +1,8 @@
 (ns personal-rss-feed.admin.pages.login
   (:require
-   [clj-simple-router.core :as router]
-   [clojure.string :as str]
-   [integrant.core :as ig]
    [personal-rss-feed.admin.auth :as auth]
-   [ring.adapter.jetty9 :as ring-jetty]
-   [ring.middleware.head :as head]
    [hiccup.page :as page]
-   [ring.middleware.defaults :as ring.defaults]
-   [ring.util.response :as response]
-   [taoensso.timbre :as log]))
+   [ring.util.response :as response]))
 
 
 (defn logged-in-claims
@@ -65,7 +58,10 @@
     (response/content-type "text/html")))
 
 (defn login-post
-  [config {{:strs [username password]} :form-params}]
-  (if-let [jwt (auth/generate-jwt-from-credentials (:auth config) username password)]
-    (log-in! (response/redirect "/") jwt)
-    (login-form {:error? true})))
+  [config {{:strs [username password] :as fp} :form-params}]
+  (try
+    (if-let [jwt (auth/generate-jwt-from-credentials (:auth config) username password)]
+      (log-in! (response/redirect "/") jwt)
+      (login-form {:error? true}))
+    (catch Exception e 
+      (login-form {:error? true}))))

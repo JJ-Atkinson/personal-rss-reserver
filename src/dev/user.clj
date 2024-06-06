@@ -4,6 +4,7 @@
    [nrepl.server :refer [start-server stop-server default-handler]]
    [clj-reload.core :as clj-reload]
    [personal-rss-feed.config :as config]
+   [portal.api]
    [taoensso.timbre :as log]))
 
 (clj-reload.core/init {:dirs ["src/dev" "src/main" "src/test"]})
@@ -20,8 +21,8 @@
   (reset! !system
     (ig/init (#'config/resolve-config! false)))
 
-  ;; (@shadow-start!) ; serves index.html as well
-  ;; (@shadow-watch :dev) ; depends on shadow server
+  (@shadow-start!) 
+  (@shadow-watch :dev) ; depends on shadow server
 )
 
 (defn stop
@@ -52,3 +53,8 @@
   (println "NREPL Server located at 8001")
   (start)
   (Thread/sleep Long/MAX_VALUE))
+
+(defn start-portal!
+  []
+  (portal.api/open)
+  (add-tap #'portal.api/submit))

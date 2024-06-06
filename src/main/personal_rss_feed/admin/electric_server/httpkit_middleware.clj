@@ -8,7 +8,6 @@
    [clojure.java.io :as io]
    [clojure.string :as str]
    [clojure.tools.logging :as log]
-   com.tybaenergy.electric.main
    [contrib.assert :refer [check]]
    [hiccup.page :refer [html5]]
    [hyperfiddle.electric :as e]
@@ -229,10 +228,10 @@
     [:meta
      {:name "viewport" :content "width=device-width, initial-scale=1"}]
     [:script
-     {:type "text/javascript" :src (:hyperfiddle.client.module/main bag)}]
+     {:type "text/javascript" :src (str "/public" (:hyperfiddle.client.module/main bag))}] ;; llandmark: adjust the url
     [:link
      {:rel  "stylesheet"
-      :href "/css/admin-dashboard-tailwind.css"}]]))
+      :href "/public/tailwind-styles.js"}]]))
 
 (defn handle-index
   [{::keys [manifest-path] :as config} req]
@@ -245,11 +244,3 @@
     )
     (-> (res/not-found (pr-str ::missing-shadow-build-manifest)) ; can't inject js modules
         (res/content-type "text/plain"))))
-
-
-
-(comment
-  (get-modules "public/js/admin_dashboard/manifest.edn")
-  (index (get-modules "public/js/admin_dashboard/manifest.edn"))
-
-)
