@@ -6,7 +6,7 @@
    [hyperfiddle.electric-dom2 :as dom]
    [hyperfiddle.electric-ui4 :as ui]
    [personal-rss-feed.admin.ui.view-types.view-db :as view-db]
-   ))
+  ))
 
 
 ;; Works on lists of maps, or a map itself.
@@ -18,16 +18,18 @@
                             ::view-options/server-value k}
                            {::view-options/id           (str (random-uuid))
                             ::view-options/server-value v}])
-                     server-value)]
+                        server-value)]
     (case table-type
       :map-only
       {::view-options/render-options {::view-options/id id
-                                      ::rows            (map (fn [row] (map #(select-keys % [::view-options/id]) row)) data)}
+                                      ::rows            (map (fn [row] (map #(select-keys % [::view-options/id]) row))
+                                                             data)}
        ::view-options/further-render (apply concat data)})))
 
 (e/defn DatifyTableClient
   [{::view-options/keys [id]
-    ::keys              [rows] :as input}]
+    ::keys              [rows]
+    :as                 input}]
   (let [id->view-fn (e/watch view-db/!id->view-fn)]
     (js/console.log "DatifyTableClient" rows id->view-fn)
     (dom/table

@@ -8,20 +8,21 @@
 
 (defonce system (atom {}))
 
-(log/merge-config! 
-  {:appenders {:spit {:enabled? false}}})
+(log/merge-config!
+ {:appenders {:spit {:enabled? false}}})
 
 (defn start-server!
   [& args]
-  (defonce server (start-server :bind "0.0.0.0"
-                    :port 8001))
+  (defonce server
+    (start-server :bind "0.0.0.0"
+                  :port 8001))
   (println "Repl started at port 8001")
   (reset! system
     (ig/init (personal-rss-feed.config/resolve-config! true))))
 
 (clojure.pprint/pprint @system)
 
-(defn -main 
+(defn -main
   [& args]
   (start-server!))
 

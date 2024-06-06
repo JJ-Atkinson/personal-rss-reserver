@@ -7,15 +7,16 @@
   (let [has-opts? (map? (first args))
         opts      (merge {:out :string
                           :err :string}
-                    (when has-opts? (first args)))
+                         (when has-opts? (first args)))
         args      (cond-> args has-opts? (rest))
         result    @(apply proc/process opts args)]
     (if (not (zero? (:exit result)))
-      (throw (ex-info "Shell threw an error!" {:args args
-                                               :opts opts 
-                                               :error (:err result)
-                                               :error-code (:exit result)
-                                               :out (:out result)}))
+      (throw (ex-info "Shell threw an error!"
+                      {:args       args
+                       :opts       opts
+                       :error      (:err result)
+                       :error-code (:exit result)
+                       :out        (:out result)}))
       (:out result))))
 
 (comment

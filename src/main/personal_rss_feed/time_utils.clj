@@ -12,10 +12,10 @@
    Can be halted with (.close (repeat-every! ...))"
   [ms-or-duration f]
   (chime/chime-at (rest (chime/periodic-seq
-                          (Instant/now)
-                          (cond-> ms-or-duration
-                            (number? ms-or-duration) (Duration/ofMillis))))
-    f))
+                         (Instant/now)
+                         (cond-> ms-or-duration
+                           (number? ms-or-duration) (Duration/ofMillis))))
+                  f))
 
 (defn queue-rate-limit-x-per-period
   "Rate limit the number of tasks a queue can pick up. Allows `limit-count` number of tasks to be processed successfully
@@ -25,13 +25,13 @@
   [{:keys [period-s limit-count]}]
   (fn queue-rate-limit-x-per-period* [_waiting-reversed active recent]
     (if (zero? limit-count)
-      true                                                  ;; true == always locked.
+      true ;; true == always locked.
       (boolean
-        (enc/when-let [timebox-end (nth (concat active recent) (dec limit-count) nil)
-                       time        (::queue-item/activation-time timebox-end)
-                       time        (.toInstant time)
-                       dur         (Duration/between time (Instant/now))]
-          (< (/ (.toMillis dur) 1000) period-s))))))
+       (enc/when-let [timebox-end (nth (concat active recent) (dec limit-count) nil)
+                      time        (::queue-item/activation-time timebox-end)
+                      time        (.toInstant time)
+                      dur         (Duration/between time (Instant/now))]
+         (< (/ (.toMillis dur) 1000) period-s))))))
 
 (defn queue-item-within-period-of-now?
   [period-s queue-item]
@@ -48,18 +48,18 @@
   (fn queue-rate-limit-x-per-period* [waiting-reversed active recent]
     (let [count-allowed-because-recent
           (count (filter (partial queue-item-within-period-of-now? period-s)
-                   (concat active recent)))]
+                         (concat active recent)))]
       (if (and (queue-item-within-period-of-now? period-s (first waiting-reversed))
-            (not (<= limit-recent count-allowed-because-recent)))
-        false                                               ;; not locked when 1. recent and 2. not too many recent have been processed
-        true)))) 
+               (not (<= limit-recent count-allowed-because-recent)))
+        false ;; not locked when 1. recent and 2. not too many recent have been processed
+        true))))
 
 (defn queue-lockout-backoff-retry
   [{:keys [base-s-backoff]}]
   (fn queue-lockout?-backoff-retry*
     [_system {::queue-item/keys [activation-time status retry-count]}]
     (when (and (= status ::queue-item/error-retrying)
-            activation-time)
+               activation-time)
       (let [minimum-delay (* base-s-backoff retry-count)
             run-after     (.plusSeconds (.toInstant activation-time) minimum-delay)
             difference    (Duration/between run-after (Instant/now))]

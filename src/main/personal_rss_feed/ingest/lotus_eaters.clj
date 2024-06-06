@@ -13,27 +13,29 @@
    [remus]))
 
 (defmethod ig/init-key ::lotus-eaters-ingest
-  [_ {:keys [start-auto-poll?
-             start-daily-feed-parse?
-             apply-playwright-cli-fix?
-             queue
-             s3/s3
-             ] :as options}]
+  [_
+   {:keys [start-auto-poll?
+           start-daily-feed-parse?
+           apply-playwright-cli-fix?
+           queue
+           s3/s3
+          ]
+    :as   options}]
   (when apply-playwright-cli-fix?
     ;; Required for nix.
     (System/setProperty "playwright.cli.dir" (System/getenv "PLAYWRIGHT_CLI_LOCATION")))
 
   (let [shared
         (-> options
-          (assoc ::le.shared/queue queue
-                 ::le.shared/s3 s3)
-          (dissoc :queue)
+            (assoc ::le.shared/queue queue
+                   ::le.shared/s3    s3)
+            (dissoc :queue)
 
-          (le.extract-audio/init!)
-          (le.download-file/init!)
-          (le.fetch-metadata/init!)
-          (cond->
-            start-daily-feed-parse? (le.rss-feed-parser/init!)))]
+            (le.extract-audio/init!)
+            (le.download-file/init!)
+            (le.fetch-metadata/init!)
+            (cond->
+              start-daily-feed-parse? (le.rss-feed-parser/init!)))]
 
     (reset! le.shared/!shared shared)
     shared)
@@ -43,7 +45,7 @@
   ;;(simple-queue/qcreate! queue {::queue/name :lotus-eaters/transcribe-audio})
   ;;(simple-queue/qcreate! queue {::queue/name :lotus-eaters/upload-s3})
 
-  )
+)
 
 (defmethod ig/suspend-key! ::lotus-eaters-ingest
   [_ _])

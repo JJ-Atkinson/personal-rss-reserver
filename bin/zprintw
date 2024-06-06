@@ -1,0 +1,11 @@
+#!/bin/sh
+
+#!/usr/bin/env bash
+
+if ! command -v zprint &> /dev/null
+then
+    echo "zprint could not be found. Please follow the installation instructions here https://github.com/weavejester/cljfmt#standalone"
+    exit 2
+fi
+
+zprint '{:search-config? true}' $@ 2>&1

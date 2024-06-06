@@ -24,6 +24,7 @@
           google-chrome
           nodejs
           playwright-driver
+          zprint
 
           openai-whisper-cpp
           ffmpeg

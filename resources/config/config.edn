@@ -1,68 +1,74 @@
-{:system                   {:personal-rss-feed.feed.db/conn
-                            {:uri "/tmp/datalevin/personal-rss-server"}
+{:system
 
-                            :personal-rss-feed.queue/queue
-                            {:dev.freeformsoftware.simple-queue.core/persistence-dir
-                             ;;"/tmp/simple-queue/personal-rss-server"
-                             "/home/jarrett/code/personal/personal-rss-reserver/tmp/simple-queue"
-                             :dev.freeformsoftware.simple-queue.core/default-timeout-ms 100000 ;; 100s
-                             :dev.freeformsoftware.simple-queue.core/watchdog-ms        1000
-                             }
+ {:personal-rss-feed.feed.db/conn
+  {:uri "/tmp/datalevin/personal-rss-server"}
 
-                            :personal-rss-feed.feed.s3/s3
-                             #n/ref [:s3 :CI]
-                            ;;#n/ref [:s3 :PROD]
-                            #_{:hostname          "something.com"
-                               :port              3900
-                               :region            "us-west-1"
-                               :access-key-id     "..."
-                               :secret-access-key "..."
-                               :bucket-name       "name"}
+  :personal-rss-feed.queue/queue
+  {:dev.freeformsoftware.simple-queue.core/persistence-dir
+   ;;"/tmp/simple-queue/personal-rss-server"
+   "/home/jarrett/code/personal/personal-rss-reserver/tmp/simple-queue"
+   :dev.freeformsoftware.simple-queue.core/default-timeout-ms 100000 ;; 100s
+   :dev.freeformsoftware.simple-queue.core/watchdog-ms        1000
+  }
 
-                            :personal-rss-feed.ingest.lotus-eaters/lotus-eaters-ingest
-                            {
-                             :start-auto-poll?          false
-                             :start-daily-feed-parse?   false ;; Override to query any existing podcasts at least once.
-                             :s3/s3                     #ig/ref :personal-rss-feed.feed.s3/s3
-                             :apply-playwright-cli-fix? true
-                             :db/conn                   #ig/ref :personal-rss-feed.feed.db/conn
-                             :queue                     #ig/ref :personal-rss-feed.queue/queue
-                             :lotus-eaters/username     #n/ref :lotus-eaters/username
-                             :lotus-eaters/password     #n/ref :lotus-eaters/password
-                             :downloads-per-day         0}
+  :personal-rss-feed.feed.s3/s3
+  #n/ref [:s3 :CI]
+  ;;#n/ref [:s3 :PROD]
+  #_{:hostname          "something.com"
+     :port              3900
+     :region            "us-west-1"
+     :access-key-id     "..."
+     :secret-access-key "..."
+     :bucket-name       "name"}
 
-                            :personal-rss-feed.feed.feed-host/server
-                            {:jetty                    {:port 3000}
-                             :db/conn                  #ig/ref :personal-rss-feed.feed.db/conn
-                             :s3/public-s3-prefix      #n/ref :s3/public-s3-prefix ;; Only semi secret, but preferable to not post on the internet.
-                             :feed/public-feed-address #n/ref :feed/public-feed-address
-                             :feed/secret-path-segment #n/ref :feed/secret-path-segment ;; Easier to implement with overcast than actual http basic auth
-                             :lotus-eaters-ingest      #ig/ref :personal-rss-feed.ingest.lotus-eaters/lotus-eaters-ingest
-                             }
+  :personal-rss-feed.ingest.lotus-eaters/lotus-eaters-ingest
+  {:start-auto-poll?          false
+   :start-daily-feed-parse?   false ;; Override to query any existing podcasts at least once.
+   :s3/s3                     #ig/ref :personal-rss-feed.feed.s3/s3
+   :apply-playwright-cli-fix? true
+   :db/conn                   #ig/ref :personal-rss-feed.feed.db/conn
+   :queue                     #ig/ref :personal-rss-feed.queue/queue
+   :lotus-eaters/username     #n/ref :lotus-eaters/username
+   :lotus-eaters/password     #n/ref :lotus-eaters/password
+   :downloads-per-day         0}
 
-                            :personal-rss-feed.admin.auth/auth
-                            {:db/conn                                   #ig/ref :personal-rss-feed.feed.db/conn
-                             :personal-rss-feed.admin.auth/hash-options {:alg :bcrypt+sha512}
-                             :personal-rss-feed.admin.auth/jwt-options  {:secret       #n/ref :auth/jwt-secret
-                                                                         :exp-period-s 86400 ;; 1 day
-                                                                         :buddy        {:skip-validation false
-                                                                                        :alg             :hs512}}}
+  :personal-rss-feed.feed.feed-host/server
+  {:http-kit                    {:port 3000}
+   :db/conn                  #ig/ref :personal-rss-feed.feed.db/conn
+   :s3/public-s3-prefix      #n/ref :s3/public-s3-prefix ;; Only semi secret, but preferable to not post on the
+                                                         ;; internet.
+   :feed/public-feed-address #n/ref :feed/public-feed-address
+   :feed/secret-path-segment #n/ref :feed/secret-path-segment ;; Easier to implement with overcast than actual http
+                                                              ;; basic auth
+   :lotus-eaters-ingest      #ig/ref :personal-rss-feed.ingest.lotus-eaters/lotus-eaters-ingest
+  }
 
-                            :personal-rss-feed.admin.server/server
-                            {:jetty                    {:port 3001}
-                             :db/conn                  #ig/ref :personal-rss-feed.feed.db/conn
-                             :auth                     #ig/ref :personal-rss-feed.admin.auth/auth
-                             :s3/public-s3-prefix      #n/ref :s3/public-s3-prefix ;; Only semi secret, but preferable to not post on the internet.
-                             :feed/secret-path-segment #n/ref :feed/secret-path-segment ;; Easier to implement with overcast than actual http basic auth
-                             :queue                    #ig/ref :personal-rss-feed.queue/queue
-                             }}
+  :personal-rss-feed.admin.auth/auth
+  {:db/conn #ig/ref :personal-rss-feed.feed.db/conn
+   :personal-rss-feed.admin.auth/hash-options {:alg :bcrypt+sha512}
+   :personal-rss-feed.admin.auth/jwt-options {:secret       #n/ref :auth/jwt-secret
+                                              :exp-period-s 86400 ;; 1 day
+                                              :buddy        {:skip-validation false
+                                                             :alg             :hs512}}}
 
- :lotus-eaters/username    "username"
- :lotus-eaters/password    "password"
- :s3/secret-access-key     "s3-secret-access-key"
- :s3/public-s3-prefix      "https://s3.amazaonaws....com/prefix/" ; to be appended with "uuid.extension"
+  #_#_
+  :personal-rss-feed.admin.server/server
+  {:jetty                    {:port 3001}
+   :db/conn                  #ig/ref :personal-rss-feed.feed.db/conn
+   :auth                     #ig/ref :personal-rss-feed.admin.auth/auth
+   :s3/public-s3-prefix      #n/ref :s3/public-s3-prefix ;; Only semi secret, but preferable to not post on the
+                                                         ;; internet.
+   :feed/secret-path-segment #n/ref :feed/secret-path-segment ;; Easier to implement with overcast than actual http
+                                                              ;; basic auth
+   :queue                    #ig/ref :personal-rss-feed.queue/queue
+  }}
+
+ :lotus-eaters/username "username"
+ :lotus-eaters/password "password"
+ :s3/secret-access-key "s3-secret-access-key"
+ :s3/public-s3-prefix "https://s3.amazaonaws....com/prefix/" ; to be appended with "uuid.extension"
  :feed/secret-path-segment "a"
  :feed/public-feed-address "http://localhost:3000/"
- :auth/jwt-secret          "secret"                         ;; preferably a 256bit random number
- }
+ :auth/jwt-secret "secret" ;; preferably a 256bit random number
+}
 

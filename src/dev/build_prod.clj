@@ -8,9 +8,9 @@
             [clojure.string :as string]
             [clojure.tools.build.api :as b]
             [clojure.tools.deps :as deps]
-            [shadow.cljs.devtools.api :as shadow-api]       ; so as not to shell out to NPM for shadow
+            [shadow.cljs.devtools.api :as shadow-api] ; so as not to shell out to NPM for shadow
             [shadow.cljs.devtools.server :as shadow-server]
-            ))
+  ))
 
 ;;(def version (b/git-process {:git-args "describe --tags --long --always --dirty"}))
 
@@ -18,40 +18,42 @@
   [s]
   (if s (json/read-str s :key-fn keyword) {}))
 
-(defn clean-cljs []
+(defn clean-cljs
+  []
   (b/delete {:path "resources/public/js"}))
 
 (defn build-client!
   "Prod optimized ClojureScript client build. (Note: in dev, the client is built 
 on startup)"
   [{:keys [optimize debug verbose ref]
-    :or   {optimize true, debug false, verbose false}}]
+    :or   {optimize true debug false verbose false}}]
   (println "Building client. Ref:" ref)
   (assert ref "Version should be specified for a build, generally it's a sha")
   (shadow-server/start!)
-  (shadow-api/release :prod {:debug        debug,
-                             :verbose      verbose,
-                             :config-merge [{:compiler-options {:optimizations (if optimize :advanced :simple)}
-                                             :closure-defines  {'hyperfiddle.electric-client/VERSION ref}}]})
+  (shadow-api/release :prod
+                      {:debug        debug
+                       :verbose      verbose
+                       :config-merge [{:compiler-options {:optimizations (if optimize :advanced :simple)}
+                                       :closure-defines  {'hyperfiddle.electric-client/VERSION ref}}]})
   (shadow-server/stop!))
 
 (defn remove-timestamp!
   [root-dir lib-name]
   (let [f (io/file root-dir "META-INF/maven" (str lib-name) "pom.properties")]
     (->> (slurp f)
-      string/split-lines
-      (remove #(string/starts-with? % "#"))
-      (string/join "\n")
-      (spit f))))
+         string/split-lines
+         (remove #(string/starts-with? % "#"))
+         (string/join "\n")
+         (spit f))))
 
 (defn- get-paths
   "Get paths from deps.edn file"
   [deps]
   (-> deps
-    io/file
-    deps/slurp-deps
-    :paths
-    (or ["src"])))
+      io/file
+      deps/slurp-deps
+      :paths
+      (or ["src"])))
 
 (defn- parse-compile-clj-opts
   "Transform JSON string to the expect Clojure data type (keywords, symbols, ...)"
@@ -84,16 +86,17 @@ on startup)"
      :basis      (b/create-basis {:project "deps.edn"})
      :lib-name   lib-name
      :output-jar (format "target/%s-%s.jar"
-                   (name lib-name)
-                   version)}))
+                         (name lib-name)
+                         version)}))
 
 (defn uber!
   [opts]
   (let [{:keys [main-ns compile-clj-opts client-opts]
-         :as   opts} (-> opts
-                       (update :compile-clj-opts str->json)
-                       (update :client-opts str->json)
-                       (update :client-opts assoc :ref (System/getenv "GIT_REF")))
+         :as   opts}
+        (-> opts
+            (update :compile-clj-opts str->json)
+            (update :client-opts str->json)
+            (update :client-opts assoc :ref (System/getenv "GIT_REF")))
 
         {:keys [src-dirs basis output-jar]} (common-compile-options opts)]
     ;; Build cljs before copying to the target dir

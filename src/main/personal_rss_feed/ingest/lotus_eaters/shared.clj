@@ -6,31 +6,32 @@
    [personal-rss-feed.time-utils :as time-utils]
    [taoensso.timbre :as log]))
 
-(tools.namespace/disable-reload!)
 
-(def !shared (atom nil))                                   ;; useful for debugging, atom containing shared
+^:clj-reload/keep
+(defonce !shared (atom nil))                                   ;; useful for debugging, atom containing shared
 
 (defn start-queue!
   "(fn poll-f [shared queue-item] ...)"
-  [shared {:keys [queue-conf
-                  poll-ms
-                  poll-f]}]
+  [shared
+   {:keys [queue-conf
+           poll-ms
+           poll-f]}]
   (simple-queue/qcreate! (::queue shared) queue-conf)
   (cond-> shared
 
     (:start-auto-poll? shared true)
     (update ::close-on-halt
-      conj
-      (time-utils/repeat-every!
-        poll-ms
-        (fn [_]
-          (try
-            (some->>
-              (simple-queue/qpop! (::queue shared) (::queue/name queue-conf))
-              (poll-f shared))
-            (catch Exception e
-              (log/error "Hit error processing queue item!" e)
-              (throw e))))))))
+            conj
+            (time-utils/repeat-every!
+             poll-ms
+             (fn [_]
+               (try
+                 (some->>
+                   (simple-queue/qpop! (::queue shared) (::queue/name queue-conf))
+                   (poll-f shared))
+                 (catch Exception e
+                   (log/error "Hit error processing queue item!" e)
+                   (throw e))))))))
 
 (defn halt!
   [shared]
