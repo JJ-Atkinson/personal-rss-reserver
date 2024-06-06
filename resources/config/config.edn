@@ -30,10 +30,10 @@
    :queue                     #ig/ref :personal-rss-feed.queue/queue
    :lotus-eaters/username     #n/ref :lotus-eaters/username
    :lotus-eaters/password     #n/ref :lotus-eaters/password
-   :downloads-per-day         0}
+   :downloads-per-day         0} ;; lockout downloads during CI
 
-  :personal-rss-feed.feed.feed-host/server
-  {:http-kit                    {:port 3000}
+  :personal-rss-feed.server.main/server
+  {:http-kit                 {:port 3000}
    :db/conn                  #ig/ref :personal-rss-feed.feed.db/conn
    :s3/public-s3-prefix      #n/ref :s3/public-s3-prefix ;; Only semi secret, but preferable to not post on the
                                                          ;; internet.
@@ -41,6 +41,8 @@
    :feed/secret-path-segment #n/ref :feed/secret-path-segment ;; Easier to implement with overcast than actual http
                                                               ;; basic auth
    :lotus-eaters-ingest      #ig/ref :personal-rss-feed.ingest.lotus-eaters/lotus-eaters-ingest
+   :auth                     #ig/ref :personal-rss-feed.admin.auth/auth
+   :personal-rss-feed.admin.electric-server.httpkit-middleware/manifest-path "public/js/manifest.edn"
   }
 
   :personal-rss-feed.admin.auth/auth
@@ -49,19 +51,7 @@
    :personal-rss-feed.admin.auth/jwt-options {:secret       #n/ref :auth/jwt-secret
                                               :exp-period-s 86400 ;; 1 day
                                               :buddy        {:skip-validation false
-                                                             :alg             :hs512}}}
-
-  #_#_
-  :personal-rss-feed.admin.server/server
-  {:jetty                    {:port 3001}
-   :db/conn                  #ig/ref :personal-rss-feed.feed.db/conn
-   :auth                     #ig/ref :personal-rss-feed.admin.auth/auth
-   :s3/public-s3-prefix      #n/ref :s3/public-s3-prefix ;; Only semi secret, but preferable to not post on the
-                                                         ;; internet.
-   :feed/secret-path-segment #n/ref :feed/secret-path-segment ;; Easier to implement with overcast than actual http
-                                                              ;; basic auth
-   :queue                    #ig/ref :personal-rss-feed.queue/queue
-  }}
+                                                             :alg             :hs512}}}}
 
  :lotus-eaters/username "username"
  :lotus-eaters/password "password"
