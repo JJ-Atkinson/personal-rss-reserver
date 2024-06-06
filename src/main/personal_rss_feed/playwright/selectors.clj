@@ -3,29 +3,35 @@
    [wally.main :as w]
    [wally.selectors])
   (:import
-   (java.lang.reflect Method)
-   (com.microsoft.playwright.impl LocatorUtils)
-   (com.microsoft.playwright Locator Locator$GetByTextOptions Locator$GetByLabelOptions ElementHandle Locator$GetByTitleOptions)))
+    (java.lang.reflect Method)
+    (com.microsoft.playwright.impl LocatorUtils)
+    (com.microsoft.playwright Locator
+                              Locator$GetByTextOptions
+                              Locator$GetByLabelOptions
+                              ElementHandle
+                              Locator$GetByTitleOptions)))
 
 (def
   ^{:private true
-    :doc "Regain access to the standard selectors hidden by object methods in Playwright. These methods are helpers
+    :doc
+    "Regain access to the standard selectors hidden by object methods in Playwright. These methods are helpers
           used by `playwright.impl.PageImpl` to implement the standard selectors behind java functions in a non composable
           way."}
   locator-utils-methods
   (->> (.getDeclaredMethods LocatorUtils)
-    (seq)
-    (into {} (map (juxt #(.getName %)
-                    (fn [m]
-                      (.setAccessible ^Method m true)
-                      m))))))
+       (seq)
+       (into {}
+             (map (juxt #(.getName %)
+                        (fn [m]
+                          (.setAccessible ^Method m true)
+                          m))))))
 
 (defn- invoke-locator-utils-method
   "Regain access to the standard selectors hidden by object methods in Playwright"
   [method-name & args]
   (.invoke ^Method (get locator-utils-methods method-name)
-    nil
-    (into-array Object args)))
+           nil
+           (into-array Object args)))
 
 (defn text
   "Selects an element by text content. See https://playwright.dev/java/docs/locators#locate-by-text

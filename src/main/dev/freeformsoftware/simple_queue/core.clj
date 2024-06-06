@@ -43,7 +43,8 @@
 (s/def ::system #(instance? Atom %))
 
 (defonce
-  ^{:doc     "For debugging, it can be useful to ratelimit to 0 and manually trigger dequeues. swap! conj onto the set
+  ^{:doc
+    "For debugging, it can be useful to ratelimit to 0 and manually trigger dequeues. swap! conj onto the set
    the name of the queue you'd like to manually trigger."
     :dynamic true}
   *manual-unlock-1*
@@ -53,27 +54,27 @@
   [{::keys [persistence-dir mem-only?]}]
   (let [persistence-dir (str persistence-dir "/queued-items")]
     (disk-map/create-disk-backed-map!
-      #::disk-map{:folder-str persistence-dir
-                  :read-fn    (if mem-only? (constantly nil) (fn [k _] (queue-item/read! persistence-dir k)))
-                  :write-fn   (if mem-only? (constantly nil) (fn [_ v] (queue-item/write! persistence-dir v)))})))
+     #::disk-map{:folder-str persistence-dir
+                 :read-fn    (if mem-only? (constantly nil) (fn [k _] (queue-item/read! persistence-dir k)))
+                 :write-fn   (if mem-only? (constantly nil) (fn [_ v] (queue-item/write! persistence-dir v)))})))
 
 (defn- create-queue-map!
   [{::keys [persistence-dir queues mem-only?]}]
   (disk-map/create-disk-backed-map!
-    #::disk-map{:folder-str   persistence-dir
-                :initial-k->v (reduce (fn [acc q]
-                                        (assoc acc (::queue/name q) q))
-                                {}
-                                queues)
-                :read-fn      (if mem-only? (constantly nil) (partial queue/read! persistence-dir))
-                :write-fn     (if mem-only? (constantly nil) (fn [_ v] (queue/write! persistence-dir v)))}))
+   #::disk-map{:folder-str   persistence-dir
+               :initial-k->v (reduce (fn [acc q]
+                                       (assoc acc (::queue/name q) q))
+                                     {}
+                                     queues)
+               :read-fn      (if mem-only? (constantly nil) (partial queue/read! persistence-dir))
+               :write-fn     (if mem-only? (constantly nil) (fn [_ v] (queue/write! persistence-dir v)))}))
 
 (defn- retry-limit
   [system queue-item]
   (or (get queue-item ::queue-item/retry-limit)
-    (get-in @system [::name->queue (::queue-item/queue queue-item) ::queue/default-retry-limit])
-    (get @system ::default-retry-limit)
-    0))
+      (get-in @system [::name->queue (::queue-item/queue queue-item) ::queue/default-retry-limit])
+      (get @system ::default-retry-limit)
+      0))
 
 (defn default-timeout?-fn
   [ms]
@@ -108,7 +109,8 @@
 
 (defn update!qi
   ([system queue-item-id f] (swap! system update ::id->queue-item (fn [n-q] (update n-q queue-item-id f))))
-  ([system queue-item-id key f] (swap! system update ::id->queue-item (fn [n-q] (update n-q queue-item-id update key f)))))
+  ([system queue-item-id key f]
+   (swap! system update ::id->queue-item (fn [n-q] (update n-q queue-item-id update key f)))))
 
 (defn resolve!i
   [system queue-item-id]
@@ -131,10 +133,10 @@
   [::system ::queue/name => ::system]
   (let [sort (fn [q]
                (vec
-                 (sort-by
-                   #(let [qi (get-in @system [::id->queue-item %])]
-                      [(::queue-item/priority qi) (- (.getTime (::queue-item/submission-time qi)))])
-                   (set q))))]
+                (sort-by
+                 #(let [qi (get-in @system [::id->queue-item %])]
+                    [(::queue-item/priority qi) (- (.getTime (::queue-item/submission-time qi)))])
+                 (set q))))]
     (update!q system queue-name ::queue/waiting-q sort)
     system))
 
@@ -143,12 +145,12 @@
   [system queue-ent]
   [::system
    (s/keys :req [::queue/name]
-     :opt [::queue/rate-limit-fn
-           ::queue/timeout?-fn])
+           :opt [::queue/rate-limit-fn
+                 ::queue/timeout?-fn])
    => ::system]
   (let [queue-ent (cond-> queue-ent
                     (and (not (contains? queue-ent ::queue/timeout?-fn))
-                      (::default-timeout-ms @system))
+                         (::default-timeout-ms @system))
                     (assoc ::queue/timeout?-fn (default-timeout?-fn (::default-timeout-ms @system))))]
     (assert (not (some (partial contains? queue-ent) [::queue/active-q ::queue/dead-q ::queue/waiting-q])))
     (update!q system (::queue/name queue-ent) #(merge queue-ent %))
@@ -162,15 +164,15 @@
    (s/keys :req [::queue-item/id
                  ::queue-item/queue
                  ::queue-item/data]
-     :opt [::queue-item/priority])
+           :opt [::queue-item/priority])
    => number?]
   (assert (contains? (set (keys (::name->queue @system))) queue))
   (log/info "Submitting queue item" queue-entry)
   (let [entry (merge
-                {::queue-item/status      ::queue-item/waiting
-                 ::queue-item/retry-count 0
-                 ::queue-item/priority    0}
-                (assoc queue-entry ::queue-item/submission-time (Date.)))]
+               {::queue-item/status      ::queue-item/waiting
+                ::queue-item/retry-count 0
+                ::queue-item/priority    0}
+               (assoc queue-entry ::queue-item/submission-time (Date.)))]
     (update!q system queue ::queue/waiting-q #(conj % id))
     (swap! system update ::id->queue-item assoc id entry)
     (-qsort! system queue)
@@ -182,7 +184,7 @@
   [system queue-name]
   [::system ::queue/name => (s/coll-of ::queue-item/item)]
   (->> (get-in @system [::name->queue queue-name ::queue/waiting-q])
-    (mapv #(resolve!i system %))))
+       (mapv #(resolve!i system %))))
 
 (>defn qview-dead
   "Lazy view of the dead items. Items may be changed before resolved if the required items are not fully realized before 
@@ -190,9 +192,9 @@
   [system queue-name]
   [::system ::queue/name => (s/coll-of ::queue-item/item)]
   (->> (get-in @system [::name->queue queue-name ::queue/dead-q])
-    (mapv #(resolve!i system %))
-    (sort-by ::queue-item/completion-time)
-    (vec)))
+       (mapv #(resolve!i system %))
+       (sort-by ::queue-item/completion-time)
+       (vec)))
 
 (>defn qview-active
   "Lazy view of the dead items. Items may be changed before resolved if the required items are not fully realized before 
@@ -200,9 +202,9 @@
   [system queue-name]
   [::system ::queue/name => (s/coll-of ::queue-item/item)]
   (->> (get-in @system [::name->queue queue-name ::queue/active-q])
-    (map #(resolve!i system %))
-    (sort-by ::queue-item/completion-time)
-    (vec)))
+       (map #(resolve!i system %))
+       (sort-by ::queue-item/completion-time)
+       (vec)))
 
 (>defn qpeek!
   "Read the top non-locked entry off the queue. Nil if none is found. Respects rate-limit-fn and lockout?-fn. 
@@ -228,12 +230,19 @@
   [::system ::queue/name => (? ::queue-item/item)]
   (let [queue-ent (get-in @system [::name->queue queue-name])
         lockout?  (::queue/lockout?-fn queue-ent)
-        ]
+       ]
     (when-let [possible-id (if lockout?
-                             (some->> queue-ent ::queue/waiting-q reverse (map (partial resolve!i system))
-                               (remove #(and (lockout? system %)
-                                          (not (::lockout-override? %)))) first ::queue-item/id)
-                             (some-> queue-ent ::queue/waiting-q peek))]
+                             (some->> queue-ent
+                                      ::queue/waiting-q
+                                      reverse
+                                      (map (partial resolve!i system))
+                                      (remove #(and (lockout? system %)
+                                                    (not (::lockout-override? %))))
+                                      first
+                                      ::queue-item/id)
+                             (some-> queue-ent
+                                     ::queue/waiting-q
+                                     peek))]
       (if-let [rate-limit-f (::queue/rate-limit-fn queue-ent)]
         (let [rate-limit-f                   (fn [& args]
                                                (if (contains? @*manual-unlock-1* queue-name)
@@ -255,12 +264,14 @@
   [::system ::queue-item/id => (? ::queue-item/item)]
   (when-let [ret (resolve!i system queue-item-id)]
     (let [ret (assoc ret
-                ::queue-item/activation-time (Date.)
-                ::queue-item/status ::queue-item/activated)
+                     ::queue-item/activation-time (Date.)
+                     ::queue-item/status          ::queue-item/activated)
           {::queue-item/keys [queue]} ret]
-      (update!q system queue #(-> %
-                                (update ::queue/waiting-q (fn [wq] (vec (remove (partial = queue-item-id) wq))))
-                                (update ::queue/active-q conj queue-item-id)))
+      (update!q system
+                queue
+                #(-> %
+                     (update ::queue/waiting-q (fn [wq] (vec (remove (partial = queue-item-id) wq))))
+                     (update ::queue/active-q conj queue-item-id)))
       (update!qi system queue-item-id (fn [qi] (merge qi ret)))
       ret)))
 
@@ -274,17 +285,20 @@
 (defn- -qfinish!*
   [system queue-item-id completion-data status]
   (let [{::queue-item/keys [queue] :as queue-ent} (resolve!i system queue-item-id)]
-    (update!q system queue (fn [q]
-                             (-> q
-                               (update ::queue/waiting-q #(vec (remove (partial = queue-item-id) %)))
-                               (update ::queue/active-q #(remove (partial = queue-item-id) %))
-                               (update ::queue/dead-q #(cons queue-item-id %)))))
-    (update!qi system queue-item-id
-      (fn [qi]
-        (assoc qi
-          ::queue-item/completion-time (Date.)
-          ::queue-item/completion-data completion-data
-          ::queue-item/status status)))))
+    (update!q system
+              queue
+              (fn [q]
+                (-> q
+                    (update ::queue/waiting-q #(vec (remove (partial = queue-item-id) %)))
+                    (update ::queue/active-q #(remove (partial = queue-item-id) %))
+                    (update ::queue/dead-q #(cons queue-item-id %)))))
+    (update!qi system
+               queue-item-id
+               (fn [qi]
+                 (assoc qi
+                        ::queue-item/completion-time (Date.)
+                        ::queue-item/completion-data completion-data
+                        ::queue-item/status          status)))))
 
 (defn -qerror-move!*
   "Move an item out of the active-q. If (::retryable? completion-data) and it is within the retry limit, the item
@@ -295,12 +309,13 @@
         queue-name  (::queue-item/queue item)]
     (update!q system queue-name ::queue/active-q #(remove (partial = queue-item-id) %))
     (if (and (::retryable? completion-data)
-          (> retry-limit (or (::queue-item/retry-count item) 0)))
-      (qsubmit! system (assoc item
-                         ::queue-item/retry-count ((fnil inc 0) (::queue-item/retry-count item))
-                         ::queue-item/status ::queue-item/error-retrying
-                         ::queue-item/priority (dec Long/MAX_VALUE)
-                         ::queue-item/completion-data {::failure-data completion-data}))
+             (> retry-limit (or (::queue-item/retry-count item) 0)))
+      (qsubmit! system
+                (assoc item
+                       ::queue-item/retry-count     ((fnil inc 0) (::queue-item/retry-count item))
+                       ::queue-item/status          ::queue-item/error-retrying
+                       ::queue-item/priority        (dec Long/MAX_VALUE)
+                       ::queue-item/completion-data {::failure-data completion-data}))
       (-qfinish!* system queue-item-id completion-data ::queue-item/failed))))
 
 (>defn qcomplete!
@@ -316,8 +331,9 @@
   "Mark a task as errored-out. Optionally can be marked as retryable? true to re-submit to the top of the queue."
   [system queue-item-id {::keys [retryable?] :as error-info}]
   [::system ::queue-item/id ::queue-item/completion-data => number?]
-  (log/error "Error processing queue item!" {:queue-item (resolve!i system queue-item-id)
-                                             :error-info error-info})
+  (log/error "Error processing queue item!"
+             {:queue-item (resolve!i system queue-item-id)
+              :error-info error-info})
   (-qerror-move!* system queue-item-id error-info))
 
 (defn all-un-resolved-errors
@@ -327,8 +343,8 @@
    (mapcat #(all-un-resolved-errors system %) (keys (::name->queue system))))
   ([system queue-name]
    (filter #(and (= ::queue-item/failed (::queue-item/status %))
-              (not (::resolved? (::queue-item/completion-data %))))
-     (qview-dead system queue-name))))
+                 (not (::resolved? (::queue-item/completion-data %))))
+           (qview-dead system queue-name))))
 
 (defn resolve-error!
   "Resolve an error. See `all-un-resolved-errors`."
@@ -343,10 +359,11 @@
    (qresubmit-item! system queue-item-id true))
   ([system queue-item-id max-priority?]
    (if-let [qi (resolve!i system queue-item-id)]
-     (qsubmit! system (-> qi
-                        (dissoc ::queue-item/retry-count ::queue-item/completion-data)
-                        (cond-> max-priority? (assoc ::queue-item/priority Long/MAX_VALUE))
-                        (update ::queue-item/data assoc ::resubmitted? true)))
+     (qsubmit! system
+               (-> qi
+                   (dissoc ::queue-item/retry-count ::queue-item/completion-data)
+                   (cond-> max-priority? (assoc ::queue-item/priority Long/MAX_VALUE))
+                   (update ::queue-item/data assoc ::resubmitted? true)))
      (throw (ex-info "Does not exist!" {:queue-item-id queue-item-id})))))
 
 (defn -activate-timeout!
@@ -355,7 +372,7 @@
   [system queue-item-id]
   (let [i (resolve!i system queue-item-id)]
     (when-let [notify-timed-out! (or (get-in @system [::name->queue (::queue/name i) ::queue/notify-timed-out!])
-                                   (::default-notify-timed-out! @system))]
+                                     (::default-notify-timed-out! @system))]
       (notify-timed-out! i))
     (-qerror-move!* system queue-item-id {::retryable? true})))
 
@@ -363,10 +380,10 @@
   [system]
   (let [queue-names        (keys (::name->queue @system))
         questionable-items (mapcat
-                             (fn [qn]
-                               (let [{::queue/keys [active-q] :as queue} (get-in @system [::name->queue qn])]
-                                 (map #(merge queue (resolve!i system %)) active-q)))
-                             queue-names)]
+                            (fn [qn]
+                              (let [{::queue/keys [active-q] :as queue} (get-in @system [::name->queue qn])]
+                                (map #(merge queue (resolve!i system %)) active-q)))
+                            queue-names)]
     (doseq [{::queue/keys [timeout?-fn] ::queue-item/keys [id] :as queue-item} questionable-items]
       (when (and timeout?-fn (timeout?-fn queue-item))
         (log/info "Queue item timed out!" queue-item)
@@ -374,24 +391,29 @@
 
 (defn- start-timeout-watchdog!
   [system]
-  (swap! system assoc ::chime-ent (chime/chime-at
-                                    (chime/periodic-seq (Instant/now) (Duration/ofMillis (get @system ::watchdog-ms 1500)))
-                                    (fn [t] (prune-timeouts! system)))))
+  (swap! system assoc
+    ::chime-ent
+    (chime/chime-at
+     (chime/periodic-seq (Instant/now) (Duration/ofMillis (get @system ::watchdog-ms 1500)))
+     (fn [t] (prune-timeouts! system)))))
 
 (>defn create-system!
   [{::keys [persistence-dir
             mem-only?
-            default-timeout-ms] :as ins}]
+            default-timeout-ms]
+    :as    ins}]
   [(s/keys :req [::persistence-dir]) => any?]
   (let [system (atom (merge ins
-                       {::name->queue    (create-queue-map! ins)
-                        ::id->queue-item (create-queue-item-map! ins)}))]
+                            {::name->queue    (create-queue-map! ins)
+                             ::id->queue-item (create-queue-item-map! ins)}))]
     (start-timeout-watchdog! system)
     system))
 
 (defn close-system!
   [system]
-  (some-> @system ::chime-ent (.close)))
+  (some-> @system
+          ::chime-ent
+          (.close)))
 
 (comment
   (def s
@@ -404,44 +426,53 @@
   @s
   (-qsort! s :third/queue)
 
-  (qcreate! s {::queue/name        :third/queue
-               ::queue/lockout?-fn #(get-in %2 [::queue-item/data :locked-eternally?])})
+  (qcreate! s
+            {::queue/name        :third/queue
+             ::queue/lockout?-fn #(get-in %2 [::queue-item/data :locked-eternally?])})
 
   (do
 
-    (qsubmit! s {::queue-item/id    #uuid"11111111-b2fc-4e21-aa6d-67dc48e9fbfd"
-                 ::queue-item/queue :third/queue
-                 ::queue-item/data  {:data "Med Prio, Add first"}})
+    (qsubmit! s
+              {::queue-item/id    #uuid "11111111-b2fc-4e21-aa6d-67dc48e9fbfd"
+               ::queue-item/queue :third/queue
+               ::queue-item/data  {:data "Med Prio, Add first"}})
     (Thread/sleep 1)
-    (qsubmit! s {::queue-item/id    #uuid"22222222-b2fc-4e21-aa6d-67dc48e9fbfd"
-                 ::queue-item/queue :third/queue
-                 ::queue-item/data  {:data              "Low Prio, Add second"
-                                     :locked-eternally? true}})
+    (qsubmit! s
+              {::queue-item/id    #uuid "22222222-b2fc-4e21-aa6d-67dc48e9fbfd"
+               ::queue-item/queue :third/queue
+               ::queue-item/data  {:data              "Low Prio, Add second"
+                                   :locked-eternally? true}})
     (Thread/sleep 2)
-    (qsubmit! s {::queue-item/id       #uuid"00000000-b2fc-4e21-aa6d-67dc48e9fbfd"
-                 ::queue-item/priority 1
-                 ::queue-item/queue    :third/queue
-                 ::queue-item/data     {:data "High Prio, first out (actually tho)"}}))
+    (qsubmit! s
+              {::queue-item/id       #uuid "00000000-b2fc-4e21-aa6d-67dc48e9fbfd"
+               ::queue-item/priority 1
+               ::queue-item/queue    :third/queue
+               ::queue-item/data     {:data "High Prio, first out (actually tho)"}}))
 
   (qpeek! s :third/queue)
   (qpop! s :third/queue)
   (qview s :third/queue)
-  (manual-dequeue! s #uuid"22222222-b2fc-4e21-aa6d-67dc48e9fbfd")
-  
+  (manual-dequeue! s #uuid "22222222-b2fc-4e21-aa6d-67dc48e9fbfd")
+
   (qview-active s :third/queue)
 
-  (qcomplete! s #uuid"22222222-b2fc-4e21-aa6d-67dc48e9fbfd" {:best :success :ever! :yay})
-  (qerror! s #uuid"11111111-b2fc-4e21-aa6d-67dc48e9fbfd" {:error       :some-random-error
-                                                          ::retryable? true})
+  (qcomplete! s #uuid "22222222-b2fc-4e21-aa6d-67dc48e9fbfd" {:best :success :ever! :yay})
+  (qerror! s
+           #uuid "11111111-b2fc-4e21-aa6d-67dc48e9fbfd"
+           {:error       :some-random-error
+            ::retryable? true})
   (prune-timeouts! s)
 
-  (resolve!i s #uuid"11111111-b2fc-4e21-aa6d-67dc48e9fbfd")
+  (resolve!i s #uuid "11111111-b2fc-4e21-aa6d-67dc48e9fbfd")
 
-  (swap! s update ::id->queue-item assoc #uuid"44444444-b2fc-4e21-aa6d-67dc48e9fbfd"
-    {::queue-item/id              #uuid"44444444-b2fc-4e21-aa6d-67dc48e9fbfd"
+  (swap! s update
+    ::id->queue-item
+    assoc
+    #uuid "44444444-b2fc-4e21-aa6d-67dc48e9fbfd"
+    {::queue-item/id              #uuid "44444444-b2fc-4e21-aa6d-67dc48e9fbfd"
      ::queue-item/submission-time (Date.)
      ::queue-item/queue           :initial/queue
      ::queue-item/status          ::queue-item/waiting
      ::queue-item/retry-count     0})
 
-  (get-in @s [::id->queue-item #uuid"44444443-b2fc-4e21-aa6d-67dc48e9fbfd"]))
+  (get-in @s [::id->queue-item #uuid "44444443-b2fc-4e21-aa6d-67dc48e9fbfd"]))

@@ -3,9 +3,9 @@
    [personal-rss-feed.playwright.wally-state :as wally-state]
    [wally.main :as w])
   (:import
-   (com.microsoft.playwright Browser BrowserType$LaunchOptions)
-   (com.microsoft.playwright.options Cookie)
-   (java.nio.file Paths)))
+    (com.microsoft.playwright Browser BrowserType$LaunchOptions)
+    (com.microsoft.playwright.options Cookie)
+    (java.nio.file Paths)))
 
 (defn fresh-browser
   "This is a very expensive call. Avoid using it.
@@ -15,41 +15,48 @@
    :between-action-delay The ms delay between browser actions. Defaults to 0. See LaunchOptions.setSlowMo.
    :devtools?            Start chromium devtools?"
   [{:keys [headless? type between-action-delay devtools? exe-path]
-    :or {headless? true
-         type :chromium
-         between-action-delay 0
-         devtools? false
-         exe-path (some-> (System/getenv "CHROME_LOCATION")
-                    (Paths/get (into-array String [])))}}]
-  (let [pw @wally-state/playwright-instance
+    :or   {headless?            true
+           type                 :chromium
+           between-action-delay 0
+           devtools?            false
+           exe-path             (some-> (System/getenv "CHROME_LOCATION")
+                                        (Paths/get (into-array String [])))}}]
+  (let [pw      @wally-state/playwright-instance
         browser (case type
                   :chromium (.chromium pw)
-                  :firefox (.firefox pw)
-                  :webkit (.webkit pw))]
-    (.launch browser (-> (BrowserType$LaunchOptions.)
-                       (.setHeadless headless?)
-                       (.setSlowMo between-action-delay)
-                       (.setDevtools devtools?)
-                       (cond->
-                         (and exe-path (not= exe-path :default)) 
-                         (.setExecutablePath exe-path))))))
+                  :firefox  (.firefox pw)
+                  :webkit   (.webkit pw))]
+    (.launch browser
+             (-> (BrowserType$LaunchOptions.)
+                 (.setHeadless headless?)
+                 (.setSlowMo between-action-delay)
+                 (.setDevtools devtools?)
+                 (cond->
+                   (and exe-path (not= exe-path :default))
+                   (.setExecutablePath exe-path))))))
 
 (defn cached-browser
   [key fallback-create-fn]
-  (fn [] (-> (swap! wally-state/name->playwright-object
-               #(update % key (fn [browser] (or (when (some-> browser (.isConnected)) browser)
-                                              (fallback-create-fn)))))
-           (get key))))
+  (fn []
+    (-> (swap! wally-state/name->playwright-object
+          #(update %
+                   key
+                   (fn [browser]
+                     (or (when (some-> browser
+                                       (.isConnected))
+                           browser)
+                         (fallback-create-fn)))))
+        (get key))))
 
 (def default-browser
   (cached-browser ::default-browser #(fresh-browser {})))
 
 (defn debug-browser
   [opts]
-  (let [opts (merge {:headless? false
+  (let [opts (merge {:headless?            false
                      :between-action-delay 75
-                     :devtools? true}
-               opts)]
+                     :devtools?            true}
+                    opts)]
     ((cached-browser [::debug-browser opts] #(fresh-browser opts)))))
 
 (defn fresh-browser-context
@@ -57,7 +64,7 @@
    Mostly useful if you wanted to test multiple users signed in at once."
   [{:keys [browser
            default-timeout]
-    :or {default-timeout 5000}}]
+    :or   {default-timeout 5000}}]
   (let [context (.newContext ^Browser (or browser (default-browser)))]
     (.setDefaultTimeout context default-timeout)
     context))
@@ -67,9 +74,10 @@
   (.clearCookies context)
   (.clearPermissions context)
   (when user-id
-    (.addCookies context [(-> (Cookie. "access-token" (str user-id))
-                            (.setDomain "localhost")
-                            (.setPath "/"))])))
+    (.addCookies context
+                 [(-> (Cookie. "access-token" (str user-id))
+                      (.setDomain "localhost")
+                      (.setPath "/"))])))
 
 (defn fresh-page
   "Create a playwright page, for use with `w/with-page`.
@@ -87,10 +95,10 @@
                     https://www.javadoc.io/doc/com.microsoft.playwright/playwright/latest/com/microsoft/playwright/BrowserContext.html"
   [{:keys [browser-context debug]}]
   (let [ctx (or (and (not debug) browser-context)
-              (fresh-browser-context {:browser (if debug
-                                                 (debug-browser debug)
-                                                 (default-browser))}))]
-    {:page (.newPage ctx)
+                (fresh-browser-context {:browser (if debug
+                                                   (debug-browser debug)
+                                                   (default-browser))}))]
+    {:page            (.newPage ctx)
      :browser-context ctx}))
 
 (defmacro with-page
@@ -101,7 +109,7 @@
        (with-open [page#            (:page page-desc#)
                    browser-context# (:browser-context page-desc#)]
          (w/with-page page# ~@body))
-       (with-open [page#            (:page page-desc#)]
+       (with-open [page# (:page page-desc#)]
          (w/with-page page# ~@body)))))
 
 (def navigate w/navigate)

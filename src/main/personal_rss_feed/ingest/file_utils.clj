@@ -8,5 +8,5 @@
   (.toFile (Files/createTempFile prefix suffix (make-array FileAttribute 0))))
 
 (defmacro with-tempfile
-  [& body] 
+  [& body]
   `(tempfile/with-tempfile ~@body))

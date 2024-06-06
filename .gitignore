@@ -12,3 +12,4 @@ resources/public/js/
 .clj-kondo/*
 .lsp/.cache/*
 .calva/*
+.nrepl-port

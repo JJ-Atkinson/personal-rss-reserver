@@ -18,11 +18,11 @@
 (defn parse-description
   [desc-str]
   (drop 1
-    (re-matches #".*\<a href=\"(.*)\" ?>.*\<img src=\"(.*)\" ?\/>.*\<br\>(.*).*<br>"
-      (some-> desc-str
-        (str/trim)
-        (str/replace "\t" "")
-        (str/replace "\n" "")))))
+        (re-matches #".*\<a href=\"(.*)\" ?>.*\<img src=\"(.*)\" ?\/>.*\<br\>(.*).*<br>"
+                    (some-> desc-str
+                            (str/trim)
+                            (str/replace "\t" "")
+                            (str/replace "\n" "")))))
 
 (defn content
   [xml-tag]
@@ -47,8 +47,8 @@
   [extractors]
   (fn [xml]
     (into {}
-      (map (fn [ex] (ex xml)))
-      extractors)))
+          (map (fn [ex] (ex xml)))
+          extractors)))
 
 (defn attributes
   ([key as value-extraction]
@@ -61,31 +61,40 @@
 
 (defn parse-date
   [s]
-  (when-let [ldt (some-> s (LocalDateTime/parse DateTimeFormatter/ISO_OFFSET_DATE_TIME))]
+  (when-let [ldt (some-> s
+                         (LocalDateTime/parse DateTimeFormatter/ISO_OFFSET_DATE_TIME))]
     (Date/from (.toInstant (.atZone ldt (ZoneId/of "UTC"))))))
 
 (def rss-str->episodes
   (comp
-    (fn [intermediate]
-      {:episodes (->> (:items intermediate)
-                   (map (partial merge (select-keys intermediate [:podcast/id]))))
-       :podcast  (dissoc intermediate :items)})
-    (map-accumulator
-      [#_(attribute :title :podcast/title content)
-       (attribute :icon :podcast/icon-uri content)
-       (attribute :updated :podcast/updated-at (comp parse-date content))
-       (attribute :description :podcast/description content)
-       (attributes :item :items
-         (navigate
-           :content
-           (map-accumulator
-             [(attribute :title :episode/title #(or (some-> (str/split (content %) #"\|") (second) str/trim)
-                                                  (content %)))
-              (attribute :description :episode/thumbnail-origin-uri #(nth (parse-description (content %)) 1))
-              (attribute :description :episode/url #(nth (parse-description (content %)) 0))
-              (attribute :description :episode/excerpt #(nth (parse-description (content %)) 2))
-              (attribute :pubDate :episode/publish-date (comp parse-date content))])))])
-    #(-> (xml/parse-str %) :content first :content)))
+   (fn [intermediate]
+     {:episodes (->> (:items intermediate)
+                     (map (partial merge (select-keys intermediate [:podcast/id]))))
+      :podcast  (dissoc intermediate :items)})
+   (map-accumulator
+    [#_(attribute :title :podcast/title content)
+     (attribute :icon :podcast/icon-uri content)
+     (attribute :updated :podcast/updated-at (comp parse-date content))
+     (attribute :description :podcast/description content)
+     (attributes :item
+                 :items
+                 (navigate
+                  :content
+                  (map-accumulator
+                   [(attribute :title
+                               :episode/title
+                               #(or (some-> (str/split (content %) #"\|")
+                                            (second)
+                                            str/trim)
+                                    (content %)))
+                    (attribute :description :episode/thumbnail-origin-uri #(nth (parse-description (content %)) 1))
+                    (attribute :description :episode/url #(nth (parse-description (content %)) 0))
+                    (attribute :description :episode/excerpt #(nth (parse-description (content %)) 2))
+                    (attribute :pubDate :episode/publish-date (comp parse-date content))])))])
+   #(-> (xml/parse-str %)
+        :content
+        first
+        :content)))
 
 (defn parse-new-feed-items
   [conn queue feed-uri]
@@ -98,14 +107,19 @@
       (log/info "Found podcast description" (assoc podcast :podcast/feed-uri feed-uri))
       (db/save-podcast! conn (assoc podcast :podcast/feed-uri feed-uri))
       (doseq [ep (remove #(db/known-episode? db (:episode/url %)) episodes)]
-        (db/save-episode! conn (assoc ep
-                                 :episode/podcast feed-uri))
-        (simple-queue/qsubmit! queue #::queue-item{:queue    ::le.fetch-metadata/fetch-metadata-queue
-                                                   :id       (random-uuid)
-                                                   :data     ep
-                                                   :priority (or (some-> ep :episode/publish-date (.getTime)) ;; Priority newest->oldest
-                                                               (.getTime (Date.)))
-                                                   })))
+        (db/save-episode! conn
+                          (assoc ep
+                                 :episode/podcast
+                                 feed-uri))
+        (simple-queue/qsubmit! queue
+                               #::queue-item{:queue    ::le.fetch-metadata/fetch-metadata-queue
+                                             :id       (random-uuid)
+                                             :data     ep
+                                             :priority (or (some-> ep
+                                                                   :episode/publish-date
+                                                                   (.getTime)) ;; Priority newest->oldest
+                                                           (.getTime (Date.)))
+                               })))
     (catch Exception e
       (log/error "Failed to parse new feed items!" e))))
 
@@ -114,38 +128,41 @@
   (log/info "Parsing rss feeds for new episodes")
   (doseq [{feed-uri :podcast/feed-uri} (db/known-podcasts conn)]
     (parse-new-feed-items conn queue feed-uri)
-    (Thread/sleep 5000)                                     ;; Don't swamp the server.
-    ))
+    (Thread/sleep 5000) ;; Don't swamp the server.
+  ))
 
 (defn make-timeline
   "Now, and 3, 4, and 5:30pm GMT"
   []
-  (let [daily-at (fn [h-gmt m] (chime/periodic-seq (-> (LocalTime/of h-gmt m)
-                                                     (.adjustInto (ZonedDateTime/now (ZoneId/of "GMT")))
-                                                     (.toInstant))
-                                 (Period/ofDays 1)))]
+  (let [daily-at (fn [h-gmt m]
+                   (chime/periodic-seq (-> (LocalTime/of h-gmt m)
+                                           (.adjustInto (ZonedDateTime/now (ZoneId/of "GMT")))
+                                           (.toInstant))
+                                       (Period/ofDays 1)))]
     (cons (.plusSeconds (Instant/now) 3)
-      (chime/without-past-times
-        (interleave
-          (daily-at 15 0)
-          (daily-at 16 0)
-          (daily-at 17 30))))))
+          (chime/without-past-times
+           (interleave
+            (daily-at 15 0)
+            (daily-at 16 0)
+            (daily-at 17 30))))))
 
-(comment (take 10 (make-timeline)))
+(comment
+  (take 10 (make-timeline)))
 
 (defn init!
   [shared]
   (log/info "Starting rss feed parser task to run at" (take 5 (make-timeline)) "...")
   (-> shared
-    (update ::le.shared/close-on-halt conj
-      (chime/chime-at
-        (make-timeline)
-        (fn [t] (parse-all-feeds (:db/conn shared) (::le.shared/queue shared)))))))
+      (update ::le.shared/close-on-halt
+              conj
+              (chime/chime-at
+               (make-timeline)
+               (fn [t] (parse-all-feeds (:db/conn shared) (::le.shared/queue shared)))))))
 
 (comment
   (def resp
     (bb.http/get
-      "https://www.lotuseaters.com/feed/category/tv-and-movies"))
+     "https://www.lotuseaters.com/feed/category/tv-and-movies"))
   (def resp2 (remus/parse-url "https://lotuseaters.com/feed/category/brokenomics"))
   (xml/parse-str (:body resp))
 
@@ -153,4 +170,4 @@
 
   (http/head "")
   (parse-all-feeds (:db/conn @le.shared/!shared) (::le.shared/queue @le.shared/!shared))
-  )
+)

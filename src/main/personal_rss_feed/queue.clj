@@ -6,15 +6,16 @@
    [dev.freeformsoftware.simple-queue.queue-item :as queue-item]
    [taoensso.timbre :as log]))
 
-(tools.namespace/disable-reload!)
 
-(def !system (atom nil))
+^:clj-reload/keep
+(defonce !system (atom nil))
 
-(defmethod ig/init-key ::queue [_ opts]
+(defmethod ig/init-key ::queue
+  [_ opts]
   (let [system (simple-queue/create-system!
-                 (assoc opts
-                   ::simple-queue/default-notify-timed-out!
-                   #(log/warn "Task timed out! :id " (::queue-item/id %) %)))]
+                (assoc opts
+                       ::simple-queue/default-notify-timed-out!
+                       #(log/warn "Task timed out! :id " (::queue-item/id %) %)))]
     (reset! !system system)
     system))
 
@@ -29,5 +30,5 @@
   (simple-queue/close-system! env))
 
 
-(comment 
+(comment
   @!system)
