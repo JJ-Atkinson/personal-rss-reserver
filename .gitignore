@@ -1,4 +1,5 @@
 /.idea/
+/node_modules/*
 /personal-rss-reserver.iml
 /resources/config/secrets.edn
 /.direnv/

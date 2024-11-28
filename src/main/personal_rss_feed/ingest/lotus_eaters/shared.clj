@@ -19,7 +19,7 @@
   (simple-queue/qcreate! (::queue shared) queue-conf)
   (cond-> shared
 
-    (:start-auto-poll? shared true)
+    (get shared :start-auto-poll? true)
     (update ::close-on-halt
             conj
             (time-utils/repeat-every!
