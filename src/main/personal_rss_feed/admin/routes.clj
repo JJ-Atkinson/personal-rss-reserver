@@ -1,9 +1,6 @@
 (ns personal-rss-feed.admin.routes
   (:require
    [clojure.string :as str]
-   [hyperfiddle.electric :as e]
-   [personal-rss-feed.admin.electric-app.main]
-   [personal-rss-feed.admin.electric-server.httpkit-middleware :as electric-httpkit]
    [personal-rss-feed.admin.pages.login :as p.login]
    [ring.middleware.content-type :as rm.content-type]
    [ring.middleware.defaults :as ring.defaults]
@@ -18,7 +15,7 @@
 
 (defn routes
   [{:keys [db/conn feed/secret-path-segment feed/public-feed-address] :as config}]
-  {"GET /**" (fn [req] (electric-httpkit/handle-index config req))
+  {#_#_"GET /**" (fn [req] (electric-httpkit/handle-index config req))
    "GET /login" p.login/login-form
    "POST /login" (partial p.login/login-post config)
    "GET /public/**"
@@ -39,6 +36,7 @@
         (handler (assoc req :auth/claims claims))
         (response/redirect "/login")))))
 
+#_
 (defn boot-electric
   [config ring-request]
   (e/boot-server {}
@@ -52,7 +50,7 @@
     ;; No need for 'not-found, since the behavior of the global router is not-found if nil
     handler ;; Lowest priority
     ;; Index page handled in routes
-    (electric-httpkit/wrap-electric-websocket config (partial boot-electric config))
+    ;; (electric-httpkit/wrap-electric-websocket config (partial boot-electric config))
     (wrap-logged-in config) ;; Hides routes by default
     ;; No need for 'wrap-resources, since the `GET /public/**` takes care of that
     (rm.content-type/wrap-content-type)
