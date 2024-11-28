@@ -40,13 +40,6 @@
    :auth                     #ig/ref :personal-rss-feed.admin.auth/auth
    :personal-rss-feed.admin.electric-server.httpkit-middleware/manifest-path "public/js/manifest.edn"
 
-   :personal-rss-feed.admin.electric-app.main/config
-   {:lotus-eaters-ingest      #ig/ref :personal-rss-feed.ingest.lotus-eaters/lotus-eaters-ingest
-    :queue                    #ig/ref :personal-rss-feed.queue/queue
-    :db/conn                  #ig/ref :personal-rss-feed.feed.db/conn
-    :feed/public-feed-address #n/ref :feed/public-feed-address
-    :feed/secret-path-segment #n/ref :feed/secret-path-segment
-   }
   }
 
   :personal-rss-feed.admin.auth/auth

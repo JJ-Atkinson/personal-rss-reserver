@@ -32,13 +32,6 @@
   buddy/buddy-hashers {:mvn/version "2.0.167"}
   buddy/buddy-sign {:mvn/version "3.5.351"}
 
-
-  com.hyperfiddle/electric {:git/url "https://github.com/hyperfiddle/electric"
-                            ;; :git/sha "7b8112670f41fce1662c9dbfca8add68983fa1bf"
-
-                            ;; feature/experiments branch, required for hf-electric-fiddle
-                            :git/sha "30a4e00f9ae13e45c2bf41399a12fe06d889f41e"
-                           }
   nextjournal/clojure-mode {:git/url "https://github.com/nextjournal/clojure-mode"
                             :sha     "3df5e837095e049fe489831742bcfa1e9704c691"}
   zprint/zprint {:mvn/version "1.2.9"}
@@ -53,20 +46,7 @@
   tick/tick {:mvn/version "0.7.5"}
 
 
-  ;; hyperfiddle electric-fiddle Datagrid deps
-  metosin/malli {:mvn/version "0.14.0"}
-  clj-jgit/clj-jgit {:mvn/version "1.0.2"}
-  org.apache.tika/tika-core {:mvn/version "1.24"} ; for contrib.datafy-fs file type detection
-
-  com.hyperfiddle/heroicons-electric {:mvn/version "79c4d15"
-                                      :exclusions  [com.hyperfiddle/electric]}
-  com.hyperfiddle/electric-fiddle
-  {:local/root "../electric-fiddle"
-   :exclusions [com.hyperfiddle/electric]
-   #_#_#_#_:git/url "https://github.com/hyperfiddle/electric-fiddle.git" ;; Datagrid
-       ;; demo
-       :git/sha
-     "0a4c41b03d5eb79e9c98804700582bbe2fc99a14"}}
+}
  :aliases
  {:dev   {:extra-paths ["src/test" "src/dev"]
           :extra-deps  {com.gfredericks/debug-repl {:mvn/version "0.0.12"}
