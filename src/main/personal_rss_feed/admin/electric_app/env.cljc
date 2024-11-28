@@ -2,3 +2,6 @@
   (:require [hyperfiddle.electric :as e]))
 
 (e/def ring-request)
+(e/def config)
+
+(e/defn Conn [] (:db/conn config))

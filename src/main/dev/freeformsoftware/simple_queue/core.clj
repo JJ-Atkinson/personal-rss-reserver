@@ -122,7 +122,7 @@
      Automatically closed when the open item is completed or times out."
     []
     (fn [system {new-id ::queue-item/id}]
-      (when-let [current-item (resolve!i system item-id)]
+      (when-let [current-item (resolve!i system @item-id)]
         (if (= ::queue-item/activated (::queue-item/status current-item))
           true
           (do (reset! item-id new-id) false))))))
@@ -197,7 +197,7 @@
        (vec)))
 
 (>defn qview-active
-  "Lazy view of the dead items. Items may be changed before resolved if the required items are not fully realized before 
+  "Lazy view of the active items. Items may be changed before resolved if the required items are not fully realized before 
    queue operations are made."
   [system queue-name]
   [::system ::queue/name => (s/coll-of ::queue-item/item)]
@@ -347,7 +347,7 @@
            (qview-dead system queue-name))))
 
 (defn resolve-error!
-  "Resolve an error. See `all-un-resolved-errors`."
+  "User metadata. Resolve an error. See `all-un-resolved-errors`."
   [system queue-item-id]
   (update!qi system queue-item-id ::queue-item/completion-data #(assoc % ::resolved? true))
   nil)

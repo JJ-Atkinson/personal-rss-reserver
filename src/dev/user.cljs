@@ -8,7 +8,8 @@
   (hyperfiddle.electric/boot-client 
    {}
    personal-rss-feed.admin.electric-app.main/Main
-   nil))
+   nil;; ring request is nil
+   nil))  ;; config is nil
 
 (defonce reactor nil)
 

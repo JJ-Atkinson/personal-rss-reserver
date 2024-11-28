@@ -1,7 +1,8 @@
 {:system
 
  {:personal-rss-feed.feed.db/conn
-  {:uri "/tmp/datalevin/personal-rss-server"}
+  ;;   {:uri "/tmp/datalevin/personal-rss-server"}
+  {:uri "/home/jarrett/code/personal/personal-rss-reserver/tmp/datalevin"}
 
   :personal-rss-feed.queue/queue
   {:dev.freeformsoftware.simple-queue.core/persistence-dir
@@ -14,12 +15,7 @@
   :personal-rss-feed.feed.s3/s3
   #n/ref [:s3 :CI]
   ;;#n/ref [:s3 :PROD]
-  #_{:hostname          "something.com"
-     :port              3900
-     :region            "us-west-1"
-     :access-key-id     "..."
-     :secret-access-key "..."
-     :bucket-name       "name"}
+
 
   :personal-rss-feed.ingest.lotus-eaters/lotus-eaters-ingest
   {:start-auto-poll?          false
@@ -33,7 +29,7 @@
    :downloads-per-day         0} ;; lockout downloads during CI
 
   :personal-rss-feed.server.main/server
-  {:http-kit                 {:port 3000}
+  {:http-kit                 {:port 3001}
    :db/conn                  #ig/ref :personal-rss-feed.feed.db/conn
    :s3/public-s3-prefix      #n/ref :s3/public-s3-prefix ;; Only semi secret, but preferable to not post on the
                                                          ;; internet.
@@ -43,6 +39,14 @@
    :lotus-eaters-ingest      #ig/ref :personal-rss-feed.ingest.lotus-eaters/lotus-eaters-ingest
    :auth                     #ig/ref :personal-rss-feed.admin.auth/auth
    :personal-rss-feed.admin.electric-server.httpkit-middleware/manifest-path "public/js/manifest.edn"
+
+   :personal-rss-feed.admin.electric-app.main/config
+   {:lotus-eaters-ingest      #ig/ref :personal-rss-feed.ingest.lotus-eaters/lotus-eaters-ingest
+    :queue                    #ig/ref :personal-rss-feed.queue/queue
+    :db/conn                  #ig/ref :personal-rss-feed.feed.db/conn
+    :feed/public-feed-address #n/ref :feed/public-feed-address
+    :feed/secret-path-segment #n/ref :feed/secret-path-segment
+   }
   }
 
   :personal-rss-feed.admin.auth/auth

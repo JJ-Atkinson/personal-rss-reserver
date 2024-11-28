@@ -18,7 +18,7 @@
 
 (defn routes
   [{:keys [db/conn feed/secret-path-segment feed/public-feed-address] :as config}]
-  {"GET /" (fn [req] (electric-httpkit/handle-index config req))
+  {"GET /**" (fn [req] (electric-httpkit/handle-index config req))
    "GET /login" p.login/login-form
    "POST /login" (partial p.login/login-post config)
    "GET /public/**"
@@ -35,17 +35,15 @@
           safe-prefix? (some #(str/starts-with? (:uri req) %)
                              (conj safe-prefixes
                                    "/login"))] ;; make sure we don't kill things that are logins
-      (tap> {:urii          (:uri req)
-             :safe-prefix? safe-prefix?
-             :claims       claims})
       (if (or claims safe-prefix?)
         (handler (assoc req :auth/claims claims))
         (response/redirect "/login")))))
 
 (defn boot-electric
-  [ring-request]
+  [config ring-request]
   (e/boot-server {}
                  personal-rss-feed.admin.electric-app.main/Main
+                 (:personal-rss-feed.admin.electric-app.main/config config)
                  ring-request))
 
 (defn wrap-electric
@@ -54,7 +52,7 @@
     ;; No need for 'not-found, since the behavior of the global router is not-found if nil
     handler ;; Lowest priority
     ;; Index page handled in routes
-    (electric-httpkit/wrap-electric-websocket config boot-electric)
+    (electric-httpkit/wrap-electric-websocket config (partial boot-electric config))
     (wrap-logged-in config) ;; Hides routes by default
     ;; No need for 'wrap-resources, since the `GET /public/**` takes care of that
     (rm.content-type/wrap-content-type)

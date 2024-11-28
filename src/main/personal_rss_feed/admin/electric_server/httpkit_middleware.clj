@@ -231,7 +231,7 @@
      {:type "text/javascript" :src (str "/public" (:hyperfiddle.client.module/main bag))}] ;; llandmark: adjust the url
     [:link
      {:rel  "stylesheet"
-      :href "/public/tailwind-styles.js"}]]))
+      :href "/public/electric-main.css"}]]))
 
 (defn handle-index
   [{::keys [manifest-path] :as config} req]

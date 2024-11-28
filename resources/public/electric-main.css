@@ -1,0 +1,32 @@
+.popup-root {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  background-color: #33333333;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.popup-body {
+  background: white;
+  border: 5px solid #33333399;
+  height: 75vh;
+  width: 80vw;
+  padding: 1rem;
+  position: relative;
+}
+
+.popup-body > button {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+}
+
+.popup-body > pre {
+  overflow: auto;
+  height: 100%;
+}

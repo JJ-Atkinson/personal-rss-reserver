@@ -1,11 +1,10 @@
 (ns user
-  (:require
-   [integrant.core :as ig]
-   [nrepl.server :refer [start-server stop-server default-handler]]
-   [clj-reload.core :as clj-reload]
-   [personal-rss-feed.config :as config]
-   [portal.api]
-   [taoensso.timbre :as log]))
+  (:require [clj-reload.core :as clj-reload]
+            [integrant.core :as ig]
+            [nrepl.server :refer [default-handler start-server]]
+            [personal-rss-feed.config :as config]
+            [portal.api]
+            [taoensso.timbre :as log]))
 
 (clj-reload.core/init {:dirs ["src/dev" "src/main" "src/test"]})
 (log/set-min-level! :debug)
@@ -21,7 +20,7 @@
   (reset! !system
     (ig/init (#'config/resolve-config! false)))
 
-  (@shadow-start!) 
+  (@shadow-start!)
   (@shadow-watch :dev) ; depends on shadow server
 )
 
@@ -47,14 +46,14 @@
   (require 'com.gfredericks.debug-repl)
   (defonce server
     (start-server :bind    "0.0.0.0"
-                  :port    8001
+                  :port    8002
                   :handler (default-handler (requiring-resolve 'com.gfredericks.debug-repl/wrap-debug-repl))))
-  (spit ".nrepl-port" "8001")
-  (println "NREPL Server located at 8001")
+  (spit ".nrepl-port" "8002")
+  (println "NREPL Server located at 8002")
   (start)
   (Thread/sleep Long/MAX_VALUE))
 
 (defn start-portal!
   []
-  (portal.api/open)
+  (portal.api/open {:launcher :vs-code})
   (add-tap #'portal.api/submit))
