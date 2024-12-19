@@ -20,6 +20,7 @@
 
 (defn clean-cljs
   []
+
   (b/delete {:path "resources/public/js"}))
 
 (defn build-client!
