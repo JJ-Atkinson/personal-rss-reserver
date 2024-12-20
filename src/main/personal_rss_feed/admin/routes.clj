@@ -37,12 +37,12 @@
         (response/redirect "/login")))))
 
 #_
-(defn boot-electric
-  [config ring-request]
-  (e/boot-server {}
-                 personal-rss-feed.admin.electric-app.main/Main
-                 (:personal-rss-feed.admin.electric-app.main/config config)
-                 ring-request))
+  (defn boot-electric
+    [config ring-request]
+    (e/boot-server {}
+                   personal-rss-feed.admin.electric-app.main/Main
+                   (:personal-rss-feed.admin.electric-app.main/config config)
+                   ring-request))
 
 (defn wrap-electric
   [config handler] ;; handler == all routes

@@ -1,4 +1,4 @@
-(ns personal-rss-feed.admin.utils 
+(ns personal-rss-feed.admin.utils
   (:import [java.lang Character]))
 
 #?(:clj

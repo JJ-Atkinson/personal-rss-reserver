@@ -5,10 +5,10 @@
    hyperfiddle.electric-dom2))
 
 (def electric-main
-  (hyperfiddle.electric/boot-client 
+  (hyperfiddle.electric/boot-client
    {}
    personal-rss-feed.admin.electric-app.main/Main
-   nil;; ring request is nil
+   nil ;; ring request is nil
    nil))  ;; config is nil
 
 (defonce reactor nil)

@@ -63,5 +63,5 @@
     (if-let [jwt (auth/generate-jwt-from-credentials (:auth config) username password)]
       (log-in! (response/redirect "/") jwt)
       (login-form {:error? true}))
-    (catch Exception e 
+    (catch Exception e
       (login-form {:error? true}))))
