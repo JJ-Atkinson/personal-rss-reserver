@@ -22,7 +22,7 @@
           ]
     :as   options}]
   (when apply-playwright-cli-fix?
-    ;; Required for nix.
+    ;; Required for nix. #PlaywrightCliDir
     (System/setProperty "playwright.cli.dir" (System/getenv "PLAYWRIGHT_CLI_LOCATION")))
 
   (let [shared

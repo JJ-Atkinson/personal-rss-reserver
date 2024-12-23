@@ -172,6 +172,8 @@
   (d/close conn))
 
 (comment
+  (reset! !conn (d/get-conn "/home/jarrett/code/personal/personal-rss-reserver/.prod-data/datalevin" schema))
+
   (save-podcast! @!conn
                  {:podcast/feed-uri                    "https://lotuseaters.com/feed/category/health"
                   :podcast/generated-icon-relative-uri ""})
@@ -211,4 +213,5 @@
                        :episode/audio-content-length]))
    (sort-by :episode/publish-date)
    (filter :episode/audio-content-length)
-   (count)))
+   (count))
+)

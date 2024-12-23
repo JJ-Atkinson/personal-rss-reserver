@@ -2,12 +2,12 @@
 
  {:personal-rss-feed.feed.db/conn
   ;;   {:uri "/tmp/datalevin/personal-rss-server"}
-  {:uri "/home/jarrett/code/personal/personal-rss-reserver/tmp/datalevin"}
+  {:uri "/home/jarrett/code/personal/personal-rss-reserver/.prod-data/datalevin"}
 
   :personal-rss-feed.queue/queue
   {:dev.freeformsoftware.simple-queue.core/persistence-dir
    ;;"/tmp/simple-queue/personal-rss-server"
-   "/home/jarrett/code/personal/personal-rss-reserver/tmp/simple-queue"
+   "/home/jarrett/code/personal/personal-rss-reserver/.prod-data/simple-queue"
    :dev.freeformsoftware.simple-queue.core/default-timeout-ms 100000 ;; 100s
    :dev.freeformsoftware.simple-queue.core/watchdog-ms        1000
   }

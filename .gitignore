@@ -1,4 +1,6 @@
 /.idea/
+/.prod-data/
+/playwright-cli-dir--bin/package
 /node_modules/*
 /personal-rss-reserver.iml
 /resources/config/secrets.edn
