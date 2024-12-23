@@ -17,11 +17,11 @@
           overlays = [ clj-nix.overlays.default ];
           config.allowUnfree = true;
         };
-        
+
         runtimeJDK = pkgs.openjdk17;
 
         runtimeDeps = with pkgs; [
-          google-chrome
+          chromium
           nodejs
           playwright-driver
           zprint
@@ -38,13 +38,17 @@
         launch-rss-server = pkgs.writeShellScriptBin "launch-rss-server" ''
           # Call hello with a traditional greeting 
 
-          PATH=${nixpkgs.lib.makeBinPath runtimeDeps}:${self.packages.${system}.binDerivation}/bin
+          PATH=${nixpkgs.lib.makeBinPath runtimeDeps}:${
+            self.packages.${system}.binDerivation
+          }/bin
           export PATH
 
           ${builtins.readFile ./bin/env-vars}
-          
-          # ##FlakeOverridePlaywrightCLI
-          export PLAYWRIGHT_CLI_LOCATION="${self.packages.${system}.binDerivation}/bin"
+
+          # #FlakeOverridePlaywrightCLI
+          export PLAYWRIGHT_CLI_LOCATION="${
+            self.packages.${system}.binDerivation
+          }/playwright-cli-dir--bin"
 
           exec ${
             self.packages.${system}.baseCljDerivation
@@ -54,6 +58,13 @@
         formatter = nixpkgs.legacyPackages.x86_64-linux.nixfmt;
 
         devShell = pkgs.mkShell {
+          
+          # #PlaywrightCliDir dev-shell config
+          shellHook = ''
+            PLAYWRIGHT_CLI_LOCATION_RAW="${pkgs.playwright-driver}"
+            export PLAYWRIGHT_CLI_LOCATION="$PWD/playwright-cli-dir--bin"
+            ln --symbolic --force "$PLAYWRIGHT_CLI_LOCATION_RAW/cli.js" "$PWD/playwright-cli-dir--bin/package/cli.js"
+          '';
           buildInputs = [
             pkgs.clojure
             runtimeJDK
@@ -68,56 +79,53 @@
 
         packages = {
 
-          baseCljDerivation = 
-          let 
+          baseCljDerivation = let
             groupId = "dev.freeformsoftware";
             artifactId = "personal-rss-reserver";
             fullId = "${groupId}/${artifactId}";
             version = "1.0";
             main-ns = "personal-rss-feed.prod";
-          in
-            pkgs.mkCljBin {
-              # pkgs = nixpkgs.legacyPackages.${system};
-              nativeBuildInputs = [pkgs.git];
+          in pkgs.mkCljBin {
+            # pkgs = nixpkgs.legacyPackages.${system};
+            nativeBuildInputs = [ pkgs.git ];
 
-              projectSrc = ./.;
-              jdkRunner = runtimeJDK;
-              name = fullId;
-              version = version;
-              main-ns = main-ns;
-              java-opts = [
-                "--add-opens"
-                "java.base/java.nio=ALL-UNNAMED" # ##SeeDepsEDN
-                "--add-opens"
-                "java.base/sun.nio.ch=ALL-UNNAMED"
-                "-Djdk.httpclient.allowRestrictedHeaders=host"
-              ];
-              buildCommand = ''
-                GIT_REF="${self.rev}"
-                export GIT_REF
-                clj -A:build -X build-prod/uber! :lib-name '${fullId}' :version '${version}' :main-ns '${main-ns}'
-              '';
-              # :lib-name :version :main-ns :compile-clj-opts :javac-opts
-              # Default build command, slightly munged.
-              #         ''
-              #          clj-builder uber "${fullId}" "${version}" "${main-ns}" \
-              #            '${builtins.toJSON compileCljOpts}' \
-              #            '${builtins.toJSON javacOpts}'
-              #        ''
+            projectSrc = ./.;
+            jdkRunner = runtimeJDK;
+            name = fullId;
+            version = version;
+            main-ns = main-ns;
+            java-opts = [
+              "--add-opens"
+              "java.base/java.nio=ALL-UNNAMED" # #SeeDepsEDN
+              "--add-opens"
+              "java.base/sun.nio.ch=ALL-UNNAMED"
+              "-Djdk.httpclient.allowRestrictedHeaders=host"
+            ];
+            buildCommand = ''
+              GIT_REF="${self.rev}"
+              export GIT_REF
+              clj -A:build -X build-prod/uber! :lib-name '${fullId}' :version '${version}' :main-ns '${main-ns}'
+            '';
+            # :lib-name :version :main-ns :compile-clj-opts :javac-opts
+            # Default build command, slightly munged.
+            #         ''
+            #          clj-builder uber "${fullId}" "${version}" "${main-ns}" \
+            #            '${builtins.toJSON compileCljOpts}' \
+            #            '${builtins.toJSON javacOpts}'
+            #        ''
 
-              # nativeImage.enable = true;
-              # customJdk.enable = true;
-            };
-          
+            # nativeImage.enable = true;
+            # customJdk.enable = true;
+          };
+
           binDerivation = pkgs.stdenv.mkDerivation {
             name = "dev.freeformsoftware/personal-rss-reserver-bin-ext";
             src = ./bin;
-            
-            installPhase =
-              ''
-                mkdir -p $out/bin
-                cp ./* $out/bin
-              '';
+
+            installPhase = ''
+              mkdir -p $out/bin
+              cp ./* $out/bin
+            '';
           };
 
           default = pkgs.stdenv.mkDerivation {

@@ -15,8 +15,12 @@
 ^:clj-reload/keep
 (defonce !system (atom nil))
 
+
+(comment
+  (tap> (#'config/resolve-config! false)))
 (defn start
   []
+  (println "Starting system!")
   (reset! !system
     (ig/init (#'config/resolve-config! false)))
 
@@ -55,5 +59,8 @@
 
 (defn start-portal!
   []
-  (portal.api/open {:launcher :vs-code})
+  (portal.api/open {:window-title "LE RSS Server" #_#_:launcher :vs-code})
   (add-tap #'portal.api/submit))
+
+(comment (tap> 1)
+         (portal.api/docs))
