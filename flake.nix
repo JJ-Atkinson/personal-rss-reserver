@@ -55,12 +55,11 @@
 
           export HI="${playwright-driver-browsers}/chromium-${playwright-chromium-revision}/chrome-linux/chrome"
 
-          ${builtins.readFile ./bin/env-vars}
-
-          # #FlakeOverridePlaywrightCLI
-          export PLAYWRIGHT_CLI_LOCATION="${
-            self.packages.${system}.binDerivation
-          }/playwright-cli-dir--bin"
+          # #PlaywrightCliDir dev-shell config
+          export PLAYWRIGHT_CLI_LOCATION_RAW="${playwright-driver}"
+          export CHROME_LOCATION="${playwright-driver-browsers}/chromium-${playwright-chromium-revision}/chrome-linux/chrome"
+          export PLAYWRIGHT_CLI_LOCATION="$PWD/playwright-cli-dir--bin"
+          ln --symbolic --force "$PLAYWRIGHT_CLI_LOCATION_RAW/cli.js" "$PWD/playwright-cli-dir--bin/package/cli.js"
 
           exec ${
             self.packages.${system}.baseCljDerivation
@@ -73,8 +72,8 @@
 
           # #PlaywrightCliDir dev-shell config
           shellHook = ''
+            export PLAYWRIGHT_CLI_BROWSERS_LOCATION_RAW="${playwright-driver-browsers}" # debug only
             export PLAYWRIGHT_CLI_LOCATION_RAW="${playwright-driver}"
-            export PLAYWRIGHT_CLI_BROWSERS_LOCATION_RAW="${playwright-driver-browsers}"
             export CHROME_LOCATION="${playwright-driver-browsers}/chromium-${playwright-chromium-revision}/chrome-linux/chrome"
             export PLAYWRIGHT_CLI_LOCATION="$PWD/playwright-cli-dir--bin"
             ln --symbolic --force "$PLAYWRIGHT_CLI_LOCATION_RAW/cli.js" "$PWD/playwright-cli-dir--bin/package/cli.js"
