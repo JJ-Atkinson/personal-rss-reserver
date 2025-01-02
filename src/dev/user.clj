@@ -67,7 +67,7 @@
   ; similar to clj reload, this prevents lockup on
   (when-let [portal-api-open (e->nil (requiring-resolve 'portal.api/open))]
     (portal-api-open {:window-title "LE RSS Server" #_#_:launcher :vs-code})
-    (add-tap #'portal.api/submit)))
+    (add-tap (requiring-resolve 'portal.api/submit))))
 
 (comment
   (tap> 1)
