@@ -38,7 +38,7 @@
                                                               ;; basic auth
    :lotus-eaters-ingest      #ig/ref :personal-rss-feed.ingest.lotus-eaters/lotus-eaters-ingest
    :auth                     #ig/ref :personal-rss-feed.admin.auth/auth
-   :personal-rss-feed.admin.electric-server.httpkit-middleware/manifest-path "public/js/manifest.edn"
+   :personal-rss-feed.admin.pages.electric-index/manifest-path "./public/js/manifest.edn"
 
   }
 

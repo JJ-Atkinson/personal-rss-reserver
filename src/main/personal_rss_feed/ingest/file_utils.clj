@@ -1,5 +1,7 @@
 (ns personal-rss-feed.ingest.file-utils
-  (:require [tempfile.core :as tempfile])
+  (:require [tempfile.core :as tempfile]
+            [babashka.fs :as fs]
+            [taoensso.encore :as enc])
   (:import (java.nio.file Files)
            (java.nio.file.attribute FileAttribute)))
 

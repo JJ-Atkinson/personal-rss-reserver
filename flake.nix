@@ -20,10 +20,20 @@
 
         runtimeJDK = pkgs.openjdk17;
 
+        playwright-driver = pkgs.playwright-driver;
+        playwright-driver-browsers = pkgs.playwright-driver.browsers;
+
+        playright-file = builtins.readFile "${playwright-driver}/browsers.json";
+        playright-json = builtins.fromJSON playright-file;
+        playwright-chromium-entry = builtins.elemAt
+          (builtins.filter (browser: browser.name == "chromium")
+            playright-json.browsers) 0;
+        playwright-chromium-revision = playwright-chromium-entry.revision;
+
         runtimeDeps = with pkgs; [
-          chromium
           nodejs
           playwright-driver
+          playwright-driver-browsers
           zprint
 
           openai-whisper-cpp
@@ -43,6 +53,8 @@
           }/bin
           export PATH
 
+          export HI="${playwright-driver-browsers}/chromium-${playwright-chromium-revision}/chrome-linux/chrome"
+
           ${builtins.readFile ./bin/env-vars}
 
           # #FlakeOverridePlaywrightCLI
@@ -58,14 +70,17 @@
         formatter = nixpkgs.legacyPackages.x86_64-linux.nixfmt;
 
         devShell = pkgs.mkShell {
-          
+
           # #PlaywrightCliDir dev-shell config
           shellHook = ''
-            PLAYWRIGHT_CLI_LOCATION_RAW="${pkgs.playwright-driver}"
+            export PLAYWRIGHT_CLI_LOCATION_RAW="${playwright-driver}"
+            export PLAYWRIGHT_CLI_BROWSERS_LOCATION_RAW="${playwright-driver-browsers}"
+            export CHROME_LOCATION="${playwright-driver-browsers}/chromium-${playwright-chromium-revision}/chrome-linux/chrome"
             export PLAYWRIGHT_CLI_LOCATION="$PWD/playwright-cli-dir--bin"
             ln --symbolic --force "$PLAYWRIGHT_CLI_LOCATION_RAW/cli.js" "$PWD/playwright-cli-dir--bin/package/cli.js"
           '';
           buildInputs = [
+            pkgs.chromium # used for portal only
             pkgs.clojure
             runtimeJDK
             pkgs.maven

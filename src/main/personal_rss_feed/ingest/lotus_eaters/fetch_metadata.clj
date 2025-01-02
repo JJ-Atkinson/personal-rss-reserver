@@ -187,7 +187,20 @@
     (assoc shared ::debug {}))
 
   (get-detailed-information (with-debug @le.shared/!shared)
-                            {:episode/url "..."})
+                            {:episode/url
+                             "https://www.lotuseaters.com/premium-epochs-190-or-pompey-and-caesar-part-xv-22-12-24"})
+
+  (get-detailed-information @le.shared/!shared
+                            {:episode/url
+                             "https://www.lotuseaters.com/premium-epochs-190-or-pompey-and-caesar-part-xv-22-12-24"})
+
+
+  (w-utils/with-page (merge (w-utils/fresh-page {:browser-context (::browser-context @le.shared/!shared)
+                                                 :debug {}})
+                            {:autoclose-browser-context? false})
+    (safe-navigate! "https://google.com"))
+
+  :a
 
   (simple-queue/all-un-resolved-errors
    (::le.shared/queue @le.shared/!shared)
@@ -241,4 +254,5 @@
      (with-debug @le.shared/!shared)
      (simple-queue/qpop!
       (::le.shared/queue @le.shared/!shared)
-      ::fetch-metadata-queue))))
+      ::fetch-metadata-queue)))
+)
