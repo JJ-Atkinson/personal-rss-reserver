@@ -24,8 +24,8 @@
   (reset! !system
     (ig/init (#'config/resolve-config! false)))
 
-  ;; (@shadow-start!)
-  ;; (@shadow-watch :dev) ; depends on shadow server
+  (@shadow-start!)
+  (@shadow-watch :dev) ; depends on shadow server
 )
 
 (defn stop

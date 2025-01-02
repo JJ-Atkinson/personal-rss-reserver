@@ -12,14 +12,18 @@
   tempfile/tempfile                          {:mvn/version "0.2.0"}
   hiccup/hiccup                              {:mvn/version "1.0.5"}
 
-  com.cognitect.aws/api                      {:mvn/version "0.8.686"}
-  com.cognitect.aws/endpoints                {:mvn/version "1.1.12.504"}
-  com.cognitect.aws/s3                       {:mvn/version         "848.2.1413.0"
+  com.cognitect.aws/api                      {:mvn/version "0.8.711"}
+  com.cognitect.aws/endpoints                {:mvn/version "871.2.29.35"}
+  com.cognitect.aws/s3                       {:mvn/version         "871.2.29.35"
                                               :aws/serviceFullName "Amazon Simple Storage Service"}
   org.babashka/http-client                   {:mvn/version "0.4.15"}
+  babashka/fs                                {:mvn/version "0.5.23"}
   babashka/process                           {:mvn/version "0.5.21"}
   io.github.tonsky/clj-simple-router         {:mvn/version "0.1.0"}
-  ring/ring                                  {:mvn/version "1.10.0"}
+  ring/ring                                  {:mvn/version "1.13.0"
+                                              #_#_:exclusions [ring/ring-jetty-adapter]} ;; don't include
+                                                                                         ;; ring-jetty - the deps
+                                                                                         ;; upgrade borks
   ring/ring-defaults                         {:mvn/version "0.4.0"}
   org.ring-clojure/ring-websocket-middleware {:mvn/version "0.2.0"}
   integrant/integrant                        {:mvn/version "0.8.1"}
@@ -36,13 +40,16 @@
   zprint/zprint                              {:mvn/version "1.2.9"}
   http-kit/http-kit                          {:mvn/version "2.8.0"}
 
-
   org.clojure/clojure                        {:mvn/version "1.12.0-alpha5"}
   org.clojure/clojurescript                  {:mvn/version "1.11.60"}
   org.clojure/tools.logging                  {:mvn/version "1.2.4"}
   ch.qos.logback/logback-classic             {:mvn/version "1.2.11"}
   datascript/datascript                      {:mvn/version "1.5.2"}
   tick/tick                                  {:mvn/version "0.7.5"}
+
+  ;; electric
+  com.hyperfiddle/electric                   {:mvn/version "v3-alpha-SNAPSHOT"}
+
  }
  :aliases
  {:dev   {:extra-paths ["src/test" "src/dev"]
@@ -67,7 +74,7 @@
                        ]}
 
   :build {:extra-paths ["src/dev"]
-          :extra-deps  {thheller/shadow-cljs          {:mvn/version "2.25.2"}
+          :extra-deps  {thheller/shadow-cljs          {:mvn/version "2.26.2"}
                         io.github.clojure/tools.build {:mvn/version "0.9.6" :exclusions [com.google.guava/guava]}}
           :jvm-opts    ["-Xss2m"                         ; https://github.com/hyperfiddle/photon/issues/11
                         "-XX:-OmitStackTraceInFastThrow" ;; RCF

@@ -1,15 +1,17 @@
 (ns ^:dev/always user ; Electric currently needs to rebuild everything when any file changes. Will fix
   (:require
    personal-rss-feed.admin.electric-app.main
-   hyperfiddle.electric
-   hyperfiddle.electric-dom2))
+   [hyperfiddle.electric3 :as e]
+   [hyperfiddle.electric-dom3 :as dom]
+   [hyperfiddle.electric-client3]))
 
 (def electric-main
-  (hyperfiddle.electric/boot-client
+  (e/boot-client
    {}
    personal-rss-feed.admin.electric-app.main/Main
+   nil ;; config is nil on the client
    nil ;; ring request is nil
-   nil))  ;; config is nil
+  ))
 
 (defonce reactor nil)
 
