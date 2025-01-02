@@ -46,18 +46,8 @@
         # References self! Interestingly, nix will iterate a function that contains
         # self until it reaches a fixed point or crashes out because of un-resolvable dependency conflicts.
         launch-rss-server = pkgs.writeShellScriptBin "launch-rss-server" ''
-          # Call hello with a traditional greeting 
-
-          PATH=${nixpkgs.lib.makeBinPath runtimeDeps}:${
-            self.packages.${system}.binDerivation
-          }/bin
-          export PATH
-
-          # #PlaywrightCliDir prod config
-          export PLAYWRIGHT_CLI_LOCATION_RAW="${playwright-driver}"
           export CHROME_LOCATION="${playwright-driver-browsers}/chromium-${playwright-chromium-revision}/chrome-linux/chrome"
-          export PLAYWRIGHT_CLI_LOCATION="$PWD/playwright-cli-dir--bin"
-          ln --symbolic --force "$PLAYWRIGHT_CLI_LOCATION_RAW/cli.js" "$PWD/playwright-cli-dir--bin/package/cli.js"
+          export PLAYWRIGHT_CLI_LOCATION="${self.packages.${system}.playwrightDriverBinDerivation}"
 
           exec ${
             self.packages.${system}.baseCljDerivation
@@ -130,13 +120,16 @@
             # customJdk.enable = true;
           };
 
-          binDerivation = pkgs.stdenv.mkDerivation {
-            name = "dev.freeformsoftware/personal-rss-reserver-bin-ext";
-            src = ./bin;
+          # Create a bin folder with the playwright cli
+          playwrightDriverBinDerivation = pkgs.stdenv.mkDerivation {
+            name = "dev.freeformsoftware/playwright-driver-cli-packaged";
+            nativeBuildInputs = [playwright-driver];
 
+            # #PlaywrightCliDir prod config
             installPhase = ''
-              mkdir -p $out/bin
-              cp ./* $out/bin
+              export PLAYWRIGHT_CLI_LOCATION_RAW=""
+              mkdir -p $out/package
+              ln --symbolic --force "${playwright-driver}/cli.js" "$out/package/cli.js"
             '';
           };
 
@@ -144,7 +137,7 @@
             name = "dev.freeformsoftware/personal-rss-server-wrapped";
             nativeBuildInputs = runtimeDeps ++ [
               self.packages.${system}.baseCljDerivation
-              self.packages.${system}.binDerivation
+              self.packages.${system}.playwrightDriverBinDerivation
               launch-rss-server
             ];
             src = ./bin;

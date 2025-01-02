@@ -25,10 +25,11 @@
             (slurp s)
             (catch Exception e
               (when enable-prod?
-                (log/error "Could not read config file!" e)))))
+                (log/error "Could not read config file!" s e))
+              nil)))
         [(io/resource "config/config.edn")
-         (io/resource "config/secrets.edn") ;; not available in prod since it's not part of the jar build. flakes
-                                            ;; ftw!
+         ;; not available in prod since it's not part of the jar build. flakes ftw!
+         (when-not enable-prod? (io/resource "config/secrets.edn"))
          (when enable-prod? (io/file "/etc/rss-feed-config.edn"))
          (when enable-prod? (io/file "/etc/rss-feed-secrets.edn"))]))
 
