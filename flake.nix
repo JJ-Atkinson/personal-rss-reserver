@@ -53,9 +53,7 @@
           }/bin
           export PATH
 
-          export HI="${playwright-driver-browsers}/chromium-${playwright-chromium-revision}/chrome-linux/chrome"
-
-          # #PlaywrightCliDir dev-shell config
+          # #PlaywrightCliDir prod config
           export PLAYWRIGHT_CLI_LOCATION_RAW="${playwright-driver}"
           export CHROME_LOCATION="${playwright-driver-browsers}/chromium-${playwright-chromium-revision}/chrome-linux/chrome"
           export PLAYWRIGHT_CLI_LOCATION="$PWD/playwright-cli-dir--bin"
