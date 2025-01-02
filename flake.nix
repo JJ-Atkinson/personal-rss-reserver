@@ -124,6 +124,7 @@
           playwrightDriverBinDerivation = pkgs.stdenv.mkDerivation {
             name = "dev.freeformsoftware/playwright-driver-cli-packaged";
             nativeBuildInputs = [playwright-driver];
+            src = ./bin;
 
             # #PlaywrightCliDir prod config
             installPhase = ''
