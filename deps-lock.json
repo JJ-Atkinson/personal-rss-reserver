@@ -2,13 +2,6 @@
   "lock-version": 4,
   "git-deps": [
     {
-      "lib": "dev.freeformsoftware/portal-test-reporter",
-      "url": "https://github.com/JJ-Atkinson/portal-test-reporter.git",
-      "rev": "4862723d4c53ea66347f16e16d8cb51143555137",
-      "git-dir": "https/github.com/JJ-Atkinson/portal-test-reporter",
-      "hash": "sha256-9X6ioZIFUWSA4YSJDTbd/PLmnXK+VBsUcdOhhwzCIHQ="
-    },
-    {
       "lib": "nextjournal/clojure-mode",
       "url": "https://github.com/nextjournal/clojure-mode",
       "rev": "3df5e837095e049fe489831742bcfa1e9704c691",
@@ -96,16 +89,6 @@
       "mvn-path": "babashka/process/0.5.21/process-0.5.21.pom",
       "mvn-repo": "https://repo.clojars.org/",
       "hash": "sha256-FDlMFp8+tAMf7TA4bQNSY+tg4guWUjbfc/c7A4xsqmQ="
-    },
-    {
-      "mvn-path": "binaryage/devtools/1.0.6/devtools-1.0.6.jar",
-      "mvn-repo": "https://repo.clojars.org/",
-      "hash": "sha256-0QnjpmU6QJpGR2niXtAMwt6FdrdlJIRhpcUPezJayXE="
-    },
-    {
-      "mvn-path": "binaryage/devtools/1.0.6/devtools-1.0.6.pom",
-      "mvn-repo": "https://repo.clojars.org/",
-      "hash": "sha256-P89jaS8nda3jv2lSeq9p5kWDqM4ZtIXdP+Wcz+/8LrI="
     },
     {
       "mvn-path": "borkdude/edamame/1.4.25/edamame-1.4.25.jar",
@@ -271,16 +254,6 @@
       "mvn-path": "cloroutine/cloroutine/12/cloroutine-12.pom",
       "mvn-repo": "https://repo.clojars.org/",
       "hash": "sha256-CzDpayzCU7xnlsOlGcU1f5SSi9afuq9c5o4pwmggB3U="
-    },
-    {
-      "mvn-path": "colorize/colorize/0.1.1/colorize-0.1.1.jar",
-      "mvn-repo": "https://repo.clojars.org/",
-      "hash": "sha256-s9GLmXv+h03Gy1yA1YChLQlZ/v/XKzIY2MaM3ks9+UU="
-    },
-    {
-      "mvn-path": "colorize/colorize/0.1.1/colorize-0.1.1.pom",
-      "mvn-repo": "https://repo.clojars.org/",
-      "hash": "sha256-vdxNxn+SldDQWQZ+LqlNGnrsFoHyZy/+BD4JYNOZzb0="
     },
     {
       "mvn-path": "com/auth0/auth0/2.13.0/auth0-2.13.0.jar",
@@ -568,16 +541,6 @@
       "hash": "sha256-3E+StNTok7xsGQ9I5MNfVPoDEU/vicfoVVCwUsTg3Ew="
     },
     {
-      "mvn-path": "com/gfredericks/debug-repl/0.0.12/debug-repl-0.0.12.jar",
-      "mvn-repo": "https://repo.clojars.org/",
-      "hash": "sha256-uMQdpRPySNeMbxT02mY1cwF1C0ueHS+TkTwXZMbz6bc="
-    },
-    {
-      "mvn-path": "com/gfredericks/debug-repl/0.0.12/debug-repl-0.0.12.pom",
-      "mvn-repo": "https://repo.clojars.org/",
-      "hash": "sha256-ohD4H+eLAAYTYH7GKa5yYd0NqpmfcMHcb+VRWS58wxQ="
-    },
-    {
       "mvn-path": "com/github/jnr/jffi/1.3.11/jffi-1.3.11-native.jar",
       "mvn-repo": "https://repo1.maven.org/maven2/",
       "hash": "sha256-9MJsCko+3f26r03ad9TZ99FIukIIeY8yzkdc5NZ3h0Q="
@@ -663,19 +626,9 @@
       "hash": "sha256-GYidvfGyVLJgGl7mRbgUepdGRIgil2hMeYr+XWPXjf4="
     },
     {
-      "mvn-path": "com/google/code/gson/gson-parent/2.10.1/gson-parent-2.10.1.pom",
-      "mvn-repo": "https://repo1.maven.org/maven2/",
-      "hash": "sha256-QkjgiCQmxhUYI4XWCGw+8yYudplXGJ4pMGKAuFSCuDM="
-    },
-    {
       "mvn-path": "com/google/code/gson/gson-parent/2.11.0/gson-parent-2.11.0.pom",
       "mvn-repo": "https://repo1.maven.org/maven2/",
       "hash": "sha256-issfO3Km8CaRasBzW62aqwKT1Sftt7NlMn3vE6k2e3o="
-    },
-    {
-      "mvn-path": "com/google/code/gson/gson/2.10.1/gson-2.10.1.pom",
-      "mvn-repo": "https://repo1.maven.org/maven2/",
-      "hash": "sha256-0rEVY09cCF20ucn/wmWOieIx/b++IkISGhzZXU2Ujdc="
     },
     {
       "mvn-path": "com/google/code/gson/gson/2.11.0/gson-2.11.0.jar",
@@ -908,16 +861,6 @@
       "mvn-path": "com/lambdaworks/scrypt/1.4.0/scrypt-1.4.0.pom",
       "mvn-repo": "https://repo1.maven.org/maven2/",
       "hash": "sha256-ayT557tiVQJB4oYof1J6fcRjZpoLfPWs3lmemYQt5yE="
-    },
-    {
-      "mvn-path": "com/lucasbradstreet/cljs-uuid-utils/1.0.2/cljs-uuid-utils-1.0.2.jar",
-      "mvn-repo": "https://repo.clojars.org/",
-      "hash": "sha256-+HqnA9cnlyswXojL+1kTWOv1k1+3+CBZpWLQKtd+K0M="
-    },
-    {
-      "mvn-path": "com/lucasbradstreet/cljs-uuid-utils/1.0.2/cljs-uuid-utils-1.0.2.pom",
-      "mvn-repo": "https://repo.clojars.org/",
-      "hash": "sha256-fnSAgL876Hg51bEzWlHv4NkUJ5sA6HrEeIAF191nTTU="
     },
     {
       "mvn-path": "com/microsoft/playwright/driver-bundle/1.47.0/driver-bundle-1.47.0.jar",
@@ -1190,16 +1133,6 @@
       "hash": "sha256-ljzOWn/WunMhOQEkkzPWLacL7ttKDFhjcXzyBrVGLzg="
     },
     {
-      "mvn-path": "djblue/portal/0.58.4/portal-0.58.4.jar",
-      "mvn-repo": "https://repo.clojars.org/",
-      "hash": "sha256-n+9znNWf3iGjqLbx9fXlexG/DbjbfXpMb0YXQmOAtZc="
-    },
-    {
-      "mvn-path": "djblue/portal/0.58.4/portal-0.58.4.pom",
-      "mvn-repo": "https://repo.clojars.org/",
-      "hash": "sha256-Hp6+drReWHvqYHhY2kn9nBnyv5LqF+lea3HvRkyVg1Q="
-    },
-    {
       "mvn-path": "expound/expound/0.9.0/expound-0.9.0.jar",
       "mvn-repo": "https://repo.clojars.org/",
       "hash": "sha256-1qNyYJkY4DUb+mqL1pPRi8GZ6Lp6r67BHola+uAY+Vw="
@@ -1218,16 +1151,6 @@
       "mvn-path": "fipp/fipp/0.6.26/fipp-0.6.26.pom",
       "mvn-repo": "https://repo.clojars.org/",
       "hash": "sha256-p+xjV7gTIRMv0HwvV+/rAhFEFVlDY9g6FDE6GU9fVTU="
-    },
-    {
-      "mvn-path": "fulcrologic/fulcro-spec/3.1.12/fulcro-spec-3.1.12.jar",
-      "mvn-repo": "https://repo.clojars.org/",
-      "hash": "sha256-GV/tLHYabRevv9oFgtPGVHvMXyE2cfVKGawEDpWkIs4="
-    },
-    {
-      "mvn-path": "fulcrologic/fulcro-spec/3.1.12/fulcro-spec-3.1.12.pom",
-      "mvn-repo": "https://repo.clojars.org/",
-      "hash": "sha256-Nv6fBvItbwiuOfnTb7FJhykpfajnxj/cVu1FirknN4Y="
     },
     {
       "mvn-path": "garden/garden/1.3.10/garden-1.3.10.jar",
@@ -1270,11 +1193,6 @@
       "hash": "sha256-4EAcorvf8cWsUuZSO1PeDxJoAwdFcBFrayf8yoMzD0M="
     },
     {
-      "mvn-path": "io/aviso/pretty/0.1.37/pretty-0.1.37.pom",
-      "mvn-repo": "https://repo.clojars.org/",
-      "hash": "sha256-21RfutUjdNGwzTVx4oc67UEljViDAQEosIzIAazwC94="
-    },
-    {
       "mvn-path": "io/aviso/pretty/1.1.1/pretty-1.1.1.jar",
       "mvn-repo": "https://repo.clojars.org/",
       "hash": "sha256-AMBmoVUsNjM5i/X071e7R5pIp0THXO7tR4xN5rZxIVE="
@@ -1303,16 +1221,6 @@
       "mvn-path": "io/github/pfeodrippe/wally/0.0.4/wally-0.0.4.pom",
       "mvn-repo": "https://repo.clojars.org/",
       "hash": "sha256-8U0xm2y4lSkqAxYqSjeWv60Phx90bL47laJ2hlcCOMo="
-    },
-    {
-      "mvn-path": "io/github/tonsky/clj-reload/0.7.0/clj-reload-0.7.0.jar",
-      "mvn-repo": "https://repo.clojars.org/",
-      "hash": "sha256-wlYE4lyXfcgEacLOg+zdYfDyTCGNQF5jV4IDpR4kYeQ="
-    },
-    {
-      "mvn-path": "io/github/tonsky/clj-reload/0.7.0/clj-reload-0.7.0.pom",
-      "mvn-repo": "https://repo.clojars.org/",
-      "hash": "sha256-LOZcRort8OF1Ng/1NJjQfLh6eY5jcHM/o93no2KBUH4="
     },
     {
       "mvn-path": "io/github/tonsky/clj-simple-router/0.1.0/clj-simple-router-0.1.0.jar",
