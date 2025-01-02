@@ -3,8 +3,8 @@
    [integrant.core :as ig]
    [nrepl.server :refer [default-handler start-server]]
    [personal-rss-feed.config :as config]
-   [portal.api]
-   [taoensso.timbre :as log]))
+   [taoensso.timbre :as log]
+   [taoensso.encore :as enc]))
 
 ;; prevents compilation lockup for prod since clj-reload isn't on prod/build
 (when-let [clj-reload-init (requiring-resolve 'clj-reload.core/init)]
@@ -62,8 +62,10 @@
 
 (defn start-portal!
   []
-  (portal.api/open {:window-title "LE RSS Server" #_#_:launcher :vs-code})
-  (add-tap #'portal.api/submit))
+  ; similar to clj reload, this prevents lockup on
+  (when-let [portal-api-open (requiring-resolve 'portal.api/open)]
+    (portal-api-open {:window-title "LE RSS Server" #_#_:launcher :vs-code})
+    (add-tap #'portal.api/submit)))
 
 (comment
   (tap> 1)
