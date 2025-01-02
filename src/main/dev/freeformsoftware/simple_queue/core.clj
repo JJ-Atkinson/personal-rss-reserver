@@ -363,6 +363,7 @@
                (-> qi
                    (dissoc ::queue-item/retry-count ::queue-item/completion-data)
                    (cond-> max-priority? (assoc ::queue-item/priority Long/MAX_VALUE))
+                   (update ::queue-item/data assoc ::prior-failure-data (::queue-item/completion-data qi))
                    (update ::queue-item/data assoc ::resubmitted? true)))
      (throw (ex-info "Does not exist!" {:queue-item-id queue-item-id})))))
 

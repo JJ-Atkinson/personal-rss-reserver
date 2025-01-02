@@ -200,8 +200,6 @@
                             {:autoclose-browser-context? false})
                      (safe-navigate! "https://google.com"))
 
-  :a
-
   (simple-queue/all-un-resolved-errors
    (::le.shared/queue @le.shared/!shared)
    ::fetch-metadata-queue)
@@ -239,12 +237,11 @@
    (::le.shared/queue @le.shared/!shared)
    ::fetch-metadata-queue)
 
-  (simple-queue/qresubmit-item! (::le.shared/queue @le.shared/!shared) #uuid "cafd67d2-7735-4671-b7b6-eddcbe03dc5c")
+  (simple-queue/qresubmit-item! (::le.shared/queue @le.shared/!shared) #uuid "785f8896-8c6b-4cbc-838f-505436cfc441")
 
   (swap! simple-queue/*manual-unlock-1*
     conj
     ::fetch-metadata-queue)
-  (simple-queue/resolve!i (::le.shared/queue @le.shared/!shared) #uuid "cafd67d2-7735-4671-b7b6-eddcbe03dc5c")
 
   (simple-queue/resolve!i (::le.shared/queue @le.shared/!shared)
                           #uuid "785f8896-8c6b-4cbc-838f-505436cfc441")
