@@ -35,8 +35,11 @@
   buddy/buddy-hashers                        {:mvn/version "2.0.167"}
   buddy/buddy-sign                           {:mvn/version "3.5.351"}
 
-  nextjournal/clojure-mode                   {:git/url "https://github.com/nextjournal/clojure-mode"
-                                              :sha     "3df5e837095e049fe489831742bcfa1e9704c691"}
+  #_#_; removed for now because it's causing issues with clj-nix, the sha is mismatched
+      ; https://github.com/jlesquembre/clj-nix/issues/109
+      nextjournal/clojure-mode
+    {:git/url "https://github.com/nextjournal/clojure-mode"
+     :sha     "3df5e837095e049fe489831742bcfa1e9704c691"}
   zprint/zprint                              {:mvn/version "1.2.9"}
   http-kit/http-kit                          {:mvn/version "2.8.0"}
 
