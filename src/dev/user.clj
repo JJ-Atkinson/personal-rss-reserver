@@ -1,12 +1,15 @@
 (ns user
-  (:require [clj-reload.core :as clj-reload]
-            [integrant.core :as ig]
-            [nrepl.server :refer [default-handler start-server]]
-            [personal-rss-feed.config :as config]
-            [portal.api]
-            [taoensso.timbre :as log]))
+  (:require
+   [integrant.core :as ig]
+   [nrepl.server :refer [default-handler start-server]]
+   [personal-rss-feed.config :as config]
+   [portal.api]
+   [taoensso.timbre :as log]))
 
-(clj-reload.core/init {:dirs ["src/dev" "src/main" "src/test"]})
+;; prevents compilation lockup for prod since clj-reload isn't on prod/build
+(when-let [clj-reload-init (requiring-resolve 'clj-reload.core/init)]
+  (clj-reload-init {:dirs ["src/dev" "src/main" "src/test"]}))
+
 (log/set-min-level! :debug)
 
 (def shadow-start! (delay @(requiring-resolve 'shadow.cljs.devtools.server/start!)))
@@ -62,5 +65,6 @@
   (portal.api/open {:window-title "LE RSS Server" #_#_:launcher :vs-code})
   (add-tap #'portal.api/submit))
 
-(comment (tap> 1)
-         (portal.api/docs))
+(comment
+  (tap> 1)
+  (portal.api/docs))
