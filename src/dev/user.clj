@@ -6,12 +6,10 @@
    [taoensso.timbre :as log]
    [taoensso.encore :as enc]))
 
-
-
-
+(defmacro e->nil [form] `(try ~form (catch Exception e# nil)))
 
 ;; prevents compilation lockup for prod since clj-reload isn't on prod/build
-(when-let [clj-reload-init (requiring-resolve 'clj-reload.core/init)]
+(when-let [clj-reload-init (e->nil (requiring-resolve 'clj-reload.core/init))]
   (clj-reload-init {:dirs ["src/dev" "src/main" "src/test"]}))
 
 (log/set-min-level! :debug)
@@ -67,7 +65,7 @@
 (defn start-portal!
   []
   ; similar to clj reload, this prevents lockup on
-  (when-let [portal-api-open (requiring-resolve 'portal.api/open)]
+  (when-let [portal-api-open (e->nil (requiring-resolve 'portal.api/open))]
     (portal-api-open {:window-title "LE RSS Server" #_#_:launcher :vs-code})
     (add-tap #'portal.api/submit)))
 
