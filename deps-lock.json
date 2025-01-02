@@ -1,14 +1,6 @@
 {
   "lock-version": 4,
-  "git-deps": [
-    {
-      "lib": "nextjournal/clojure-mode",
-      "url": "https://github.com/nextjournal/clojure-mode",
-      "rev": "3df5e837095e049fe489831742bcfa1e9704c691",
-      "git-dir": "https/github.com/nextjournal/clojure-mode",
-      "hash": "sha256-Y+UjyenOVopWvkHdNjF4F86ScD5BYzJog26Ft2xRHZg="
-    }
-  ],
+  "git-deps": [],
   "mvn-deps": [
     {
       "mvn-path": "aopalliance/aopalliance/1.0/aopalliance-1.0.jar",
@@ -19,26 +11,6 @@
       "mvn-path": "aopalliance/aopalliance/1.0/aopalliance-1.0.pom",
       "mvn-repo": "https://repo1.maven.org/maven2/",
       "hash": "sha256-JugjMBV9a4RLZ6gGSUXiBlgedyl3GD4+Mf7GBYqppZs="
-    },
-    {
-      "mvn-path": "applied-science/js-interop/0.3.3/js-interop-0.3.3.jar",
-      "mvn-repo": "https://repo.clojars.org/",
-      "hash": "sha256-1bVv447Y4Lf/IzCzIAeWCBFQcVqbTO69HOwTw4xpy1U="
-    },
-    {
-      "mvn-path": "applied-science/js-interop/0.3.3/js-interop-0.3.3.pom",
-      "mvn-repo": "https://repo.clojars.org/",
-      "hash": "sha256-lKlMACVEhOobAqY2WatGFygJuCvmvOmb0VqNAJV9ou0="
-    },
-    {
-      "mvn-path": "appliedscience/js-interop/0.2.6-MOVED/js-interop-0.2.6-MOVED.jar",
-      "mvn-repo": "https://repo.clojars.org/",
-      "hash": "sha256-cfVgSwFP2TBPIhgFqk4rxCu79PZjJf3WZLaSWRwGWis="
-    },
-    {
-      "mvn-path": "appliedscience/js-interop/0.2.6-MOVED/js-interop-0.2.6-MOVED.pom",
-      "mvn-repo": "https://repo.clojars.org/",
-      "hash": "sha256-hBL9F5QIVRf9YvHEOElzl8w53AwGqQ0iD5oU9gUQkxA="
     },
     {
       "mvn-path": "args4j/args4j-site/2.33/args4j-site-2.33.pom",
