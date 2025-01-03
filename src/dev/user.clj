@@ -59,11 +59,12 @@
   (let [middleware (->> (concat [
                                  'shadow.cljs.devtools.server.nrepl/middleware
                                  'com.gfredericks.debug-repl/wrap-debug-repl
-                                 'jarrett.completions/wrap-completion]
+                                 #_'jarrett.completions/wrap-completion ;; commented out until I need it
+                                 ]
                                 cider.nrepl.middleware/cider-middleware)
-                        (remove #{'cider.nrepl/wrap-complete})
+                        ;; (remove #{'cider.nrepl/wrap-complete})
                         (map requiring-resolve)
-                        (remove nil?))] 
+                        (remove nil?))]
     (defonce server
       (start-server :bind    "0.0.0.0"
                     :port    8002
