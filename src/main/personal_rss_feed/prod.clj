@@ -21,12 +21,12 @@
     (defonce server
       (start-server :bind    "0.0.0.0"
                     :port    8001
-                    :handler (default-handler middleware)))
+                    :handler (apply default-handler middleware)))
     (println "Repl started at port 8001")
     (pprint/pprint ["Using middleware"
                     middleware])
     (reset! system
-            (ig/init (personal-rss-feed.config/resolve-config! true)))))
+      (ig/init (personal-rss-feed.config/resolve-config! true)))))
 
 (pprint/pprint @system)
 
