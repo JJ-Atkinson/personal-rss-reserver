@@ -52,7 +52,8 @@
 
   ;; electric
   com.hyperfiddle/electric                   {:mvn/version "v3-alpha-SNAPSHOT"}
-  com.google.guava/guava                     {:mvn/version "31.0-jre"} ;; pinned version, needs to change possibly when electric changes
+  com.google.guava/guava                     {:mvn/version "31.0-jre"} ;; pinned version, needs to change possibly
+                                                                       ;; when electric changes
 
  }
  :aliases

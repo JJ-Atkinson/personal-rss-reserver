@@ -1,5 +1,11 @@
 {
-    "workbench.colorCustomizations": {
-        "statusBar.background": "#0e0c8a"
+  "workbench.colorCustomizations": {
+    "statusBar.background": "#0e0c8a"
+  },
+  "calva.customREPLHoverSnippets": [
+    {
+      "name": "eval thing on hover 222222",
+      "snippet": "(jarrett.tyba/hover-details \"$ns\" \"$hover-current-form\")"
     }
+  ]
 }

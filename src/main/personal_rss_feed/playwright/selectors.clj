@@ -90,3 +90,13 @@
   [q]
   (seq (.querySelectorAll w/*page* (w/query->selector q))))
 
+
+(comment
+  (assoc (assoc {} :a 1 :b 2)
+         :k
+         3)
+
+  (let [a 1
+        b 2]
+    (assoc {:a 1}
+           :b b)))

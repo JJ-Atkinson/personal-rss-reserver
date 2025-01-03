@@ -2,9 +2,11 @@
   (:require
    [integrant.core :as ig]
    [nrepl.server :refer [default-handler start-server]]
+   [cider.nrepl.middleware]
    [personal-rss-feed.config :as config]
    [taoensso.timbre :as log]
-   [taoensso.encore :as enc]))
+   [taoensso.encore :as enc]
+   [nrepl.middleware :as middleware]))
 
 (defmacro e->nil [form] `(try ~form (catch Exception e# nil)))
 
@@ -53,14 +55,24 @@
 (defn dev-main
   [& args]
   (require 'com.gfredericks.debug-repl)
-  (defonce server
-    (start-server :bind    "0.0.0.0"
-                  :port    8002
-                  :handler (default-handler (requiring-resolve 'com.gfredericks.debug-repl/wrap-debug-repl))))
-  (spit ".nrepl-port" "8002")
-  (println "NREPL Server located at 8002")
-  (start)
-  (Thread/sleep Long/MAX_VALUE))
+
+  (let [middleware (->> (concat [
+                                 'shadow.cljs.devtools.server.nrepl/middleware
+                                 'com.gfredericks.debug-repl/wrap-debug-repl
+                                 'jarrett.completions/wrap-completion]
+                                cider.nrepl.middleware/cider-middleware)
+                        (remove #{'cider.nrepl/wrap-complete})
+                        (map requiring-resolve)
+                        (remove nil?))] 
+    (defonce server
+      (start-server :bind    "0.0.0.0"
+                    :port    8002
+                    :handler (apply default-handler middleware)))
+    (spit ".nrepl-port" "8002")
+    (println "NREPL Server located at 8002")
+    (println "Applied middleware:" middleware)
+    (start)
+    (Thread/sleep Long/MAX_VALUE)))
 
 (defn start-portal!
   []
