@@ -3,6 +3,7 @@
  {com.microsoft.playwright/playwright        {:mvn/version "1.47.0"}
   io.github.pfeodrippe/wally                 {:mvn/version "0.0.4"}
   nrepl/nrepl                                {:mvn/version "1.0.0"}
+  cider/cider-nrepl                          {:mvn/version "0.51.1"}
   datalevin/datalevin                        {:mvn/version "0.8.18"}
   commons-io/commons-io                      {:mvn/version "2.15.0"}
   clj-http/clj-http                          {:mvn/version "3.12.3"}
