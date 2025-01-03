@@ -158,6 +158,26 @@
       "hash": "sha256-63Enn5Ak0AUpOBdVZKScWG8P/QAnWaVNPmIPS891Leo="
     },
     {
+      "mvn-path": "cider/cider-nrepl/0.51.1/cider-nrepl-0.51.1.jar",
+      "mvn-repo": "https://repo.clojars.org/",
+      "hash": "sha256-WXbjjQVdEajdJq3CU5zAREh9Q/geHb/MQsAnP9N3siM="
+    },
+    {
+      "mvn-path": "cider/cider-nrepl/0.51.1/cider-nrepl-0.51.1.pom",
+      "mvn-repo": "https://repo.clojars.org/",
+      "hash": "sha256-pRDM/YuoGDF8tJLVrJU1Vbx8Fn1wJsEd1Xx5Apb5j2A="
+    },
+    {
+      "mvn-path": "cider/orchard/0.29.1/orchard-0.29.1.jar",
+      "mvn-repo": "https://repo.clojars.org/",
+      "hash": "sha256-KsDPC+YgbcRQSUZjA6gmkl4lve/zRvGYyzEBTx9RfJU="
+    },
+    {
+      "mvn-path": "cider/orchard/0.29.1/orchard-0.29.1.pom",
+      "mvn-repo": "https://repo.clojars.org/",
+      "hash": "sha256-Bnyjcdp8erOUB4W9q8pJPAGftQUkgHl/mdTdKj1IaPc="
+    },
+    {
       "mvn-path": "cider/piggieback/0.5.3/piggieback-0.5.3.jar",
       "mvn-repo": "https://repo.clojars.org/",
       "hash": "sha256-WYsPBNKvNPiKoLqNA6C9OlREIpLwxfq4+0kEGmhc7RM="
@@ -1328,6 +1348,16 @@
       "mvn-path": "missionary/missionary/b.41/missionary-b.41.pom",
       "mvn-repo": "https://repo.clojars.org/",
       "hash": "sha256-jEmH2SNRVyl1UrCh8WT6OY9leLAsN6nYQnfPDBvJDCU="
+    },
+    {
+      "mvn-path": "mx/cider/logjam/0.3.0/logjam-0.3.0.jar",
+      "mvn-repo": "https://repo.clojars.org/",
+      "hash": "sha256-h1moSv+GjTrjwDEil7l6psf7j5NUK39llkv5kT9K4J8="
+    },
+    {
+      "mvn-path": "mx/cider/logjam/0.3.0/logjam-0.3.0.pom",
+      "mvn-repo": "https://repo.clojars.org/",
+      "hash": "sha256-k9fFPsmXKX/14Z92LgY8cFtCu8jmbBE/DCbyRWK1D6Q="
     },
     {
       "mvn-path": "net/java/dev/jna/jna/5.12.1/jna-5.12.1.jar",
