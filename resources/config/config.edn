@@ -49,7 +49,8 @@
                                               :exp-period-s 86400 ;; 1 day
                                               :buddy        {:skip-validation false
                                                              :alg             :hs512}}}}
-
+ 
+ ;; Things in the secrets file
  :lotus-eaters/username "username"
  :lotus-eaters/password "password"
  :s3/secret-access-key "s3-secret-access-key"
