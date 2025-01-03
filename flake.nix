@@ -124,7 +124,7 @@
           # This could be part of the final install phase, but I'm not worried about that today
           playwrightDriverBinDerivation = pkgs.stdenv.mkDerivation {
             name = "dev.freeformsoftware/playwright-driver-cli-packaged";
-            nativeBuildInputs = [playwright-driver];
+            nativeBuildInputs = [playwright-driver pkgs.nodejs];
             src = ./bin;
 
             # #PlaywrightCliDir prod config
@@ -132,6 +132,7 @@
               export PLAYWRIGHT_CLI_LOCATION_RAW=""
               mkdir -p $out/package
               ln --symbolic --force "${playwright-driver}/cli.js" "$out/package/cli.js"
+              ln --symbolic --force "${pkgs.nodejs}/bin/node" "$out/package/node"
             '';
           };
 
