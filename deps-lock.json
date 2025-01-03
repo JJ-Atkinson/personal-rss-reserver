@@ -1405,14 +1405,19 @@
       "hash": "sha256-o3pFBButfzw3yua864SedMbz58atvnYFR5VghPuua3I="
     },
     {
-      "mvn-path": "nrepl/nrepl/1.0.0/nrepl-1.0.0.jar",
-      "mvn-repo": "https://repo.clojars.org/",
-      "hash": "sha256-owuXNP8uY582Xw11U7SHcwbypUPPAh4pnRW/HqvWpbs="
-    },
-    {
       "mvn-path": "nrepl/nrepl/1.0.0/nrepl-1.0.0.pom",
       "mvn-repo": "https://repo.clojars.org/",
       "hash": "sha256-dHN5LZGfjodYUES5nySqLqFVNCBgRI2opHhGvkXz2nI="
+    },
+    {
+      "mvn-path": "nrepl/nrepl/1.3.1/nrepl-1.3.1.jar",
+      "mvn-repo": "https://repo.clojars.org/",
+      "hash": "sha256-rZ57tFC9Hsz+QypViWDng0vFsR28ea+z+tTTpbQwfFo="
+    },
+    {
+      "mvn-path": "nrepl/nrepl/1.3.1/nrepl-1.3.1.pom",
+      "mvn-repo": "https://repo.clojars.org/",
+      "hash": "sha256-YXGdz9qqc3r4vPzjQl81fYS/QnS8Ej7UjsJI8iQKabY="
     },
     {
       "mvn-path": "ns-tracker/ns-tracker/1.0.0/ns-tracker-1.0.0.jar",
