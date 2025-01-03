@@ -628,9 +628,9 @@
       "hash": "sha256-TKWjXWEjXhZUmsNG0eNFUc3w/ifoSqV+A8vrJV6k5do="
     },
     {
-      "mvn-path": "com/google/errorprone/error_prone_annotations/2.3.4/error_prone_annotations-2.3.4.pom",
+      "mvn-path": "com/google/errorprone/error_prone_annotations/2.7.1/error_prone_annotations-2.7.1.pom",
       "mvn-repo": "https://repo1.maven.org/maven2/",
-      "hash": "sha256-EyZziktPfMrPYHuGahH7hRk+9g9qWUYRh85yZfm+W+0="
+      "hash": "sha256-Mahy4RScXzqLwF+03kVeXqYI7PrRryIst2N8psdi7iU="
     },
     {
       "mvn-path": "com/google/errorprone/error_prone_parent/2.15.0/error_prone_parent-2.15.0.pom",
@@ -643,9 +643,9 @@
       "hash": "sha256-+oGCnQSVWd9pJ/nJpv1rvQn4tQ5tRzaucsgwC2w9dlQ="
     },
     {
-      "mvn-path": "com/google/errorprone/error_prone_parent/2.3.4/error_prone_parent-2.3.4.pom",
+      "mvn-path": "com/google/errorprone/error_prone_parent/2.7.1/error_prone_parent-2.7.1.pom",
       "mvn-repo": "https://repo1.maven.org/maven2/",
-      "hash": "sha256-QElbQ3pg0jmPD9/AVLidnDlKgjR6J0oHIcLpUKQwIYY="
+      "hash": "sha256-Cm4kLigQToCTQFrjeWlmCkOLccTBtz/E/3FtuJ2ojeY="
     },
     {
       "mvn-path": "com/google/google/5/google-5.pom",
@@ -668,19 +668,19 @@
       "hash": "sha256-+GmKtGypls6InBr8jKTyXrisawNNyJjUWDdCNgAWzAQ="
     },
     {
-      "mvn-path": "com/google/guava/guava-parent/30.0-jre/guava-parent-30.0-jre.pom",
+      "mvn-path": "com/google/guava/guava-parent/31.0-jre/guava-parent-31.0-jre.pom",
       "mvn-repo": "https://repo1.maven.org/maven2/",
-      "hash": "sha256-ZXNslXzfE7NWIG/mE5K16kh2D/tRdFBPGQ3MO2ROOZw="
+      "hash": "sha256-aEXSBSd3hDSfoHC/y3PmRxOxuJVYLh/v40s0v74nmb8="
     },
     {
-      "mvn-path": "com/google/guava/guava/30.0-jre/guava-30.0-jre.jar",
+      "mvn-path": "com/google/guava/guava/31.0-jre/guava-31.0-jre.jar",
       "mvn-repo": "https://repo1.maven.org/maven2/",
-      "hash": "sha256-VrKS357CnRAoIMH9fdWBzXSdXEFsezrqwAjb2juYTMI="
+      "hash": "sha256-BA0Xt6Q0w+eQjStRs+GLMFNQKcw+3x+eOUX67XitPqs="
     },
     {
-      "mvn-path": "com/google/guava/guava/30.0-jre/guava-30.0-jre.pom",
+      "mvn-path": "com/google/guava/guava/31.0-jre/guava-31.0-jre.pom",
       "mvn-repo": "https://repo1.maven.org/maven2/",
-      "hash": "sha256-P4gXdBYSgvZzDSuOdKjhrHU7inNHgaUm+ICxuL24lFE="
+      "hash": "sha256-JpRY/hCDH02kYEGKMOfA7xC0moR4w2jONDaqFtdSk5s="
     },
     {
       "mvn-path": "com/google/guava/listenablefuture/9999.0-empty-to-avoid-conflict-with-guava/listenablefuture-9999.0-empty-to-avoid-conflict-with-guava.jar",
@@ -1905,14 +1905,14 @@
       "hash": "sha256-HmDCVoXlIdnrpHcT31dfjlFxysZWKiQ/mWFrv1qOewY="
     },
     {
-      "mvn-path": "org/checkerframework/checker-qual/3.5.0/checker-qual-3.5.0.jar",
+      "mvn-path": "org/checkerframework/checker-qual/3.12.0/checker-qual-3.12.0.jar",
       "mvn-repo": "https://repo1.maven.org/maven2/",
-      "hash": "sha256-cpmQs/GKlWBvwlc4NraVi820TLUr+9G3qpwznP81paQ="
+      "hash": "sha256-/xB4WsKjV+xd6cKTy5gqLLtgXAMJ6kzBy5ubxtvn88s="
     },
     {
-      "mvn-path": "org/checkerframework/checker-qual/3.5.0/checker-qual-3.5.0.pom",
+      "mvn-path": "org/checkerframework/checker-qual/3.12.0/checker-qual-3.12.0.pom",
       "mvn-repo": "https://repo1.maven.org/maven2/",
-      "hash": "sha256-KDazuKeO2zGhgDWS5g/HZ7IfLRkHZGMbpu+gg3uzVyE="
+      "hash": "sha256-d1t6425iggs7htwao5rzfArEuF/0j3/khakionkPRrk="
     },
     {
       "mvn-path": "org/clojars/huahaiy/dtlvnative-macos-aarch64-shared/0.7.12/dtlvnative-macos-aarch64-shared-0.7.12.jar",
