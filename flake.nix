@@ -121,6 +121,7 @@
           };
 
           # Create a bin folder with the playwright cli
+          # This could be part of the final install phase, but I'm not worried about that today
           playwrightDriverBinDerivation = pkgs.stdenv.mkDerivation {
             name = "dev.freeformsoftware/playwright-driver-cli-packaged";
             nativeBuildInputs = [playwright-driver];
@@ -146,8 +147,6 @@
             installPhase =
               let baseCljDerPath = self.packages.${system}.baseCljDerivation;
               in ''
-                mkdir -p $out/bin/extra-path
-                cp ./* $out/bin/extra-path
                 cp ${launch-rss-server}/bin/* $out/bin
               '';
           };
