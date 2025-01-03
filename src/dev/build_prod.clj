@@ -7,7 +7,6 @@
             [clojure.java.io :as io]
             [clojure.string :as string]
             [clojure.tools.build.api :as b]
-            [clojure.pprint]
             [clojure.tools.deps :as deps]
             [shadow.cljs.devtools.api :as shadow-api] ; so as not to shell out to NPM for shadow
             [shadow.cljs.devtools.server :as shadow-server]
@@ -83,7 +82,6 @@ on startup)"
   (let [lib-name (if (qualified-symbol? (symbol lib-name))
                    (symbol lib-name)
                    (symbol lib-name lib-name))]
-    (clojure.pprint/pprint (b/create-basis {:project "deps.edn"}))
     {:src-dirs   (get-paths "deps.edn")
      :basis      (b/create-basis {:project "deps.edn"})
      :lib-name   lib-name
