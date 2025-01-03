@@ -22,6 +22,12 @@
 
         playwright-driver = pkgs.playwright-driver;
         playwright-driver-browsers = pkgs.playwright-driver.browsers;
+        playwright-env-vars = ''
+          export PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
+          export PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS=true
+          # export DEBUG="pw:install"
+          export DEBUG="pw:browser"
+        '';
 
         playright-file = builtins.readFile "${playwright-driver}/browsers.json";
         playright-json = builtins.fromJSON playright-file;
@@ -47,7 +53,11 @@
         # self until it reaches a fixed point or crashes out because of un-resolvable dependency conflicts.
         launch-rss-server = pkgs.writeShellScriptBin "launch-rss-server" ''
           export CHROME_LOCATION="${playwright-driver-browsers}/chromium-${playwright-chromium-revision}/chrome-linux/chrome"
-          export PLAYWRIGHT_CLI_LOCATION="${self.packages.${system}.playwrightDriverBinDerivation}"
+          export PLAYWRIGHT_CLI_LOCATION="${
+            self.packages.${system}.playwrightDriverBinDerivation
+          }"
+
+          ${playwright-env-vars}
 
           exec ${
             self.packages.${system}.baseCljDerivation
@@ -60,11 +70,11 @@
 
           # #PlaywrightCliDir dev-shell config
           shellHook = ''
-            export PLAYWRIGHT_CLI_BROWSERS_LOCATION_RAW="${playwright-driver-browsers}" # debug only
-            export PLAYWRIGHT_CLI_LOCATION_RAW="${playwright-driver}"
             export CHROME_LOCATION="${playwright-driver-browsers}/chromium-${playwright-chromium-revision}/chrome-linux/chrome"
             export PLAYWRIGHT_CLI_LOCATION="$PWD/playwright-cli-dir--bin"
-            ln --symbolic --force "$PLAYWRIGHT_CLI_LOCATION_RAW/cli.js" "$PWD/playwright-cli-dir--bin/package/cli.js"
+            ln --symbolic --force "${playwright-driver}/cli.js" "$PWD/playwright-cli-dir--bin/package/cli.js"
+            ln --symbolic --force "${pkgs.nodejs}/bin/node" "$PWD/playwright-cli-dir--bin/node"
+            ${playwright-env-vars}
           '';
           buildInputs = [
             pkgs.chromium # used for portal only
@@ -124,7 +134,7 @@
           # This could be part of the final install phase, but I'm not worried about that today
           playwrightDriverBinDerivation = pkgs.stdenv.mkDerivation {
             name = "dev.freeformsoftware/playwright-driver-cli-packaged";
-            nativeBuildInputs = [playwright-driver pkgs.nodejs];
+            nativeBuildInputs = [ playwright-driver pkgs.nodejs ];
             src = ./bin;
 
             # #PlaywrightCliDir prod config
