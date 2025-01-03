@@ -132,7 +132,7 @@
               export PLAYWRIGHT_CLI_LOCATION_RAW=""
               mkdir -p $out/package
               ln --symbolic --force "${playwright-driver}/cli.js" "$out/package/cli.js"
-              ln --symbolic --force "${pkgs.nodejs}/bin/node" "$out/package/node"
+              ln --symbolic --force "${pkgs.nodejs}/bin/node" "$out/node"
             '';
           };
 
