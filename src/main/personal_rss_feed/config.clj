@@ -21,12 +21,13 @@
 (defn read-config-files!
   [enable-prod?]
   (keep (fn [s]
-          (try
-            (slurp s)
-            (catch Exception e
-              (when enable-prod?
-                (log/error "Could not read config file!" s e))
-              nil)))
+          (when s
+            (try
+              (slurp s)
+              (catch Exception e
+                (when enable-prod?
+                  (log/error "Could not read config file!" s e))
+                nil))))
         [(io/resource "config/config.edn")
          ;; not available in prod since it's not part of the jar build. flakes ftw!
          (when-not enable-prod? (io/resource "config/secrets.edn"))
