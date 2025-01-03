@@ -15,16 +15,18 @@
 
 (defn start-server!
   [& args]
-  (defonce server
-    (start-server :bind    "0.0.0.0"
-                  :port    8001
-                  :handler (default-handler
-                            (->> cider.nrepl.middleware/cider-middleware
-                                 (map requiring-resolve)
-                                 (remove nil?)))))
-  (println "Repl started at port 8001")
-  (reset! system
-    (ig/init (personal-rss-feed.config/resolve-config! true))))
+  (let [middleware (->> cider.nrepl.middleware/cider-middleware
+                        (map requiring-resolve)
+                        (remove nil?))]
+    (defonce server
+      (start-server :bind    "0.0.0.0"
+                    :port    8001
+                    :handler (default-handler middleware)))
+    (println "Repl started at port 8001")
+    (pprint/pprint ["Using middleware"
+                    middleware])
+    (reset! system
+            (ig/init (personal-rss-feed.config/resolve-config! true)))))
 
 (pprint/pprint @system)
 
