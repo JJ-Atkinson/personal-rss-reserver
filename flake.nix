@@ -147,6 +147,7 @@
             installPhase =
               let baseCljDerPath = self.packages.${system}.baseCljDerivation;
               in ''
+                mkdir -p $out/bin
                 cp ${launch-rss-server}/bin/* $out/bin
               '';
           };
