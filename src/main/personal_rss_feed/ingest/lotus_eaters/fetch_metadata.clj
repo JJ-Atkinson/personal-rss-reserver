@@ -76,15 +76,11 @@
 
                   :episode/video-original-uri
                   (or
-                   (e->nil (.getAttribute (ws/query-1 [".post__body" (ws/title "Download Video File (720P)")]) "href")) ;; Initial
-                                                                                                                        ;; download
-                                                                                                                        ;; link
-                   (e->nil (.getAttribute (ws/query-1 [".post__body" (ws/title "Download Video File")]) "src")) ;; Fallback
-                                                                                                                ;; when
-                                                                                                                ;; only
-                                                                                                                ;; one
-                                                                                                                ;; res
-                                                                                                                ;; exists
+                   ;; Initial download link
+                   (e->nil (.getAttribute (ws/query-1 [".post__body" (ws/title "Download Video File (720P)")]) "href"))
+
+                   ;; Fallback when only one res exists
+                   (e->nil (.getAttribute (ws/query-1 [".post__body" (ws/title "Download Video File")]) "src"))
 
                    ;; Hangouts/interview videos are rumble only for now. Query the video element
                    (e->nil (blob->nil (.getAttribute (first (ws/query [".post__body" ".embeddedEntry" "video"]))
