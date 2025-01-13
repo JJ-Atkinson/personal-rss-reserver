@@ -72,7 +72,11 @@
                         ;; https://bugs.openjdk.org/browse/JDK-8213696. Required to allow signing to procede
                         ;; normally for the cognitect aws api. It signs the headers as well, and by default the jdk
                         ;; http client sets its own (wrong) `host` header, breaking the signature.
-                        "-Djdk.httpclient.allowRestrictedHeaders=host"
+
+
+                        ;; temp removing this in relation to
+                        ;; https://github.com/cognitect-labs/aws-api/commit/c1208b5bfd1af79f38aa928d87e8060332ce780c#diff-d1d974d67a52b0c5f4ed728e4562da6d599117646d6f24ad42eaf0907811d2d0R18-R21
+                        ;; "-Djdk.httpclient.allowRestrictedHeaders=host"
 
                         "-Xss2m"                         ; https://github.com/hyperfiddle/photon/issues/11
                         "-XX:-OmitStackTraceInFastThrow" ;; RCF
