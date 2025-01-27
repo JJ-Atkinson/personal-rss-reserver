@@ -9,6 +9,8 @@
    [integrant.core :as ig]
    [personal-rss-feed.ingest.file-utils :as file-utils]
    [personal-rss-feed.name-utils :as name-utils]
+   [cognitect.aws.signers :as a.signers]
+   [cognitect.aws.client.protocol :as client.protocol]
    [taoensso.timbre :as log])
   (:import (java.net URI URL)))
 
@@ -117,23 +119,38 @@
   [_ s3]
   (aws/stop (:client s3)))
 
+
+;; #AWSS3Signatures https://github.com/cognitect-labs/aws-api/issues/263
+(defmethod a.signers/sign-http-request "s3"
+  [service endpoint credentials http-request]
+  (a.signers/v4-sign-http-request service
+                                  endpoint
+                                  credentials
+                                  (-> http-request
+                                      (assoc-in [:headers "host"]
+                                                (str (get-in http-request [:headers "host"]) ":3900")))
+                                  :content-sha256-header?
+                                  true))
+
+
+
+
 (comment
   (keys (aws/ops (:client @!s3)))
   (aws/doc (:client @!s3) :PutObject)
   (aws/doc (:client @!s3) :ListObjects)
-  (upload-uri! @!s3 "https://github.com/anars/blank-audio/raw/master/1-second-of-silence.mp3" "blank.mp3")
 
   (aws/invoke (:client @!s3)
               {:op      :HeadObject
                :request {:Bucket "lotus-eaters"
-                         :Key    "audio-f4861adb-faa1-4e8e-ae6d-462c5942c80d.mp3"}})
+                         :Key    "example"}})
 
   (download-object! @!s3 "video-a466e883-b8c1-422f-9a01-f2a566738dfd.mp4" "/tmp/file222222.mp4")
   (upload-file!
    @!s3
-   ""
-   "/home/jarrett/Downloads/DALL·E 2023-11-25 20.10.03 - Create an additional variation of the thumbnail for the product 'Interviews', set on an old England street. The scene should depict a journalist with .png"
-   {:content-type "image/png"})
+   "example"
+   "/home/jarrett/Downloads/example.html"
+   {:content-type "text/html"})
 
   (aws/invoke (:client @!s3)
               {:op      :ListObjects
@@ -144,6 +161,7 @@
                             {:op      :ListObjects
                              :request {:Bucket "lotus-eaters"}})]
     (:Contents objects)
+    objects
     #_(doseq [obj (:Contents objects)]
         (println "Deleting" (:Key obj))
         (aws/invoke (:client @!s3)

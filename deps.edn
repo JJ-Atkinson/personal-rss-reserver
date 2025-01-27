@@ -12,8 +12,9 @@
   tempfile/tempfile                          {:mvn/version "0.2.0"}
   hiccup/hiccup                              {:mvn/version "1.0.5"}
 
-  com.cognitect.aws/api                      {:mvn/version "0.8.711"}
-  com.cognitect.aws/endpoints                {:mvn/version "871.2.29.35"}
+  ;; ##AWSS3Signatures
+  com.cognitect.aws/api                      {:mvn/version "0.8.723"}
+  com.cognitect.aws/endpoints                {:mvn/version "871.2.29.39"}
   com.cognitect.aws/s3                       {:mvn/version         "871.2.29.35"
                                               :aws/serviceFullName "Amazon Simple Storage Service"}
   org.babashka/http-client                   {:mvn/version "0.4.15"}

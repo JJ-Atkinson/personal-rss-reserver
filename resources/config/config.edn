@@ -13,8 +13,8 @@
   }
 
   :personal-rss-feed.feed.s3/s3
-  #n/ref [:s3 :CI]
-  ;;#n/ref [:s3 :PROD]
+  ;;   #n/ref [:s3 :CI]
+  #n/ref [:s3 :PROD]
 
 
   :personal-rss-feed.ingest.lotus-eaters/lotus-eaters-ingest
@@ -49,7 +49,7 @@
                                               :exp-period-s 86400 ;; 1 day
                                               :buddy        {:skip-validation false
                                                              :alg             :hs512}}}}
- 
+
  ;; Things in the secrets file
  :lotus-eaters/username "username"
  :lotus-eaters/password "password"
