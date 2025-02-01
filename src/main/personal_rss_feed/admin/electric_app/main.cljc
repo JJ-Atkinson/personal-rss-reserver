@@ -3,28 +3,42 @@
    [clojure.math :refer [floor-div]]
    [hyperfiddle.electric3 :as e]
    [hyperfiddle.electric-dom3 :as dom]
-  ;;  [hyperfiddle.electric-forms0 :as ef0]
+   ;;  [hyperfiddle.electric-forms0 :as ef0]
    [missionary.core :as m]
    [personal-rss-feed.admin.electric-app.context :as admin.context]
   ))
 
 
 #_
-(e/defn DemoInputCircuit-controlled
+  (e/defn DemoInputCircuit-controlled
+    []
+    (let [!s (atom "")
+          s  (e/watch !s)]
+      (reset! !s (ef0/Input s))
+      (reset! !s (ef0/Input s))
+      (dom/code (dom/text (pr-str s)))))
+
+(e/defn ContextEntryCnt
   []
-  (let [!s (atom "")
-        s  (e/watch !s)]
-    (reset! !s (ef0/Input s))
-    (reset! !s (ef0/Input s))
-    (dom/code (dom/text (pr-str s)))))
+  (e/client
+   (dom/div (dom/text
+             (str "Count: " (e/server (count admin.context/system-config)))))))
 
 (e/defn Main
   [server-config ring-request]
-  (e/client
-   (binding [dom/node       js/document.body
-             e/http-request (e/server ring-request)]
-     ; mandatory wrapper div https://github.com/hyperfiddle/electric/issues/74
-
-     (dom/div (dom/props {:style {:display "contents"}})
-     #_
-     (DemoInputCircuit-controlled)))))
+  (e/server
+   ;;  (tap> [:server-config server-config])
+    (binding [admin.context/system-config {}]
+      (e/client
+       (binding [dom/node       js/document.body
+                 e/http-request (e/server ring-request)]
+        ; mandatory wrapper div https://github.com/hyperfiddle/electric/issues/74
+         
+         (dom/div (dom/props {:style {:display "contents"}})
+           (dom/div
+             (dom/props {:style {:color "red"}})
+             (dom/text "hello"))
+           (dom/div
+             (dom/text "gby"))
+           #_
+             (DemoInputCircuit-controlled)))))))

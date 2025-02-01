@@ -194,7 +194,7 @@
   (w-utils/with-page (merge (w-utils/fresh-page {:browser-context (::browser-context @le.shared/!shared)
                                                  :debug           {}})
                             {:autoclose-browser-context? false})
-                     (safe-navigate! "https://google.com"))
+    (safe-navigate! "https://google.com"))
 
   (simple-queue/all-un-resolved-errors
    (::le.shared/queue @le.shared/!shared)
@@ -229,26 +229,85 @@
     ::fetch-metadata-queue))
 
 
-  (simple-queue/qview-dead
-   (::le.shared/queue @le.shared/!shared)
-   ::fetch-metadata-queue)
+  (->> (simple-queue/qview-dead
+        (::le.shared/queue @le.shared/!shared)
+        ::fetch-metadata-queue) 
+       (reverse)
+       (map ::queue-item/status)
+       (take 200))
+
 
   (simple-queue/qresubmit-item! (::le.shared/queue @le.shared/!shared) #uuid "785f8896-8c6b-4cbc-838f-505436cfc441")
 
   (swap! simple-queue/*manual-unlock-1*
-    conj
-    ::fetch-metadata-queue)
+         conj
+         ::fetch-metadata-queue)
 
   (simple-queue/resolve!i (::le.shared/queue @le.shared/!shared)
                           #uuid "785f8896-8c6b-4cbc-838f-505436cfc441")
 
   (do
     (swap! simple-queue/*manual-unlock-1*
-      conj
-      ::fetch-metadata-queue)
+           conj
+           ::fetch-metadata-queue)
     (augment-episode-information
      (with-debug @le.shared/!shared)
      (simple-queue/qpop!
       (::le.shared/queue @le.shared/!shared)
       ::fetch-metadata-queue)))
-)
+
+  (def ep-url
+    #_
+      (:episode/url (::queue-item/data (simple-queue/resolve!i (::le.shared/queue @le.shared/!shared)
+                                                               #uuid "bfcc3379-73f7-43d7-917d-1cc9489a8fce")))
+    "https://www.lotuseaters.com/premium-the-career-of-stanley-kubrick-part-v-30-12-24")
+
+  (def test-page
+    (merge (w-utils/fresh-page
+            {:browser-context (::browser-context @le.shared/!shared)
+             :debug           {}})
+           {:autoclose-browser-context? false}))
+
+  (w/with-page (:page test-page) (safe-navigate! ep-url))
+  (w/with-page (:page test-page) (ws/query-1-now [".fa-sign-in-alt"]))
+  (w/with-page (:page test-page) (ws/query-1-now [".fa-sign-out-alt"]))
+  (w/with-page (:page test-page) (ensure-logged-in! @le.shared/!shared))
+
+  (w/with-page
+    (:page test-page)
+    (enc/assoc-some {}
+                    :episode/audio-original-uri
+                    [(e->nil (.getAttribute (ws/query-1 [".post__body" (ws/title "Download Audio File")]) "href"))]
+
+                    :episode/video-original-uri
+                    [
+                    ;; Initial download link
+                     (e->nil (.getAttribute (ws/query-1 [".post__body" (ws/title "Download Video File (720P)")]) "href"))
+
+                    ;; Fallback when only one res exists
+                     (e->nil (.getAttribute (ws/query-1 [".post__body" (ws/title "Download Video File")]) "src"))
+
+                    ;; Hangouts/interview videos are rumble only for now. Query the video element
+                     (e->nil (blob->nil (.getAttribute (first (ws/query [".post__body" ".embeddedEntry" "video"]))
+                                                       "src")))
+                     (e->nil (blob->nil (.getAttribute (second (ws/query [".post__body" ".embeddedEntry" "video"]))
+                                                       "src")))]
+
+                    :episode/excerpt
+                    (e->nil (.textContent (first (ws/query [".post__body" s/div s/p s/span]))))
+
+                    :episode/publish-date
+                    (e->nil (parse-date (.textContent (first (ws/query [".post__metaDetails" s/p s/b])))))
+
+                    :episode/title ;; trims "Premium: Brokenomics | Argentina"
+                    (e->nil (let [text (.textContent (first (ws/query [".post__intro" s/h1])))]
+                              (if (str/starts-with? text "PREMIUM")
+                                (-> text
+                                    (str/split #"\|")
+                                    (second)
+                                    (str/trim))
+                                text)))))
+
+  (.close (:page test-page))
+
+  )

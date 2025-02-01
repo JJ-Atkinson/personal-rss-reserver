@@ -146,6 +146,7 @@
                          :Key    "example"}})
 
   (download-object! @!s3 "video-a466e883-b8c1-422f-9a01-f2a566738dfd.mp4" "/tmp/file222222.mp4")
+  (download-object! @!s3 "audio-697d57bb-3f73-4a00-9f61-49f7c475d37c.mp3" "/tmp/filewhisper.mp3")
   (upload-file!
    @!s3
    "example"
