@@ -56,7 +56,7 @@
  :s3/secret-access-key "s3-secret-access-key"
  :s3/public-s3-prefix "https://s3.amazaonaws....com/prefix/" ; to be appended with "uuid.extension"
  :feed/secret-path-segment "a"
- :feed/public-feed-address "http://localhost:3000/"
+ :feed/public-feed-address "http://localhost:3001/"
  :auth/jwt-secret "secret" ;; preferably a 256bit random number
 }
 
