@@ -29,7 +29,7 @@
    :downloads-per-day         0} ;; lockout downloads during CI
 
   :personal-rss-feed.server.main/server
-  {:http-kit                 {:port 3001}
+  {:jetty                    {:port 3001}
    :db/conn                  #ig/ref :personal-rss-feed.feed.db/conn
    :s3/public-s3-prefix      #n/ref :s3/public-s3-prefix ;; Only semi secret, but preferable to not post on the
                                                          ;; internet.

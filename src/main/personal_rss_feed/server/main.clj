@@ -7,7 +7,8 @@
    [personal-rss-feed.admin.routes :as admin.routes]
    [personal-rss-feed.feed.routes :as feed.routes]
    [org.httpkit.server :as hk-server]
-   [clojure.set :as set]))
+   [clojure.set :as set]
+   [ring.adapter.jetty :as ring]))
 
 ;; The indirection for `handler` and `init-key` enable tools.ns.refresh, without the need for suspend/resume. quite
 ;; handy
@@ -43,10 +44,15 @@
           (catch Exception e (log/error "Handler error" e)))))))
 
 (defmethod ig/init-key ::server
-  [_ {:keys [http-kit] :as config}]
-  (let [options (assoc http-kit :legacy-return-value? false)]
-    (println "Starting server" options)
-    (hk-server/run-server (handler config) options)))
+  [_ {:keys [jetty] :as config}]
+  (let [options (merge {:port         3001
+                        :host         "0.0.0.0"
+                        :join?        false
+                        :configurator admin.routes/jetty-electric-configurator}
+                       jetty)]
+    (println "Starting server " options)
+    (ring/run-jetty (handler config)
+                    options)))
 
 (defmethod ig/suspend-key! ::server
   [_ _])
@@ -56,4 +62,4 @@
 
 (defmethod ig/halt-key! ::server
   [_ server]
-  @(hk-server/server-stop! server))
+  (.stop server))

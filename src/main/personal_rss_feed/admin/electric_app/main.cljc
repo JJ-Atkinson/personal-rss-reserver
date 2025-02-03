@@ -22,7 +22,7 @@
   []
   (e/client
    (dom/div (dom/text
-             (str "Count: " (e/server (tap> [:scnt admin.context/system-config])))))))
+             (str "Count: " (e/server (pr-str admin.context/system-config)))))))
 
 (e/defn Main
   [server-config ring-request]
@@ -32,18 +32,15 @@
              admin.context/system-config (e/server server-config)]
       ; mandatory wrapper div https://github.com/hyperfiddle/electric/issues/74
      
-     (do
-       (e/server (tap> [:main server-config ring-request]))
-
-       (dom/div (dom/props {:style {:display "contents"}})
-         (dom/div
-           (dom/props {:style {:color "red"}})
-           (dom/text "hello"))
-         (dom/div
-           (dom/text "gby"))
-         (ContextEntryCnt)
-         #_
-           (DemoInputCircuit-controlled))))))
+     (dom/div (dom/props {:style {:display "contents"}})
+       (dom/div
+         (dom/props {:style {:color "red"}})
+         (dom/text "hello"))
+       (dom/div
+         (dom/text "gby"))
+       (ContextEntryCnt)
+       #_
+         (DemoInputCircuit-controlled)))))
 
 (comment
   (require '[clojure.java.classpath :as cp])

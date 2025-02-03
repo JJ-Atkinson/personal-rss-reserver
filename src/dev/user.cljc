@@ -1,5 +1,7 @@
 (ns ^:dev/always user ; Electric currently needs to rebuild everything when any file changes. Will fix
   (:require
+   [hyperfiddle.electric3 :as e]
+   [personal-rss-feed.admin.electric-app.main]
    #?@(:clj
        [[integrant.core :as ig]
         [nrepl.server :refer [default-handler start-server]]
@@ -9,9 +11,7 @@
         [taoensso.encore :as enc]
         [nrepl.middleware :as middleware]]
        :cljs
-       [personal-rss-feed.admin.electric-app.main
-        [hyperfiddle.electric3 :as e]
-        hyperfiddle.electric-client3])))
+       [hyperfiddle.electric-client3])))
 
 #?(:clj
    (do
@@ -92,7 +92,14 @@
 
      (comment
        (tap> 1)
-       (portal.api/docs))))
+       (portal.api/docs))
+
+     (defn boot-electric-clj
+       [config ring-request]
+       (e/boot-server {}
+                      personal-rss-feed.admin.electric-app.main/Main
+                      (e/server config)
+                      (e/server ring-request)))))
 
 
 #?(:cljs
@@ -101,22 +108,12 @@
 
      (defn ^:dev/after-load ^:export start!
        []
-       ;;  (assert (nil? reactor) "reactor already running")
+       (assert (nil? reactor) "reactor already running")
        (set! reactor
              ((e/boot-client {}
-                             personal-rss-feed.admin.electric-app.main/Main 
-                             (e/server nil)
-                             (e/server nil))
-              #(js/console.log "Reactor success:" %)
-              #(js/console.error "Reactor failure:" %)))
-              #_
-       (set! reactor
-             ((e/boot-client
-               {}
-               personal-rss-feed.admin.electric-app.main/Main
-               nil ;; config is nil on the client
-               nil ;; ring request is nil
-              )
+                             personal-rss-feed.admin.electric-app.main/Main
+                             (e/server (e/amb))
+                             (e/server (e/amb)))
               #(js/console.log "Reactor success:" %)
               #(js/console.error "Reactor failure:" %))))
 
