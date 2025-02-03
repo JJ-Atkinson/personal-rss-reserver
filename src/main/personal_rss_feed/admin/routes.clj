@@ -42,9 +42,10 @@
 
 (defn boot-electric
   [config ring-request]
+  (tap> [:boot config ring-request])
   (e/boot-server {}
                  personal-rss-feed.admin.electric-app.main/Main
-                 (e/server (:personal-rss-feed.admin.electric-app.main/config config))
+                 (e/server config)
                  (e/server ring-request)))
 
 (defn wrap-electric
