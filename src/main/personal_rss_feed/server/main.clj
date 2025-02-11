@@ -6,7 +6,6 @@
    [taoensso.timbre :as log]
    [personal-rss-feed.admin.routes :as admin.routes]
    [personal-rss-feed.feed.routes :as feed.routes]
-   [org.httpkit.server :as hk-server]
    [clojure.set :as set]
    [ring.adapter.jetty :as ring]))
 
