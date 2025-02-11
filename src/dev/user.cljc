@@ -58,6 +58,7 @@
      (defn restart
        []
        (when @!system (stop))
+       (e->nil (clj-reload.core/reload {:log-fn println}))
        (start))
 
      (defn dev-main
