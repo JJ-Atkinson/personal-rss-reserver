@@ -24,6 +24,7 @@
    "GET /login" p.login/login-form
    "POST /login" (partial p.login/login-post config)
    "GET /public/**"
+
    (fn [{[path] :path-params :as req}]
      (or
       (-> (response/resource-response path {:root "/public"})
@@ -37,6 +38,7 @@
           safe-prefix? (some #(str/starts-with? (:uri req) %)
                              (conj safe-prefixes
                                    "/login"))] ;; make sure we don't kill things that are logins
+
       (if (or claims safe-prefix?)
         (handler (assoc req :auth/claims claims))
         (response/redirect "/login")))))
