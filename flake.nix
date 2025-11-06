@@ -7,9 +7,16 @@
     clj-nix.url = "github:jlesquembre/clj-nix";
   };
 
-  outputs = { self, nixpkgs, flake-utils, clj-nix }:
+  outputs =
+    {
+      self,
+      nixpkgs,
+      flake-utils,
+      clj-nix,
+    }:
 
-    flake-utils.lib.eachDefaultSystem (system:
+    flake-utils.lib.eachDefaultSystem (
+      system:
 
       let
         pkgs = import nixpkgs {
@@ -18,7 +25,7 @@
           config.allowUnfree = true;
         };
 
-        runtimeJDK = pkgs.openjdk17;
+        runtimeJDK = (pkgs.jdk23.override { enableJavaFX = true; });
 
         playwright-driver = pkgs.playwright-driver;
         playwright-driver-browsers = pkgs.playwright-driver.browsers;
@@ -31,9 +38,9 @@
 
         playright-file = builtins.readFile "${playwright-driver}/browsers.json";
         playright-json = builtins.fromJSON playright-file;
-        playwright-chromium-entry = builtins.elemAt
-          (builtins.filter (browser: browser.name == "chromium")
-            playright-json.browsers) 0;
+        playwright-chromium-entry = builtins.elemAt (builtins.filter (
+          browser: browser.name == "chromium"
+        ) playright-json.browsers) 0;
         playwright-chromium-revision = playwright-chromium-entry.revision;
 
         runtimeDeps = with pkgs; [
@@ -42,7 +49,6 @@
           playwright-driver-browsers
           zprint
 
-          openai-whisper-cpp
           ffmpeg
           awscli2
 
@@ -53,17 +59,14 @@
         # self until it reaches a fixed point or crashes out because of un-resolvable dependency conflicts.
         launch-rss-server = pkgs.writeShellScriptBin "launch-rss-server" ''
           export CHROME_LOCATION="${playwright-driver-browsers}/chromium-${playwright-chromium-revision}/chrome-linux/chrome"
-          export PLAYWRIGHT_CLI_LOCATION="${
-            self.packages.${system}.playwrightDriverBinDerivation
-          }"
+          export PLAYWRIGHT_CLI_LOCATION="${self.packages.${system}.playwrightDriverBinDerivation}"
 
           ${playwright-env-vars}
 
-          exec ${
-            self.packages.${system}.baseCljDerivation
-          }/bin/personal-rss-reserver
+          exec ${self.packages.${system}.baseCljDerivation}/bin/personal-rss-reserver
         '';
-      in {
+      in
+      {
         formatter = nixpkgs.legacyPackages.x86_64-linux.nixfmt;
 
         devShell = pkgs.mkShell {
@@ -78,7 +81,8 @@
           '';
           buildInputs = [
             pkgs.chromium # used for portal only
-            pkgs.clojure
+            (pkgs.clojure.override { jdk = runtimeJDK; })
+
             runtimeJDK
             pkgs.maven
 
@@ -86,55 +90,62 @@
             pkgs.clj-kondo
             pkgs.clojure-lsp
             pkgs.jet
-          ] ++ runtimeDeps;
+            pkgs.claude-code
+          ]
+          ++ runtimeDeps;
         };
 
         packages = {
 
-          baseCljDerivation = let
-            groupId = "dev.freeformsoftware";
-            artifactId = "personal-rss-reserver";
-            fullId = "${groupId}/${artifactId}";
-            version = "1.0";
-            main-ns = "personal-rss-feed.prod";
-          in pkgs.mkCljBin {
-            # pkgs = nixpkgs.legacyPackages.${system};
-            nativeBuildInputs = [ pkgs.git ];
+          baseCljDerivation =
+            let
+              groupId = "dev.freeformsoftware";
+              artifactId = "personal-rss-reserver";
+              fullId = "${groupId}/${artifactId}";
+              version = "1.0";
+              main-ns = "personal-rss-feed.prod";
+            in
+            pkgs.mkCljBin {
+              # pkgs = nixpkgs.legacyPackages.${system};
+              nativeBuildInputs = [ pkgs.git ];
 
-            projectSrc = ./.;
-            jdkRunner = runtimeJDK;
-            name = fullId;
-            version = version;
-            main-ns = main-ns;
-            java-opts = [
-              "--add-opens"
-              "java.base/java.nio=ALL-UNNAMED" # #SeeDepsEDN
-              "--add-opens"
-              "java.base/sun.nio.ch=ALL-UNNAMED"
-              "-Djdk.httpclient.allowRestrictedHeaders=host"
-            ];
-            buildCommand = ''
-              GIT_REF="${self.rev}"
-              export GIT_REF
-              clj -A:build -X build-prod/uber! :lib-name '${fullId}' :version '${version}' :main-ns '${main-ns}'
-            '';
-            # :lib-name :version :main-ns :compile-clj-opts :javac-opts
-            # Default build command, slightly munged.
-            #         ''
-            #          clj-builder uber "${fullId}" "${version}" "${main-ns}" \
-            #            '${builtins.toJSON compileCljOpts}' \
-            #            '${builtins.toJSON javacOpts}'
-            #        ''
+              projectSrc = ./.;
+              jdkRunner = runtimeJDK;
+              name = fullId;
+              version = version;
+              main-ns = main-ns;
+              java-opts = [
+                "--add-opens"
+                "java.base/java.nio=ALL-UNNAMED" # #SeeDepsEDN
+                "--add-opens"
+                "java.base/sun.nio.ch=ALL-UNNAMED"
+                "-Djdk.httpclient.allowRestrictedHeaders=host"
+              ];
+              buildCommand = ''
+                GIT_REF="${self.rev}"
+                export GIT_REF
+                clj -A:build -X build-prod/uber! :lib-name '${fullId}' :version '${version}' :main-ns '${main-ns}'
+              '';
+              # :lib-name :version :main-ns :compile-clj-opts :javac-opts
+              # Default build command, slightly munged.
+              #         ''
+              #          clj-builder uber "${fullId}" "${version}" "${main-ns}" \
+              #            '${builtins.toJSON compileCljOpts}' \
+              #            '${builtins.toJSON javacOpts}'
+              #        ''
 
-            # nativeImage.enable = true;
-            # customJdk.enable = true;
-          };
+              # nativeImage.enable = true;
+              # customJdk.enable = true;
+            };
 
           # Create a bin folder with the playwright cli
           # This could be part of the final install phase, but I'm not worried about that today
           playwrightDriverBinDerivation = pkgs.stdenv.mkDerivation {
             name = "dev.freeformsoftware/playwright-driver-cli-packaged";
-            nativeBuildInputs = [ playwright-driver pkgs.nodejs ];
+            nativeBuildInputs = [
+              playwright-driver
+              pkgs.nodejs
+            ];
             src = ./bin;
 
             # #PlaywrightCliDir prod config
@@ -156,12 +167,15 @@
             src = ./bin;
 
             installPhase =
-              let baseCljDerPath = self.packages.${system}.baseCljDerivation;
-              in ''
+              let
+                baseCljDerPath = self.packages.${system}.baseCljDerivation;
+              in
+              ''
                 mkdir -p $out/bin
                 cp ${launch-rss-server}/bin/* $out/bin
               '';
           };
         };
-      });
+      }
+    );
 }

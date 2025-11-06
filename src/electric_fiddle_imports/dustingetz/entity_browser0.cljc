@@ -1,16 +1,17 @@
 (ns dustingetz.entity-browser0
   "no major/breaking changes changes - used in the blog"
-  (:require [clojure.datafy :refer [datafy]]
-            [clojure.core.protocols :refer [nav]]
-            [contrib.data :refer [unqualify index-of]]
-            [dustingetz.easy-table :refer [Load-css]]
-            [dustingetz.treelister2 :refer [explorer-seq]]
-            [hyperfiddle.electric3 :as e]
-            [hyperfiddle.electric3-contrib :as ex]
-            [hyperfiddle.electric-dom3 :as dom]
-            [hyperfiddle.electric-forms4 :refer [Intercept Interpreter Checkbox* TablePicker!]]
-            [hyperfiddle.router4 :as router]
-            [hyperfiddle.rcf :refer [tests]]))
+  (:require
+   [clojure.datafy :refer [datafy]]
+   [clojure.core.protocols :refer [nav]]
+   [contrib.data :refer [unqualify index-of]]
+   [dustingetz.easy-table :refer [Load-css]]
+   [dustingetz.treelister2 :refer [explorer-seq]]
+   [hyperfiddle.electric3 :as e]
+   [hyperfiddle.electric3-contrib :as ex]
+   [hyperfiddle.electric-dom3 :as dom]
+   [hyperfiddle.electric-forms4 :refer [Intercept Interpreter Checkbox* TablePicker!]]
+   [hyperfiddle.router4 :as router]
+   [hyperfiddle.rcf :refer [tests]]))
 
 (defn nav-in
   [m path]

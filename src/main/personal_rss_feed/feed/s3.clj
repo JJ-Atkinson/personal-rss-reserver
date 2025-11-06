@@ -119,6 +119,7 @@
   [_ s3]
   (aws/stop (:client s3)))
 
+#_
 
 ;; #AWSS3Signatures https://github.com/cognitect-labs/aws-api/issues/263
 (defmethod a.signers/sign-http-request "s3"

@@ -1,4 +1,4 @@
-{:paths ["src/main" "resources"]
+{:paths ["src/main" "src/electric_fiddle_imports" "resources"]
  :deps
  {com.microsoft.playwright/playwright        {:mvn/version "1.47.0"}
   io.github.pfeodrippe/wally                 {:mvn/version "0.0.4"}
@@ -13,9 +13,9 @@
   hiccup/hiccup                              {:mvn/version "1.0.5"}
 
   ;; ##AWSS3Signatures
-  com.cognitect.aws/api                      {:mvn/version "0.8.723"}
-  com.cognitect.aws/endpoints                {:mvn/version "871.2.29.39"}
-  com.cognitect.aws/s3                       {:mvn/version         "871.2.29.35"
+  com.cognitect.aws/api                      {:mvn/version "0.8.774"}
+  com.cognitect.aws/endpoints                {:mvn/version "871.2.36.3"}
+  com.cognitect.aws/s3                       {:mvn/version         "871.2.33.5"
                                               :aws/serviceFullName "Amazon Simple Storage Service"}
   org.babashka/http-client                   {:mvn/version "0.4.15"}
   babashka/fs                                {:mvn/version "0.5.23"}
@@ -44,7 +44,7 @@
   zprint/zprint                              {:mvn/version "1.2.9"}
   http-kit/http-kit                          {:mvn/version "2.8.0"}
 
-  org.clojure/clojure                        {:mvn/version "1.12.0-alpha5"}
+  org.clojure/clojure                        {:mvn/version "1.12.0"} ;; tempoary hack while using rama
   org.clojure/clojurescript                  {:mvn/version "1.11.60"}
   org.clojure/tools.logging                  {:mvn/version "1.2.4"}
   ch.qos.logback/logback-classic             {:mvn/version "1.2.11"}
@@ -53,6 +53,7 @@
 
   ;; electric
   com.hyperfiddle/electric                   {:mvn/version "v3-alpha-SNAPSHOT"}
+  com.hyperfiddle/hyperfiddle                {:mvn/version "v0-alpha-SNAPSHOT"}
   com.google.guava/guava                     {:mvn/version "31.0-jre"} ;; pinned version, needs to change possibly
                                                                        ;; when electric changes
 
@@ -66,7 +67,9 @@
                         {:git/url "https://github.com/JJ-Atkinson/portal-test-reporter.git"
                          :sha     "4862723d4c53ea66347f16e16d8cb51143555137"}
                         io.github.tonsky/clj-reload {:mvn/version "0.7.0"}
-                        djblue/portal {:mvn/version "0.58.4"}}
+                        djblue/portal {:mvn/version "0.58.5"}
+                        refactor-nrepl/refactor-nrepl {:mvn/version "3.11.0"}
+                        cider/cider-nrepl {:mvn/version "0.58.0"}}
           :jvm-opts    ["--add-opens" "java.base/java.nio=ALL-UNNAMED" ;; ##SeeDepsEDN
                         "--add-opens" "java.base/sun.nio.ch=ALL-UNNAMED"
 
@@ -88,4 +91,8 @@
                         io.github.clojure/tools.build {:mvn/version "0.9.6" :exclusions [com.google.guava/guava]}}
           :jvm-opts    ["-Xss2m"                         ; https://github.com/hyperfiddle/photon/issues/11
                         "-XX:-OmitStackTraceInFastThrow" ;; RCF
-                       ]}}}
+                       ]}}
+
+ :mvn/repos
+ {"nexus-releases"
+  {:url "https://nexus.redplanetlabs.com/repository/maven-public-releases"}}}
