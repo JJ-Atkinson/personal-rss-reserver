@@ -4,7 +4,8 @@
    [clojure.edn :as edn]
    [clojure.java.io :as io]
    [potemkin :as pk]
-   [taoensso.encore :as enc])
+   [taoensso.encore :as enc]
+   [clojure.string :as string])
   (:import (java.nio.file Files Paths)
            (java.nio.file.attribute FileAttribute)))
 
@@ -66,7 +67,13 @@
      (atom initial-keyset)
      (atom initial-k->v-seeded)
 
-     (constantly true) ;; maybe I was wrong about k-pred being needed. See deftype comment above
+     (fn [k]
+       (if-let [ns-str (and (keyword? k)
+                            (namespace k))]
+         (not (string/starts-with? ns-str "portal"))
+         true)) ;; just prevent portal from contaminating the key set for no reason.
+
+     ;;(constantly true) ;; maybe I was wrong about k-pred being needed. See deftype comment above
      ;;(fn [k]
      ;;  (or (uuid? k) (string? k) (contains? initial-keyset k)))
      read-fn

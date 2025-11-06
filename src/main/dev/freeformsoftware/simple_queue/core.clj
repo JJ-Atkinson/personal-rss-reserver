@@ -104,8 +104,8 @@
 
 (defn update!q
   "Specifically update a queue, optionally updating a sub-key"
-  ([system queue-name f] (swap! system update ::name->queue (fn [n-q] (update n-q queue-name f))))
-  ([system queue-name key f] (swap! system update ::name->queue (fn [n-q] (update n-q queue-name update key f)))))
+  ([system queue-name f] (swap! system update ::name->queue (fn [n->q] (update n->q queue-name f))))
+  ([system queue-name key f] (swap! system update ::name->queue (fn [n->q] (update n->q queue-name update key f)))))
 
 (defn update!qi
   ([system queue-item-id f] (swap! system update ::id->queue-item (fn [n-q] (update n-q queue-item-id f))))
@@ -392,6 +392,7 @@
 
 (defn- start-timeout-watchdog!
   [system]
+  #_
   (swap! system assoc
     ::chime-ent
     (chime/chime-at

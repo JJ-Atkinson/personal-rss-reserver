@@ -1,8 +1,10 @@
 (ns personal-rss-feed.config
-  (:require [clojure.java.io :as io]
-            [clojure.walk :as walk]
-            [integrant.core :as ig]
-            [taoensso.timbre :as log]))
+  (:require
+   [clojure.java.io :as io]
+   [clojure.string :as str]
+   [clojure.walk :as walk]
+   [integrant.core :as ig]
+   [taoensso.timbre :as log]))
 
 (defn nref?
   [x]
@@ -32,7 +34,7 @@
          ;; not available in prod since it's not part of the jar build. flakes ftw!
          (when-not enable-prod? (io/resource "config/secrets.edn"))
          (when enable-prod? (io/file "/etc/rss-feed-config.edn"))
-         (when enable-prod? (io/file "/etc/rss-feed-secrets.edn"))]))
+         #_(when enable-prod? (io/file "/etc/rss-feed-secrets.edn"))]))
 
 (defn reader-nref
   [key]
@@ -54,11 +56,22 @@
          x))
      config)))
 
+(defn reader-file-str
+  [key]
+  (str/trim (slurp key)))
+
+(defn reader-env
+  [key]
+  (System/getenv key))
+
 (defn resolve-config!
   [enable-prod?]
   (let [parsed-config
         (->> (read-config-files! enable-prod?)
-             (map (partial ig/read-string {:readers {'n/ref reader-nref}}))
+             (map (partial ig/read-string
+                           {:readers {'n/ref             reader-nref
+                                      'n/reader-file-str reader-file-str
+                                      'n/env             reader-env}}))
              (reduce deep-merge)
              (resolve-nrefs)
              :system)]

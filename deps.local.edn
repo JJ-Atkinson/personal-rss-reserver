@@ -1,0 +1,24 @@
+{;; Always start with these aliases
+ :launchpad/aliases [:dev :test]
+ ;; Call (user/go) to start the server, include Portal (invoke with
+ ;; (user/portal))
+ :launchpad/options {:middleware [cider.nrepl/cider-middleware refactor-nrepl.middleware/wrap-refactor]
+                     :nrepl-port 7888
+                     :java-args  ["-Djdk.attach.allowAttachSelf"]}
+
+ ;; Additional deps, things you want to have available but not check in.
+ ;; Could be tooling, or libraries you are evaluating. Can also be used to
+ ;; override a dependency with a `:local/root` version, to develop against
+ ;; a local copy.
+ :deps              {jarrett/devtools
+                     {:local/root
+                      "/home/jarrett/code/personal/jarrett-personal-dev-tools"}
+                     io.github.tonsky/clj-reload {:mvn/version "1.0.0"}
+                     djblue/portal {:mvn/version "0.59.1"}
+                     org.slf4j/slf4j-nop {:mvn/version "2.0.16"} ;; Required for stdio server
+                     com.bhauman/clojure-mcp {:git/url "https://github.com/bhauman/clojure-mcp.git"
+                                              :git/tag "v0.1.11-alpha"
+                                              :git/sha "7739dba"}
+                     #_#_dev.freeformsoftware/portal-test-reporter
+                       {:git/url "https://github.com/JJ-Atkinson/portal-test-reporter.git"
+                        :sha     "4862723d4c53ea66347f16e16d8cb51143555137"}}}

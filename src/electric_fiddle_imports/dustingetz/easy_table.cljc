@@ -1,12 +1,13 @@
 (ns dustingetz.easy-table
-  (:require #?(:clj clojure.java.io)
-            [contrib.clojurex :refer [#?(:clj slurp-safe)]]
-            [contrib.data :refer [clamp-left]]
-            [contrib.str :refer [includes-str?]]
-            [hyperfiddle.electric3 :as e]
-            [hyperfiddle.electric-dom3 :as dom]
-            [hyperfiddle.electric-forms4 :refer [Input*]]
-            [hyperfiddle.electric-scroll0 :refer [Scroll-window IndexRing]]))
+  (:require
+   #?(:clj clojure.java.io)
+   [contrib.clojurex :refer [#?(:clj slurp-safe)]]
+   [contrib.data :refer [clamp-left]]
+   [dustingetz.str :refer [includes-str?]]
+   [hyperfiddle.electric3 :as e]
+   [hyperfiddle.electric-dom3 :as dom]
+   [hyperfiddle.electric-forms4 :refer [Input*]]
+   [hyperfiddle.electric-scroll0 :refer [Scroll-window IndexRing]]))
 
 (e/defn TableScroll
   [record-count Row & [selected]]

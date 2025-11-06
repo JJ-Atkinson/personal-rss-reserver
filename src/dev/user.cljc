@@ -61,35 +61,38 @@
        (e->nil (clj-reload.core/reload {:log-fn println}))
        (start))
 
-     (defn dev-main
-       [& args]
-       (require 'com.gfredericks.debug-repl)
+     #_
+       (defn dev-main
+         [& args]
+         (require 'com.gfredericks.debug-repl)
 
-       (let [middleware (->> (concat [
-                                      'shadow.cljs.devtools.server.nrepl/middleware
-                                      'com.gfredericks.debug-repl/wrap-debug-repl
-                                      #_'jarrett.completions/wrap-completion ;; commented out until I need it
-                                     ]
-                                     cider.nrepl.middleware/cider-middleware)
-                             ;; (remove #{'cider.nrepl/wrap-complete})
-                             (map requiring-resolve)
-                             (remove nil?))]
-         (defonce server
-           (start-server :bind    "0.0.0.0"
-                         :port    8002
-                         :handler (apply default-handler middleware)))
-         (spit ".nrepl-port" "8002")
-         (println "NREPL Server located at 8002")
-         (println "Applied middleware:" middleware)
-         (start)
-         (Thread/sleep Long/MAX_VALUE)))
+         (let [middleware (->> (concat [
+                                        'shadow.cljs.devtools.server.nrepl/middleware
+                                        'com.gfredericks.debug-repl/wrap-debug-repl
+                                        #_'jarrett.completions/wrap-completion ;; commented out until I need it
+                                       ]
+                                       cider.nrepl.middleware/cider-middleware)
+                               ;; (remove #{'cider.nrepl/wrap-complete})
+                               (map requiring-resolve)
+                               (remove nil?))]
+           (defonce server
+             (start-server :bind    "0.0.0.0"
+                           :port    8002
+                           :handler (apply default-handler middleware)))
+           (spit ".nrepl-port" "8002")
+           (println "NREPL Server located at 8002")
+           (println "Applied middleware:" middleware)
+           (start)
+           (Thread/sleep Long/MAX_VALUE)))
 
      (defn start-portal!
        []
        ; similar to clj reload, this prevents lockup on
        (when-let [portal-api-open (e->nil (requiring-resolve 'portal.api/open))]
-         (portal-api-open {:window-title "LE RSS Server" #_#_:launcher :vs-code})
+         (portal-api-open {:window-title "LE RSS Server" :editor :vs-code})
          (add-tap (requiring-resolve 'portal.api/submit))))
+
+     (def go start)
 
      (comment
        (tap> 1)
