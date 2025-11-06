@@ -393,11 +393,11 @@
 (defn- start-timeout-watchdog!
   [system]
   #_
-  (swap! system assoc
-    ::chime-ent
-    (chime/chime-at
-     (chime/periodic-seq (Instant/now) (Duration/ofMillis (get @system ::watchdog-ms 1500)))
-     (fn [t] (prune-timeouts! system)))))
+    (swap! system assoc
+      ::chime-ent
+      (chime/chime-at
+       (chime/periodic-seq (Instant/now) (Duration/ofMillis (get @system ::watchdog-ms 1500)))
+       (fn [t] (prune-timeouts! system)))))
 
 (>defn create-system!
   [{::keys [persistence-dir

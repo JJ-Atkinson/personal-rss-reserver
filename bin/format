@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+# Enable globstar for ** wildcards
+shopt -s globstar
+
+zprint '{:search-config? true}' -sw src/**/*.clj

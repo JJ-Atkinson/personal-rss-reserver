@@ -1,97 +1,83 @@
-{:paths ["src/main" "src/electric_fiddle_imports" "resources"]
+{:paths ["src/main" "resources"]
  :deps
- {com.microsoft.playwright/playwright        {:mvn/version "1.47.0"}
-  io.github.pfeodrippe/wally                 {:mvn/version "0.0.4"}
-  cider/cider-nrepl                          {:mvn/version "0.51.1"} ;; contains nrepl
-  datalevin/datalevin                        {:mvn/version "0.8.18"}
-  commons-io/commons-io                      {:mvn/version "2.15.0"}
-  clj-http/clj-http                          {:mvn/version "3.12.3"}
-  remus/remus                                {:mvn/version "0.2.4"}
-  clj-rss/clj-rss                            {:mvn/version "0.4.0"}
-  potemkin/potemkin                          {:mvn/version "0.4.6"}
-  tempfile/tempfile                          {:mvn/version "0.2.0"}
-  hiccup/hiccup                              {:mvn/version "1.0.5"}
+ {com.microsoft.playwright/playwright {:mvn/version "1.47.0"}
+  io.github.pfeodrippe/wally {:mvn/version "0.0.4"}
+  cider/cider-nrepl {:mvn/version "0.51.1"} ;; contains nrepl
+  datalevin/datalevin {:mvn/version "0.8.18"}
+  commons-io/commons-io {:mvn/version "2.15.0"}
+  clj-http/clj-http {:mvn/version "3.12.3"}
+  remus/remus {:mvn/version "0.2.4"}
+  clj-rss/clj-rss {:mvn/version "0.4.0"}
+  potemkin/potemkin {:mvn/version "0.4.6"}
+  tempfile/tempfile {:mvn/version "0.2.0"}
+  hiccup/hiccup {:mvn/version "1.0.5"}
 
   ;; ##AWSS3Signatures
-  com.cognitect.aws/api                      {:mvn/version "0.8.774"}
-  com.cognitect.aws/endpoints                {:mvn/version "871.2.36.3"}
-  com.cognitect.aws/s3                       {:mvn/version         "871.2.33.5"
-                                              :aws/serviceFullName "Amazon Simple Storage Service"}
-  org.babashka/http-client                   {:mvn/version "0.4.15"}
-  babashka/fs                                {:mvn/version "0.5.23"}
-  babashka/process                           {:mvn/version "0.5.21"}
-  io.github.tonsky/clj-simple-router         {:mvn/version "0.1.0"}
-  ring/ring                                  {:mvn/version "1.13.0"
-                                              #_#_:exclusions [ring/ring-jetty-adapter]} ;; don't include
+  com.cognitect.aws/api {:mvn/version "0.8.774"}
+  com.cognitect.aws/endpoints {:mvn/version "871.2.36.3"}
+  com.cognitect.aws/s3 {:mvn/version "871.2.33.5"
+                        :aws/serviceFullName "Amazon Simple Storage Service"}
+  org.babashka/http-client {:mvn/version "0.4.15"}
+  babashka/fs {:mvn/version "0.5.23"}
+  babashka/process {:mvn/version "0.5.21"}
+  io.github.tonsky/clj-simple-router {:mvn/version "0.1.0"}
+  ring/ring {:mvn/version "1.13.0"
+             #_#_:exclusions [ring/ring-jetty-adapter]} ;; don't include
                                                                                          ;; ring-jetty - the deps
                                                                                          ;; upgrade borks
-  ring/ring-defaults                         {:mvn/version "0.4.0"}
+  ring/ring-defaults {:mvn/version "0.4.0"}
   org.ring-clojure/ring-websocket-middleware {:mvn/version "0.2.0"}
-  integrant/integrant                        {:mvn/version "0.8.1"}
-  jarohen/chime                              {:mvn/version "0.3.3"}
-  org.clojure/tools.namespace                {:mvn/version "1.4.4"}
-  com.fulcrologic/guardrails                 {:mvn/version "1.1.13"} ;; allow guardrails in prod because idc. Perf
+  integrant/integrant {:mvn/version "0.8.1"}
+  jarohen/chime {:mvn/version "0.3.3"}
+  org.clojure/tools.namespace {:mvn/version "1.4.4"}
+  com.fulcrologic/guardrails {:mvn/version "1.1.13"} ;; allow guardrails in prod because idc. Perf
                                                                      ;; isn't a huge deal
 
-  buddy/buddy-hashers                        {:mvn/version "2.0.167"}
-  buddy/buddy-sign                           {:mvn/version "3.5.351"}
+  buddy/buddy-hashers {:mvn/version "2.0.167"}
+  buddy/buddy-sign {:mvn/version "3.5.351"}
 
   #_#_; removed for now because it's causing issues with clj-nix, the sha is mismatched
       ; https://github.com/jlesquembre/clj-nix/issues/109
       nextjournal/clojure-mode
     {:git/url "https://github.com/nextjournal/clojure-mode"
-     :sha     "3df5e837095e049fe489831742bcfa1e9704c691"}
-  zprint/zprint                              {:mvn/version "1.2.9"}
-  http-kit/http-kit                          {:mvn/version "2.8.0"}
+     :sha "3df5e837095e049fe489831742bcfa1e9704c691"}
+  zprint/zprint {:mvn/version "1.2.9"}
+  http-kit/http-kit {:mvn/version "2.8.0"}
 
-  org.clojure/clojure                        {:mvn/version "1.12.0"} ;; tempoary hack while using rama
-  org.clojure/clojurescript                  {:mvn/version "1.11.60"}
-  org.clojure/tools.logging                  {:mvn/version "1.2.4"}
-  ch.qos.logback/logback-classic             {:mvn/version "1.2.11"}
-  datascript/datascript                      {:mvn/version "1.5.2"}
-  tick/tick                                  {:mvn/version "0.7.5"}
-
-  ;; electric
-  com.hyperfiddle/electric                   {:mvn/version "v3-alpha-SNAPSHOT"}
-  com.hyperfiddle/hyperfiddle                {:mvn/version "v0-alpha-SNAPSHOT"}
-  com.google.guava/guava                     {:mvn/version "31.0-jre"} ;; pinned version, needs to change possibly
-                                                                       ;; when electric changes
-
- }
+  org.clojure/clojure {:mvn/version "1.12.0"} ;; tempoary hack while using rama
+  org.clojure/tools.logging {:mvn/version "1.2.4"}
+  ch.qos.logback/logback-classic {:mvn/version "1.2.11"}
+  datascript/datascript {:mvn/version "1.5.2"}
+  tick/tick {:mvn/version "0.7.5"}}
  :aliases
- {:dev   {:extra-paths ["src/test" "src/dev"]
-          :extra-deps  {com.gfredericks/debug-repl {:mvn/version "0.0.12"}
-                        binaryage/devtools {:mvn/version "1.0.6"}
-                        fulcrologic/fulcro-spec {:mvn/version "3.1.12"}
-                        dev.freeformsoftware/portal-test-reporter
-                        {:git/url "https://github.com/JJ-Atkinson/portal-test-reporter.git"
-                         :sha     "4862723d4c53ea66347f16e16d8cb51143555137"}
-                        io.github.tonsky/clj-reload {:mvn/version "0.7.0"}
-                        djblue/portal {:mvn/version "0.58.5"}
-                        refactor-nrepl/refactor-nrepl {:mvn/version "3.11.0"}
-                        cider/cider-nrepl {:mvn/version "0.58.0"}}
-          :jvm-opts    ["--add-opens" "java.base/java.nio=ALL-UNNAMED" ;; ##SeeDepsEDN
-                        "--add-opens" "java.base/sun.nio.ch=ALL-UNNAMED"
+ {:dev {:extra-paths ["src/test" "src/dev"]
+        :extra-deps {com.gfredericks/debug-repl {:mvn/version "0.0.12"}
+                     fulcrologic/fulcro-spec {:mvn/version "3.1.12"}
+                     dev.freeformsoftware/portal-test-reporter
+                     {:git/url "https://github.com/JJ-Atkinson/portal-test-reporter.git"
+                      :sha "4862723d4c53ea66347f16e16d8cb51143555137"}
+                     io.github.tonsky/clj-reload {:mvn/version "0.7.0"}
+                     djblue/portal {:mvn/version "0.58.5"}
+                     refactor-nrepl/refactor-nrepl {:mvn/version "3.11.0"}
+                     cider/cider-nrepl {:mvn/version "0.58.0"}}
+        :jvm-opts ["--add-opens" "java.base/java.nio=ALL-UNNAMED" ;; ##SeeDepsEDN
+                   "--add-opens" "java.base/sun.nio.ch=ALL-UNNAMED"
 
-                        ;; https://bugs.openjdk.org/browse/JDK-8213696. Required to allow signing to procede
-                        ;; normally for the cognitect aws api. It signs the headers as well, and by default the jdk
-                        ;; http client sets its own (wrong) `host` header, breaking the signature.
+                   ;; https://bugs.openjdk.org/browse/JDK-8213696. Required to allow signing to procede
+                   ;; normally for the cognitect aws api. It signs the headers as well, and by default the jdk
+                   ;; http client sets its own (wrong) `host` header, breaking the signature.
 
+                   ;; temp removing this in relation to
+                   ;; https://github.com/cognitect-labs/aws-api/commit/c1208b5bfd1af79f38aa928d87e8060332ce780c#diff-d1d974d67a52b0c5f4ed728e4562da6d599117646d6f24ad42eaf0907811d2d0R18-R21
+                   ;; "-Djdk.httpclient.allowRestrictedHeaders=host"
 
-                        ;; temp removing this in relation to
-                        ;; https://github.com/cognitect-labs/aws-api/commit/c1208b5bfd1af79f38aa928d87e8060332ce780c#diff-d1d974d67a52b0c5f4ed728e4562da6d599117646d6f24ad42eaf0907811d2d0R18-R21
-                        ;; "-Djdk.httpclient.allowRestrictedHeaders=host"
-
-                        "-Xss2m"                         ; https://github.com/hyperfiddle/photon/issues/11
-                        "-XX:-OmitStackTraceInFastThrow" ;; RCF
-                       ]}
+                   "-XX:-OmitStackTraceInFastThrow" ;; RCF
+                   ]}
 
   :build {:extra-paths ["src/dev"]
-          :extra-deps  {thheller/shadow-cljs          {:mvn/version "2.26.2"}
-                        io.github.clojure/tools.build {:mvn/version "0.9.6" :exclusions [com.google.guava/guava]}}
-          :jvm-opts    ["-Xss2m"                         ; https://github.com/hyperfiddle/photon/issues/11
-                        "-XX:-OmitStackTraceInFastThrow" ;; RCF
-                       ]}}
+          :extra-deps {io.github.clojure/tools.build {:mvn/version "0.9.6"}}
+          :jvm-opts ["-XX:-OmitStackTraceInFastThrow" ;; RCF
+                     ]}}
 
  :mvn/repos
  {"nexus-releases"

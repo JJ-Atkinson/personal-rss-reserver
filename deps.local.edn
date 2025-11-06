@@ -2,7 +2,9 @@
  :launchpad/aliases [:dev :test]
  ;; Call (user/go) to start the server, include Portal (invoke with
  ;; (user/portal))
- :launchpad/options {:middleware [cider.nrepl/cider-middleware refactor-nrepl.middleware/wrap-refactor]
+ :launchpad/options {:middleware [com.gfredericks.debug-repl/wrap-debug-repl
+                                  cider.nrepl/cider-middleware
+                                  refactor-nrepl.middleware/wrap-refactor]
                      :nrepl-port 7888
                      :java-args  ["-Djdk.attach.allowAttachSelf"]}
 
@@ -19,6 +21,7 @@
                      com.bhauman/clojure-mcp {:git/url "https://github.com/bhauman/clojure-mcp.git"
                                               :git/tag "v0.1.11-alpha"
                                               :git/sha "7739dba"}
+                     com.gfredericks/debug-repl {:mvn/version "0.0.12"}
                      #_#_dev.freeformsoftware/portal-test-reporter
                        {:git/url "https://github.com/JJ-Atkinson/portal-test-reporter.git"
                         :sha     "4862723d4c53ea66347f16e16d8cb51143555137"}}}

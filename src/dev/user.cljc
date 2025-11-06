@@ -1,7 +1,5 @@
-(ns ^:dev/always user ; Electric currently needs to rebuild everything when any file changes. Will fix
+(ns ^:dev/always user
   (:require
-   [hyperfiddle.electric3 :as e]
-   [personal-rss-feed.admin.electric-app.main]
    #?@(:clj
        [[integrant.core :as ig]
         [nrepl.server :refer [default-handler start-server]]
@@ -9,9 +7,7 @@
         [personal-rss-feed.config :as config]
         [taoensso.timbre :as log]
         [taoensso.encore :as enc]
-        [nrepl.middleware :as middleware]]
-       :cljs
-       [hyperfiddle.electric-client3])))
+        [nrepl.middleware :as middleware]])))
 
 #?(:clj
    (do
@@ -24,12 +20,8 @@
 
      (log/set-min-level! :debug)
 
-     (def shadow-start! (delay @(requiring-resolve 'shadow.cljs.devtools.server/start!)))
-     (def shadow-watch (delay @(requiring-resolve 'shadow.cljs.devtools.api/watch)))
-
      ^:clj-reload/keep
      (defonce !system (atom nil))
-
 
      (comment
        (tap> (#'config/resolve-config! false)))
@@ -37,11 +29,7 @@
        []
        (println "Starting system!")
        (reset! !system
-         (ig/init (#'config/resolve-config! false)))
-
-       (@shadow-start!)
-       (@shadow-watch :dev) ; depends on shadow server
-     )
+         (ig/init (#'config/resolve-config! false))))
 
      (defn stop
        []
@@ -61,14 +49,11 @@
        (e->nil (clj-reload.core/reload {:log-fn println}))
        (start))
 
-     #_
-       (defn dev-main
+     #_(defn dev-main
          [& args]
          (require 'com.gfredericks.debug-repl)
 
-         (let [middleware (->> (concat [
-                                        'shadow.cljs.devtools.server.nrepl/middleware
-                                        'com.gfredericks.debug-repl/wrap-debug-repl
+         (let [middleware (->> (concat ['com.gfredericks.debug-repl/wrap-debug-repl
                                         #_'jarrett.completions/wrap-completion ;; commented out until I need it
                                        ]
                                        cider.nrepl.middleware/cider-middleware)
@@ -96,32 +81,4 @@
 
      (comment
        (tap> 1)
-       (portal.api/docs))
-
-     (defn boot-electric-clj
-       [config ring-request]
-       (e/boot-server {}
-                      personal-rss-feed.admin.electric-app.main/Main
-                      (e/server config)
-                      (e/server ring-request)))))
-
-
-#?(:cljs
-   (do
-     (defonce reactor nil)
-
-     (defn ^:dev/after-load ^:export start!
-       []
-       (assert (nil? reactor) "reactor already running")
-       (set! reactor
-             ((e/boot-client {}
-                             personal-rss-feed.admin.electric-app.main/Main
-                             (e/server (e/amb))
-                             (e/server (e/amb)))
-              #(js/console.log "Reactor success:" %)
-              #(js/console.error "Reactor failure:" %))))
-
-     (defn ^:dev/before-load stop!
-       []
-       (when reactor (reactor)) ; teardown
-       (set! reactor nil))))
+       (portal.api/docs))))

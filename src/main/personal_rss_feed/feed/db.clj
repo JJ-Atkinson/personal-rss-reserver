@@ -11,13 +11,11 @@
    :user/password-crypt                 {:db/valueType :db.type/string}
    :user/admin?                         {:db/valueType :db.type/boolean}
 
-
    :episode/url                         {:db/valueType :db.type/string
                                          :db/unique    :db.unique/identity}
-   :episode/id                          {:db/valueType :db.type/string} ;; One of :singleton/current-id, used in
-                                                                        ;; the electric app
-   :episode/uuid                        {:db/valueType :db.type/uuid} ;; A uuid for naming in the s3 bucket,
-                                                                      ;; enabling a passwordless CDN
+   :episode/id                          {:db/valueType :db.type/string} ;; One of :singleton/current-id
+   :episode/uuid                        {:db/valueType :db.type/uuid}   ;; A uuid for naming in the s3 bucket,
+   ;; enabling a passwordless CDN
    :episode/title                       {:db/valueType :db.type/string}
    :episode/ep-number                   {:db/valueType :db.type/string} ;; OPTIONAL!!
    :episode/thumbnail-origin-uri        {:db/valueType :db.type/string}
@@ -27,9 +25,9 @@
    :episode/video-original-uri          {:db/valueType :db.type/string}
    :episode/podcast                     {:db/valueType :db.type/string}
    :episode/audio-content-length        {:db/valueType :db.type/long} ;; only present when the podcast has been
-                                                                      ;; downloaded properly.
+   ;; downloaded properly.
    :episode/video-content-length        {:db/valueType :db.type/long} ;; only present when the podcast has been
-                                                                      ;; downloaded properly.
+   ;; downloaded properly.
 
    :podcast/feed-uri                    {:db/valueType :db.type/string
                                          :db/unique    :db.unique/identity} ;; Must be seeded by a user
@@ -41,9 +39,8 @@
 
    :singleton/singleton-id              {:db/valueType :db.type/string
                                          :db/unique    :db.unique/identity} ;; Always going to be "1" so there's
-                                                                            ;; only one in the db
-   :singleton/current-id                {:db/valueType :db.type/string}
-  })
+   ;; only one in the db
+   :singleton/current-id                {:db/valueType :db.type/string}})
 
 (defn inc-str
   "Take a character string (e.g. aaa) and increment it, (e.g. aab)."
@@ -156,7 +153,6 @@
            (ffirst)
            (podcast-by-feed-uri (d/db conn))))
 
-
 (defmethod ig/init-key ::conn
   [_ {:keys [uri] :as options}]
   (reset! !conn (d/get-conn uri schema)))
@@ -213,5 +209,4 @@
                        :episode/audio-content-length]))
    (sort-by :episode/publish-date)
    (filter :episode/audio-content-length)
-   (count))
-)
+   (count)))
