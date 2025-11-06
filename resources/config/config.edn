@@ -9,46 +9,41 @@
    ;;"/tmp/simple-queue/personal-rss-server"
    "/home/jarrett/code/personal/personal-rss-reserver/.prod-data/simple-queue"
    :dev.freeformsoftware.simple-queue.core/default-timeout-ms 100000 ;; 100s
-   :dev.freeformsoftware.simple-queue.core/watchdog-ms        1000
-  }
+   :dev.freeformsoftware.simple-queue.core/watchdog-ms 1000}
 
   :personal-rss-feed.feed.s3/s3
   ;;   #n/ref [:s3 :CI]
   #n/ref [:s3 :PROD]
 
-
   :personal-rss-feed.ingest.lotus-eaters/lotus-eaters-ingest
-  {:start-auto-poll?          false
-   :start-daily-feed-parse?   false ;; Override to query any existing podcasts at least once.
-   :s3/s3                     #ig/ref :personal-rss-feed.feed.s3/s3
+  {:start-auto-poll? false
+   :start-daily-feed-parse? false ;; Override to query any existing podcasts at least once.
+   :s3/s3 #ig/ref :personal-rss-feed.feed.s3/s3
    :apply-playwright-cli-fix? true
-   :db/conn                   #ig/ref :personal-rss-feed.feed.db/conn
-   :queue                     #ig/ref :personal-rss-feed.queue/queue
-   :lotus-eaters/username     #n/ref :lotus-eaters/username
-   :lotus-eaters/password     #n/ref :lotus-eaters/password
-   :downloads-per-day         0} ;; lockout downloads during CI
+   :db/conn #ig/ref :personal-rss-feed.feed.db/conn
+   :queue #ig/ref :personal-rss-feed.queue/queue
+   :lotus-eaters/username #n/ref :lotus-eaters/username
+   :lotus-eaters/password #n/ref :lotus-eaters/password
+   :downloads-per-day 0} ;; lockout downloads during CI
 
   :personal-rss-feed.server.main/server
-  {:jetty                    {:port 3001}
-   :db/conn                  #ig/ref :personal-rss-feed.feed.db/conn
-   :s3/public-s3-prefix      #n/ref :s3/public-s3-prefix ;; Only semi secret, but preferable to not post on the
+  {:jetty {:port 3001}
+   :db/conn #ig/ref :personal-rss-feed.feed.db/conn
+   :s3/public-s3-prefix #n/ref :s3/public-s3-prefix ;; Only semi secret, but preferable to not post on the
                                                          ;; internet.
    :feed/public-feed-address #n/ref :feed/public-feed-address
    :feed/secret-path-segment #n/ref :feed/secret-path-segment ;; Easier to implement with overcast than actual http
                                                               ;; basic auth
-   :lotus-eaters-ingest      #ig/ref :personal-rss-feed.ingest.lotus-eaters/lotus-eaters-ingest
-   :auth                     #ig/ref :personal-rss-feed.admin.auth/auth
-   :personal-rss-feed.admin.pages.electric-index/manifest-path "./public/js/manifest.edn"
-
-  }
+   :lotus-eaters-ingest #ig/ref :personal-rss-feed.ingest.lotus-eaters/lotus-eaters-ingest
+   :auth #ig/ref :personal-rss-feed.admin.auth/auth}
 
   :personal-rss-feed.admin.auth/auth
   {:db/conn #ig/ref :personal-rss-feed.feed.db/conn
    :personal-rss-feed.admin.auth/hash-options {:alg :bcrypt+sha512}
-   :personal-rss-feed.admin.auth/jwt-options {:secret       #n/ref :auth/jwt-secret
+   :personal-rss-feed.admin.auth/jwt-options {:secret #n/ref :auth/jwt-secret
                                               :exp-period-s 86400 ;; 1 day
-                                              :buddy        {:skip-validation false
-                                                             :alg             :hs512}}}}
+                                              :buddy {:skip-validation false
+                                                      :alg :hs512}}}}
 
  ;; Things in the secrets file
  :lotus-eaters/username "username"
@@ -58,5 +53,5 @@
  :feed/secret-path-segment "a"
  :feed/public-feed-address "http://localhost:3001/"
  :auth/jwt-secret "secret" ;; preferably a 256bit random number
-}
+ }
 

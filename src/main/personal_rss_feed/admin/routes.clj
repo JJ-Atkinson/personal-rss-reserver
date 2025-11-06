@@ -1,12 +1,7 @@
 (ns personal-rss-feed.admin.routes
   (:require
    [clojure.string :as str]
-   [hyperfiddle.electric3 :as e]
-   personal-rss-feed.admin.electric-app.main
-   ;;  [personal-rss-feed.admin.electric-httpkit-adapter-fork :as hk-electric]
-   [personal-rss-feed.admin.electric-jetty-adapter :as jetty-electric]
    [personal-rss-feed.admin.pages.login :as p.login]
-   [personal-rss-feed.admin.pages.electric-index :as p.electric-index]
    [ring.middleware.content-type :as rm.content-type]
    [ring.middleware.defaults :as ring.defaults]
    [ring.middleware.head :as head]
@@ -20,8 +15,7 @@
 
 (defn routes
   [{:keys [db/conn feed/secret-path-segment feed/public-feed-address] :as config}]
-  {"GET /**" (fn [req] (p.electric-index/handle-index config req))
-   "GET /login" p.login/login-form
+  {"GET /login" p.login/login-form
    "POST /login" (partial p.login/login-post config)
    "GET /public/**"
    (fn [{[path] :path-params :as req}]
@@ -41,30 +35,12 @@
         (handler (assoc req :auth/claims claims))
         (response/redirect "/login")))))
 
-
-(let [boot-electric-clj
-      (delay (or (try (requiring-resolve 'user/boot-electric-clj) (catch Exception _ nil))
-                 (try (requiring-resolve 'prod/boot-electric-clj) (catch Exception _ nil))))]
-  (defn boot-electric
-    "Either invokes the dev or prod electric boot function"
-    [config ring-request]
-    (@boot-electric-clj config ring-request)))
-
-(defn wrap-electric
+(defn wrap-admin
   [config handler] ;; handler == all routes
   (->
-    ;; No need for 'not-found, since the behavior of the global router is not-found if nil
-    handler ;; Lowest priority
-
-    ;; Index page handled in routes
-    ;; (hk-electric/wrap-electric-websocket (partial boot-electric config))
-    (jetty-electric/electric-websocket-middleware (::jetty-electric/config config)
-                                                  (partial boot-electric config))
-    (wrap-logged-in config) ;; Hides routes by default
-    ;; No need for 'wrap-resources, since the `GET /public/**` takes care of that
+    handler
+    (wrap-logged-in config)
     (rm.content-type/wrap-content-type)
     (ring.defaults/wrap-defaults (assoc-in ring.defaults/site-defaults
                                   [:security :anti-forgery]
                                   false))))
-
-(def jetty-electric-configurator jetty-electric/jetty-configurator)

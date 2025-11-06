@@ -1,13 +1,13 @@
 (ns personal-rss-feed.server.main
   (:require
    [clj-simple-router.core :as router]
+   [clojure.set :as set]
    [integrant.core :as ig]
-   [ring.util.response :as response]
-   [taoensso.timbre :as log]
    [personal-rss-feed.admin.routes :as admin.routes]
    [personal-rss-feed.feed.routes :as feed.routes]
-   [clojure.set :as set]
-   [ring.adapter.jetty :as ring]))
+   [ring.adapter.jetty :as ring]
+   [ring.util.response :as response]
+   [taoensso.timbre :as log]))
 
 ;; The indirection for `handler` and `init-key` enable tools.ns.refresh, without the need for suspend/resume. quite
 ;; handy
@@ -36,7 +36,7 @@
   (let [create-router (memoize router/router)]
     (fn [req]
       (let [router  (create-router (#'create-routes config))
-            handler (admin.routes/wrap-electric (update-config config) router)]
+            handler (admin.routes/wrap-admin (update-config config) router)]
         (try
           (or (handler req)
               (response/not-found "Route not found"))
@@ -44,10 +44,9 @@
 
 (defmethod ig/init-key ::server
   [_ {:keys [jetty] :as config}]
-  (let [options (merge {:port         3001
-                        :host         "0.0.0.0"
-                        :join?        false
-                        :configurator admin.routes/jetty-electric-configurator}
+  (let [options (merge {:port  3001
+                        :host  "0.0.0.0"
+                        :join? false}
                        jetty)]
     (println "Starting server " options)
     (ring/run-jetty (handler config)

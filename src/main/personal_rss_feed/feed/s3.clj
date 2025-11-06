@@ -121,17 +121,17 @@
 
 #_
 
-;; #AWSS3Signatures https://github.com/cognitect-labs/aws-api/issues/263
-(defmethod a.signers/sign-http-request "s3"
-  [service endpoint credentials http-request]
-  (a.signers/v4-sign-http-request service
-                                  endpoint
-                                  credentials
-                                  (-> http-request
-                                      (assoc-in [:headers "host"]
-                                                (str (get-in http-request [:headers "host"]) ":3900")))
-                                  :content-sha256-header?
-                                  true))
+  ;; #AWSS3Signatures https://github.com/cognitect-labs/aws-api/issues/263
+  (defmethod a.signers/sign-http-request "s3"
+    [service endpoint credentials http-request]
+    (a.signers/v4-sign-http-request service
+                                    endpoint
+                                    credentials
+                                    (-> http-request
+                                        (assoc-in [:headers "host"]
+                                                  (str (get-in http-request [:headers "host"]) ":3900")))
+                                    :content-sha256-header?
+                                    true))
 
 
 
