@@ -19,7 +19,6 @@
   {:start-auto-poll? false
    :start-daily-feed-parse? false ;; Override to query any existing podcasts at least once.
    :s3/s3 #ig/ref :personal-rss-feed.feed.s3/s3
-   :apply-playwright-cli-fix? true
    :db/conn #ig/ref :personal-rss-feed.feed.db/conn
    :queue #ig/ref :personal-rss-feed.queue/queue
    :lotus-eaters/username #n/ref :lotus-eaters/username

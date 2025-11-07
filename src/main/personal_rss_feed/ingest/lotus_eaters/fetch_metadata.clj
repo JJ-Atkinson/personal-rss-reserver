@@ -275,6 +275,10 @@
 
   (w/with-page
    (:page test-page)
+   (.innerHTML (ws/query-1 [".post__body" (ws/title "Download Audio File")])))
+
+  (w/with-page
+   (:page test-page)
    (enc/assoc-some {}
                    :episode/audio-original-uri
                    [(e->nil (.getAttribute (ws/query-1 [".post__body" (ws/title "Download Audio File")]) "href"))]
