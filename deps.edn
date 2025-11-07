@@ -1,6 +1,6 @@
 {:paths ["src/main" "resources"]
  :deps
- {com.microsoft.playwright/playwright {:mvn/version "1.47.0"}
+ {com.microsoft.playwright/playwright {:mvn/version "1.52.0"}
   io.github.pfeodrippe/wally {:mvn/version "0.0.4"}
   cider/cider-nrepl {:mvn/version "0.51.1"} ;; contains nrepl
   datalevin/datalevin {:mvn/version "0.8.18"}
